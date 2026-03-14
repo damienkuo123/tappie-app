@@ -36,8 +36,8 @@
   <script>
     // --- ⚠️ 設定區 (請務必確認正確) ---
     const GAS_URL = "https://script.google.com/macros/s/AKfycbxHkA5LmIqBVuMEkaT1IcOarqMuEtw7HBX-BplhvOiDw_XCGiksPQotRb0qwftm2Lub/exec"; 
-    const AZURE_KEY = "42S6T0s5RLoRY1QNTVmmApoMGeZ0qK59Imgwf2RKlD9HLVaBc0E6JQQJ99CCAC3pKaRXJ3w3AAAYACOGzkn7";
-    const AZURE_REGION = "eastasia"; // 偵探提醒：若您的 Azure 資源是在香港，請改為 eastasia
+    const AZURE_KEY = "7GrGGySZJ7wxugw35x4xgYx5IzIP9pd6eZL2Pqy5GOo8FhEoJhyTJQQJ99CCAC3pKaRXJ3w3AAAYACOGiIOL";
+    const AZURE_ENDPOINT = "https://eastasia.api.cognitive.microsoft.com/";
 
     const params = new URLSearchParams(window.location.search);
     const STUDENT_ID = params.get('id') || "S001";
@@ -112,38 +112,44 @@
       };
     };
 
-    async function evaluateAzure(arrayBuffer, text) {
-      const url = `https://${AZURE_REGION}.stt.speech.microsoft.com/speech/recognition/conversation/cognitiveservices/v1?language=en-US`;
-      const pronParams = { 
-        "ReferenceText": text, 
-        "GradingSystem": "HundredMark", 
-        "Granularity": "Phoneme", 
-        "Dimension": "Comprehensive" 
-      };
+async function evaluateAzure(arrayBuffer, text) {
+  // 自動處理端點網址格式
+  let baseUrl = AZURE_ENDPOINT;
+  if (!baseUrl.endsWith('/')) baseUrl += '/';
+  
+  // 針對「全家桶型」金鑰的正確 API 路徑
+  const url = `${baseUrl}speech/recognition/conversation/cognitiveservices/v1?language=en-US`;
+  
+  const pronParams = { 
+    "ReferenceText": text, 
+    "GradingSystem": "HundredMark", 
+    "Granularity": "Phoneme", 
+    "Dimension": "Comprehensive" 
+  };
 
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Ocp-Apim-Subscription-Key': AZURE_KEY,
-          'Pronunciation-Assessment': btoa(JSON.stringify(pronParams)),
-          'Content-Type': 'audio/webm; codecs=opus',
-          'Accept': 'application/json'
-        },
-        body: arrayBuffer
-      });
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Ocp-Apim-Subscription-Key': AZURE_KEY,
+      'Pronunciation-Assessment': btoa(JSON.stringify(pronParams)),
+      'Content-Type': 'audio/webm; codecs=opus',
+      'Accept': 'application/json'
+    },
+    body: arrayBuffer
+  });
 
-      if (!response.ok) {
-        const errText = await response.text();
-        throw new Error(`Azure 報錯 (${response.status}): ${errText}`);
-      }
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`Azure 拒絕訪問 (${response.status}): ${errText}`);
+  }
 
-      const resData = await response.json();
-      if (resData.RecognitionStatus === "Success") {
-        return resData.NBest[0].PronunciationAssessment.AccuracyScore;
-      } else {
-        throw new Error("AI 聽不懂，請錄清楚一點。狀態：" + resData.RecognitionStatus);
-      }
-    }
+  const resData = await response.json();
+  if (resData.RecognitionStatus === "Success") {
+    return resData.NBest[0].PronunciationAssessment.AccuracyScore;
+  } else {
+    throw new Error("AI 無法辨識音訊內容，狀態：" + resData.RecognitionStatus);
+  }
+}
 
     function finishChallenge() {
       const avg = Math.round(total / words.length);
