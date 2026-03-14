@@ -1,29 +1,173 @@
-mediaRecorder.onstop = () => {
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+  <title>瑪麗安口說挑戰室</title>
+  <style>
+    :root { --primary-blue: #1e90ff; --marian-yellow: #ffa502; --marian-red: #ff4757; }
+    body { font-family: -apple-system, sans-serif; text-align: center; padding: 20px; background: #f0f2f5; touch-action: none; }
+    .card { background: white; padding: 30px; border-radius: 28px; box-shadow: 0 12px 40px rgba(0,0,0,0.12); max-width: 400px; margin: 0 auto; }
+    
+    #record-btn { 
+      background: var(--marian-red); width: 120px; height: 120px; border-radius: 50%; 
+      border: 8px solid white; font-size: 50px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); 
+      margin: 30px auto; touch-action: none; display: none; cursor: pointer;
+    }
+    #record-btn.active { transform: scale(0.9); background: #333; animation: pulse 1s infinite; }
+    @keyframes pulse { 0% { box-shadow: 0 0 0 0px rgba(255, 71, 87, 0.4); } 100% { box-shadow: 0 0 0 20px rgba(255, 71, 87, 0); } }
+    
+    .btn-start { background: var(--primary-blue); color: white; padding: 20px 40px; border-radius: 18px; font-size: 20px; font-weight: bold; border: none; cursor: pointer; }
+    #feedback { font-size: 28px; font-weight: bold; color: #2ed573; margin-top: 15px; min-height: 40px; }
+    #status { color: #666; margin-top: 10px; font-size: 14px; }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <div id="setup-zone">
+      <h2 style="color:var(--primary-blue);">瑪麗安口說挑戰</h2>
+      <p id="info-text">正在準備麥克風...</p>
+      <button class="btn-start" id="start-btn" style="display:none;">開始挑戰！</button>
+    </div>
+
+    <div id="studio" style="display:none;">
+      <p style="color:var(--primary-blue); font-weight:bold;">🎙️ 第 <span id="idx">1</span> 題</p>
+      <h1 id="word" style="font-size: 48px; color:#0d47a1; margin: 20px 0;">載入中...</h1>
+      <button type="button" id="record-btn">🎤</button>
+      <p id="status">按住麥克風開始錄音</p>
+      <div id="feedback"></div>
+    </div>
+  </div>
+
+  <script>
+    // ⚠️ 請務必確認此處為您最新的 GAS 部署網址
+    const GAS_URL = "您的GAS部署網址"; 
+
+    const params = new URLSearchParams(window.location.search);
+    const STUDENT_ID = params.get('id') || "S001";
+
+    let stream, mediaRecorder, chunks = [], words = [], idx = 0, total = 0, startTime;
+
+    // 初始化麥克風
+    window.onload = async () => {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        document.getElementById('info-text').innerText = "麥克風準備就緒！";
+        document.getElementById('start-btn').style.display = 'inline-block';
+      } catch (e) {
+        alert("無法開啟麥克風，請檢查權限或使用 Safari 瀏覽器。");
+      }
+    };
+
+    // 開始挑戰：抓取題庫
+    document.getElementById('start-btn').onclick = () => {
+      document.getElementById('setup-zone').style.display = 'none';
+      document.getElementById('studio').style.display = 'block';
+      
+      fetch(`${GAS_URL}?id=${STUDENT_ID}&action=get_data`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.words && data.words.length > 0 && !data.words[0].includes("Error")) {
+            words = data.words;
+            renderWord();
+          } else {
+            alert("題目抓取失敗：" + (data.words ? data.words[0] : "未知錯誤"));
+          }
+        })
+        .catch(err => alert("網路連線失敗，請重整頁面。"));
+    };
+
+    function renderWord() {
+      if (idx < words.length) {
+        document.getElementById('idx').innerText = idx + 1;
+        document.getElementById('word').innerText = words[idx];
+        document.getElementById('record-btn').style.display = 'block';
+        document.getElementById('feedback').innerText = "";
+        document.getElementById('status').innerText = "長按麥克風唸單字";
+      } else {
+        finishChallenge();
+      }
+    }
+
+    const rb = document.getElementById('record-btn');
+
+    // 觸摸/點擊開始
+    const startRecording = (e) => {
+      e.preventDefault();
+      startTime = Date.now();
+      chunks = [];
+      mediaRecorder = new MediaRecorder(stream);
+      mediaRecorder.ondataavailable = ev => chunks.push(ev.data);
+      mediaRecorder.start();
+      rb.classList.add('active');
+      document.getElementById('status').innerText = "正在錄音，請發音...";
+    };
+
+    // 觸摸/點擊放開
+    const stopRecording = () => {
+      if (!mediaRecorder || mediaRecorder.state !== "recording") return;
+      
+      const duration = Date.now() - startTime;
+      mediaRecorder.stop();
+      rb.classList.remove('active');
+
+      if (duration < 800) {
+        alert("錄音太短了，請唸清楚一點喔！");
+        document.getElementById('status').innerText = "請重錄一次";
+        return;
+      }
+
+      document.getElementById('status').innerText = "Gemini 老師正在打分...";
+      
+      mediaRecorder.onstop = () => {
         const audioBlob = new Blob(chunks, { type: 'audio/webm' });
         const reader = new FileReader();
         reader.readAsDataURL(audioBlob);
         reader.onloadend = () => {
-          // 確保只拿 Base64 字串，不要前面的 data:audio/webm;base64,
-          const base64 = reader.result.split(',')[1];
+          const base64 = reader.result.split(',')[1]; // 取得純 Base64 字串
           
-          // 注意：我們把 action, id, word 通通塞進網址參數裡
-          const uploadUrl = `${GAS_URL}?action=evaluate_speech&id=${STUDENT_ID}&word=${words[idx]}`;
+          // 將參數寫在網址中，檔案放在 Body
+          const apiEndpoint = `${GAS_URL}?action=evaluate_speech&id=${STUDENT_ID}&word=${encodeURIComponent(words[idx])}`;
           
-          fetch(uploadUrl, {
+          fetch(apiEndpoint, {
             method: 'POST',
-            body: base64 // 錄音檔放在 Body
+            body: base64
           })
           .then(res => res.json())
           .then(data => {
             if (data.score !== undefined) {
               document.getElementById('feedback').innerText = "得分：" + data.score;
-              total += data.score; 
+              total += data.score;
               idx++;
-              setTimeout(renderWord, 1200);
+              setTimeout(renderWord, 1500);
             } else {
-              alert("AI 老師沒回傳分數：" + (data.msg || "未知錯誤"));
+              alert("評分失敗：" + (data.error || data.msg || "AI 無法辨識"));
+              document.getElementById('status').innerText = "請再試一次";
             }
           })
-          .catch(err => alert("傳送失敗，請檢查網路：" + err));
+          .catch(err => {
+            alert("通訊失敗，請檢查網路連線。");
+          });
         };
       };
+    };
+
+    // 支援手機與電腦操作
+    rb.onpointerdown = startRecording;
+    rb.onpointerup = stopRecording;
+    rb.onpointerleave = stopRecording;
+
+    function finishChallenge() {
+      const avg = Math.round(total / words.length);
+      document.getElementById('studio').innerHTML = "<h3>挑戰完成！</h3><p>平均分數：" + avg + "</p><p>正在存入點數...</p>";
+      
+      fetch(`${GAS_URL}?id=${STUDENT_ID}&action=add_score&score=${avg}`)
+        .then(() => {
+          alert("🎉 太棒了！點數已存入。");
+          window.location.href = `${GAS_URL}?id=${STUDENT_ID}`;
+        });
+    }
+  </script>
+</body>
+</html>
