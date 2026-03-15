@@ -64,7 +64,6 @@
 </div>
 
 <script>
-  // 偵探修正：補回正確的 GAS 網址
   const GAS_URL = "https://script.google.com/macros/s/AKfycbziI4_b3WDoy4em5kXL75lDT4kx6ZwFTSVTBOWzaLCqcDQgk-e0t5JPERXs8jzOx9NJ/exec"; 
   const params = new URLSearchParams(window.location.search);
   const STUDENT_ID = params.get('id') || "S001";
@@ -72,15 +71,13 @@
   const MODE = params.get('mode') || "challenge";
 
   let stream, mediaRecorder, chunks = [], quizData = [], scores = [], currentIndex = 0, isReReading = false;
-  let audioContext, analyser, dataArray, source;
-  let maxVolume = 0; // 🕵️ 偵探新增：紀錄本次錄音的最大音量
+  let audioContext, analyser, dataArray, source, gradingInterval;
+  let maxVolume = 0;
 
   window.onload = async () => {
     if(MODE === 'review') document.getElementById('title-text').innerText = "📖 自由練習模式";
     try {
       stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      
-      // 🕵️ 偵探新增：初始化音量檢測器
       audioContext = new (window.AudioContext || window.webkitAudioContext)();
       analyser = audioContext.createAnalyser();
       source = audioContext.createMediaStreamSource(stream);
@@ -93,13 +90,56 @@
     } catch (e) { alert("請開啟麥克風權限"); }
   };
 
-  const rb = document.getElementById('record-btn');
-  let gradingInterval;
+  document.getElementById('start-btn').onclick = () => {
+    document.getElementById('info-text').innerText = "正在載入題目...";
+    fetch(`${GAS_URL}?id=${STUDENT_ID}&action=get_data&unit=${encodeURIComponent(TARGET_UNIT)}`)
+      .then(res => res.json()).then(data => {
+        if (!data.words || data.words.length === 0) {
+          alert("後台回傳題目為空，請檢查 Word_Bank。");
+          return;
+        }
+        quizData = data.words;
+        scores = new Array(quizData.length).fill(null);
+        document.getElementById('total-display').innerText = quizData.length;
+        document.getElementById('setup-zone').style.display = 'none';
+        document.getElementById('progress-container').style.display = 'block';
+        document.getElementById('studio').style.display = 'block';
+        renderWord();
+      })
+      .catch(err => {
+        alert("連線失敗！");
+        console.error(err);
+      });
+  };
 
+  function renderWord() {
+    const current = quizData[currentIndex];
+    document.getElementById('idx-display').innerText = currentIndex + 1;
+    document.getElementById('word-display').innerText = current.en;
+    document.getElementById('zh-display').innerText = current.zh;
+    document.getElementById('feedback').innerText = scores[currentIndex] !== null ? "得分：" + scores[currentIndex] : "";
+    document.getElementById('record-btn').style.display = 'block';
+    const fill = ((currentIndex + 1) / quizData.length) * 100;
+    document.getElementById('progress-fill').style.width = fill + "%";
+    
+    if (isReReading) {
+      document.getElementById('prev-btn').style.display = 'none';
+      document.getElementById('next-btn').style.display = 'none';
+      document.getElementById('back-summary-btn').style.display = 'inline-block';
+    } else {
+      document.getElementById('prev-btn').style.display = 'inline-block';
+      document.getElementById('next-btn').style.display = 'inline-block';
+      document.getElementById('back-summary-btn').style.display = 'none';
+      document.getElementById('prev-btn').disabled = currentIndex === 0;
+      document.getElementById('next-btn').innerText = currentIndex === quizData.length - 1 ? "查看結算" : "下一題 ▶";
+    }
+  }
+
+  const rb = document.getElementById('record-btn');
   rb.onpointerdown = (e) => {
     e.preventDefault();
     document.getElementById('feedback').innerHTML = "";
-    maxVolume = 0; // 重置音量計
+    maxVolume = 0;
     chunks = [];
     mediaRecorder = new MediaRecorder(stream);
     mediaRecorder.ondataavailable = ev => chunks.push(ev.data);
@@ -108,14 +148,13 @@
     document.getElementById('status').innerText = "正在錄音...";
     document.getElementById('status').style.color = "var(--marian-red)";
 
-    // 🕵️ 偵探新增：錄音時持續監測音量
     const checkVolume = () => {
       if (mediaRecorder.state === "recording") {
         analyser.getByteFrequencyData(dataArray);
         let values = 0;
         for (let i = 0; i < dataArray.length; i++) values += dataArray[i];
         let average = values / dataArray.length;
-        if (average > maxVolume) maxVolume = average; // 紀錄最高瞬間音量
+        if (average > maxVolume) maxVolume = average;
         requestAnimationFrame(checkVolume);
       }
     };
@@ -127,8 +166,6 @@
     mediaRecorder.stop();
     rb.classList.remove('active');
     
-    // 🕵️ 偵探守門員：如果音量低於 5 (滿分是 255)，直接判定為沒聲音
-    console.log("本次錄音最高音量:", maxVolume);
     if (maxVolume < 8) { 
       document.getElementById('status').innerText = "太安靜了，請大聲一點喔！";
       document.getElementById('status').style.color = "var(--marian-red)";
@@ -164,37 +201,6 @@
       };
     };
   };
-  
-        renderWord();
-      })
-      .catch(err => {
-        alert("連線失敗！請確認 GAS 是否有成功『部署為新版本』，且權限設為『任何人』。");
-        console.error("錯誤細節:", err);
-      });
-  };
-
-  function renderWord() {
-    const current = quizData[currentIndex];
-    document.getElementById('idx-display').innerText = currentIndex + 1;
-    document.getElementById('word-display').innerText = current.en;
-    document.getElementById('zh-display').innerText = current.zh;
-    document.getElementById('feedback').innerText = scores[currentIndex] !== null ? "得分：" + scores[currentIndex] : "";
-    document.getElementById('record-btn').style.display = 'block';
-    const fill = ((currentIndex + 1) / quizData.length) * 100;
-    document.getElementById('progress-fill').style.width = fill + "%";
-    
-    if (isReReading) {
-      document.getElementById('prev-btn').style.display = 'none';
-      document.getElementById('next-btn').style.display = 'none';
-      document.getElementById('back-summary-btn').style.display = 'inline-block';
-    } else {
-      document.getElementById('prev-btn').style.display = 'inline-block';
-      document.getElementById('next-btn').style.display = 'inline-block';
-      document.getElementById('back-summary-btn').style.display = 'none';
-      document.getElementById('prev-btn').disabled = currentIndex === 0;
-      document.getElementById('next-btn').innerText = currentIndex === quizData.length - 1 ? "查看結算" : "下一題 ▶";
-    }
-  }
 
   document.getElementById('play-btn').onclick = () => {
     window.speechSynthesis.cancel();
@@ -204,67 +210,6 @@
     window.speechSynthesis.speak(msg);
   };
 
-const rb = document.getElementById('record-btn');
-  let startTime, gradingInterval; // 🕵️ 偵探新增：定義評分動畫計時器
-
-  rb.onpointerdown = (e) => {
-    e.preventDefault();
-    
-    // 🕵️ 偵探新增：按下瞬間「清空」上一次的評分與建議，避免混淆
-    document.getElementById('feedback').innerHTML = "";
-    
-    startTime = Date.now();
-    chunks = [];
-    mediaRecorder = new MediaRecorder(stream);
-    mediaRecorder.ondataavailable = ev => chunks.push(ev.data);
-    mediaRecorder.start();
-    rb.classList.add('active');
-    document.getElementById('status').innerText = "正在錄音...";
-    document.getElementById('status').style.color = "var(--marian-red)"; // 錄音中變紅色
-  };
-
-  rb.onpointerup = () => {
-    if (!mediaRecorder || mediaRecorder.state !== "recording") return;
-    mediaRecorder.stop();
-    rb.classList.remove('active');
-    
-    // 🕵️ 偵探新增：啟動動態點點點動畫
-    let dots = 0;
-    document.getElementById('status').style.color = "var(--primary-blue)"; // 評分中變藍色
-    gradingInterval = setInterval(() => {
-      dots = (dots + 1) % 4;
-      document.getElementById('status').innerText = "老師評分中" + ".".repeat(dots);
-    }, 400);
-
-    mediaRecorder.onstop = () => {
-      const reader = new FileReader();
-      reader.readAsDataURL(new Blob(chunks, { type: 'audio/webm' }));
-      reader.onloadend = () => {
-        const base64 = reader.result.split(',')[1];
-        fetch(`${GAS_URL}?action=evaluate_speech&word=${encodeURIComponent(quizData[currentIndex].en)}`, { method: 'POST', body: base64 })
-          .then(res => res.json()).then(data => {
-            
-            // 🕵️ 偵探提醒：拿到分數了，立刻停掉動畫！
-            clearInterval(gradingInterval);
-            
-            scores[currentIndex] = data.score;
-            if(!window.feedbacks) window.feedbacks = [];
-            window.feedbacks[currentIndex] = data.feedback;
-
-            document.getElementById('feedback').innerHTML = 
-              `得分：${data.score}<br><span style="font-size:16px; color:#555; font-weight:normal;">${data.feedback}</span>`;
-            
-            document.getElementById('status').innerText = "按住錄音，放開打分";
-            document.getElementById('status').style.color = "#636e72"; // 恢復原色
-          })
-          .catch(err => {
-            clearInterval(gradingInterval);
-            document.getElementById('status').innerText = "評分失敗，請重新錄音";
-          });
-      };
-    };
-  };
-
   document.getElementById('prev-btn').onclick = () => { if(currentIndex > 0){ currentIndex--; renderWord(); } };
   document.getElementById('next-btn').onclick = () => {
     if (currentIndex < quizData.length - 1) { currentIndex++; renderWord(); } 
@@ -272,35 +217,23 @@ const rb = document.getElementById('record-btn');
   };
   document.getElementById('back-summary-btn').onclick = () => { isReReading = false; showSummary(); };
 
-function showSummary() {
+  function showSummary() {
     document.getElementById('studio').style.display = 'none';
     document.getElementById('summary').style.display = 'block';
     let sum = 0, count = 0;
     const list = document.getElementById('word-list');
     list.innerHTML = "";
-    
     quizData.forEach((item, i) => {
       let s = scores[i] || 0;
       let f = (window.feedbacks && window.feedbacks[i]) ? window.feedbacks[i] : "";
       sum += s; count++;
-      list.innerHTML += `<tr>
-        <td>
-          <b style="color:#0d47a1">${item.en}</b><br>
-          <span style="color:#7f8c8d; font-size:14px">${item.zh}</span><br>
-          <p style="margin:5px 0; font-size:13px; color:#e67e22;">💡 ${f}</p>
-          <button class="btn-re" onclick="reRead(${i})">🔄 重唸</button>
-        </td>
-        <td><span class="score-badge">${s} 分</span></td>
-      </tr>`;
+      list.innerHTML += `<tr><td><b style="color:#0d47a1">${item.en}</b><br><span style="color:#7f8c8d; font-size:14px">${item.zh}</span><br><p style="margin:5px 0; font-size:13px; color:#e67e22;">💡 ${f}</p><button class="btn-re" onclick="reRead(${i})">🔄 重唸</button></td><td><span class="score-badge">${s} 分</span></td></tr>`;
     });
-    // ... 後續平均分數與按鈕邏輯維持不變 ...
     const avg = Math.round(sum / count);
     document.getElementById('total-avg').innerText = avg;
-    
     const submitBtn = document.getElementById('submit-btn');
     const lockMsg = document.getElementById('lock-msg');
     const rewardHint = document.getElementById('reward-hint');
-
     if (MODE === 'review') {
       submitBtn.disabled = false;
       submitBtn.style.backgroundColor = "var(--marian-green)";
@@ -329,7 +262,7 @@ function showSummary() {
     const avg = parseInt(document.getElementById('total-avg').innerText);
     fetch(`${GAS_URL}?id=${STUDENT_ID}&action=add_score&score=${avg}&mode=${MODE}`)
       .then(() => { 
-        alert(MODE === 'review' ? "👍 練習辛苦了！" : "🎉 挑戰完成！點數已入帳。"); 
+        alert(MODE === 'review' ? "👍 練習辛苦了！" : "🎉 挑戰完成！"); 
         window.location.href = `${GAS_URL}?id=${STUDENT_ID}`; 
       });
   };
