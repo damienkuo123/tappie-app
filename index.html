@@ -169,7 +169,7 @@
 // 🕵️ 偵探建議：將門檻提高到 18
     // 如果安靜時環境音是 5-10，電視聲是 12-15，設定在 18 就能擋掉大部份干擾
     console.log("本次錄音最高音量:", maxVolume);
-    if (maxVolume < 18) { 
+    if (maxVolume < 30) { 
       document.getElementById('status').innerText = "太小聲或雜訊過多，請靠近麥克風大聲唸！";
       document.getElementById('status').style.color = "var(--marian-red)";
       return; 
