@@ -150,7 +150,7 @@
     document.getElementById('status').innerText = "正在錄音...";
   };
 
-  rb.onpointerup = () => {
+rb.onpointerup = () => {
     if (!mediaRecorder || mediaRecorder.state !== "recording") return;
     mediaRecorder.stop();
     rb.classList.remove('active');
@@ -163,7 +163,12 @@
         fetch(`${GAS_URL}?action=evaluate_speech&word=${encodeURIComponent(quizData[currentIndex].en)}`, { method: 'POST', body: base64 })
           .then(res => res.json()).then(data => {
             scores[currentIndex] = data.score;
-            document.getElementById('feedback').innerText = "得分：" + data.score;
+            // 儲存建議內容以便結算頁使用
+            if(!window.feedbacks) window.feedbacks = [];
+            window.feedbacks[currentIndex] = data.feedback;
+
+            document.getElementById('feedback').innerHTML = 
+              `得分：${data.score}<br><span style="font-size:16px; color:#555; font-weight:normal;">${data.feedback}</span>`;
             document.getElementById('status').innerText = "按住錄音，放開打分";
           });
       };
@@ -177,17 +182,28 @@
   };
   document.getElementById('back-summary-btn').onclick = () => { isReReading = false; showSummary(); };
 
-  function showSummary() {
+function showSummary() {
     document.getElementById('studio').style.display = 'none';
     document.getElementById('summary').style.display = 'block';
     let sum = 0, count = 0;
     const list = document.getElementById('word-list');
     list.innerHTML = "";
+    
     quizData.forEach((item, i) => {
       let s = scores[i] || 0;
+      let f = (window.feedbacks && window.feedbacks[i]) ? window.feedbacks[i] : "";
       sum += s; count++;
-      list.innerHTML += `<tr><td><b style="color:#0d47a1">${item.en}</b><br><span style="color:#7f8c8d; font-size:14px">${item.zh}</span><br><button class="btn-re" onclick="reRead(${i})">🔄 重唸</button></td><td><span class="score-badge">${s} 分</span></td></tr>`;
+      list.innerHTML += `<tr>
+        <td>
+          <b style="color:#0d47a1">${item.en}</b><br>
+          <span style="color:#7f8c8d; font-size:14px">${item.zh}</span><br>
+          <p style="margin:5px 0; font-size:13px; color:#e67e22;">💡 ${f}</p>
+          <button class="btn-re" onclick="reRead(${i})">🔄 重唸</button>
+        </td>
+        <td><span class="score-badge">${s} 分</span></td>
+      </tr>`;
     });
+    // ... 後續平均分數與按鈕邏輯維持不變 ...
     const avg = Math.round(sum / count);
     document.getElementById('total-avg').innerText = avg;
     
