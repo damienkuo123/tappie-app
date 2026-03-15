@@ -9,38 +9,35 @@
     body { font-family: -apple-system, sans-serif; text-align: center; padding: 20px; background: #eaeff2; margin: 0; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
     .card { background: white; padding: 25px; border-radius: 28px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); max-width: 400px; margin: 10px auto; border: 1px solid #ddd; }
     
-    /* 麥克風按鈕 */
     #record-btn { 
       background: var(--marian-red); width: 110px; height: 110px; border-radius: 50%; 
       border: 8px solid white; font-size: 45px; box-shadow: 0 6px 15px rgba(214, 48, 49, 0.4); 
-      margin: 10px auto; cursor: pointer; display: none; outline: none;
+      margin: 20px auto; cursor: pointer; display: none; outline: none;
       user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
     }
     #record-btn.active { transform: scale(0.95); background: #333; animation: pulse 1s infinite; }
     @keyframes pulse { 0% { box-shadow: 0 0 0 0px rgba(214, 48, 49, 0.4); } 100% { box-shadow: 0 0 0 20px rgba(214, 48, 49, 0); } }
     
-    /* 播放按鈕樣式 */
     .btn-play {
       background: var(--primary-blue); width: 45px; height: 45px; border-radius: 50%;
       border: none; color: white; font-size: 20px; cursor: pointer; margin-left: 10px;
       vertical-align: middle; box-shadow: 0 3px 6px rgba(0,0,0,0.1);
     }
     .btn-play:active { transform: scale(0.9); background: #004499; }
-
     .btn { padding: 12px 25px; border-radius: 12px; font-weight: bold; border: none; cursor: pointer; color: white; margin: 5px; box-shadow: 0 4px 0 rgba(0,0,0,0.2); }
     .btn-nav { background: #4b6584; border-bottom: 4px solid #2c3e50; }
     .btn-nav:disabled { background: #ccc; border-bottom: none; }
-    
     .btn-finish { width: 100%; font-size: 22px; padding: 20px; margin-top: 20px; border-bottom: 5px solid rgba(0,0,0,0.2); transition: 0.3s; }
     .btn-finish:disabled { background: #636e72 !important; cursor: not-allowed; border-bottom: none; opacity: 0.7; }
-    
     .progress-bar { width: 100%; background: #dfe6e9; height: 12px; border-radius: 6px; margin-bottom: 20px; overflow: hidden; border: 1px solid #ccc; }
     .progress-fill { background: var(--primary-blue); height: 100%; width: 0%; transition: 0.5s; }
-    
     table { width: 100%; border-collapse: collapse; margin-top: 15px; background: #fff; border-radius: 10px; overflow: hidden; }
     td { padding: 12px; border-bottom: 1px solid #eee; text-align: left; }
     .score-badge { float: right; font-weight: bold; color: var(--primary-blue); font-size: 18px; }
     .btn-re { background: var(--marian-red); font-size: 13px; padding: 6px 12px; border-radius: 8px; color: white; border: none; cursor: pointer; font-weight: bold; }
+    
+    /* 中文顯示樣式 */
+    #zh-display { font-size: 20px; color: #7f8c8d; margin: -10px 0 20px 0; font-weight: bold; }
   </style>
 </head>
 <body>
@@ -61,8 +58,7 @@
       <h1 id="word-display" style="font-size: 46px; color:#0d47a1; margin: 0; text-shadow: 1px 1px 0 #fff;">載入中...</h1>
       <button id="play-btn" class="btn-play">🔊</button>
     </div>
-
-    <button type="button" id="record-btn" oncontextmenu="return false;">🎤</button>
+    <div id="zh-display"></div> <button type="button" id="record-btn" oncontextmenu="return false;">🎤</button>
     <p id="status" style="font-weight:bold; color:#636e72;">按住錄音，放開打分</p>
     <div id="feedback" style="font-size: 26px; font-weight: 800; color: var(--marian-green); margin-top: 10px;"></div>
     
@@ -86,10 +82,10 @@
 </div>
 
 <script>
-  const GAS_URL = "https://script.google.com/macros/s/AKfycbziI4_b3WDoy4em5kXL75lDT4kx6ZwFTSVTBOWzaLCqcDQgk-e0t5JPERXs8jzOx9NJ/exec"; 
+  const GAS_URL = "您的GAS網址"; 
   const STUDENT_ID = new URLSearchParams(window.location.search).get('id') || "S001";
 
-  let stream, mediaRecorder, chunks = [], words = [], scores = [], currentIndex = 0, isReReading = false;
+  let stream, mediaRecorder, chunks = [], quizData = [], scores = [], currentIndex = 0, isReReading = false;
 
   window.onload = async () => {
     try {
@@ -110,25 +106,24 @@
           alert("目前沒有排定的單字喔！");
           return;
         }
-        words = data.words;
-        scores = new Array(words.length).fill(null);
-        document.getElementById('total-display').innerText = words.length;
+        quizData = data.words; // 這裡拿到的是 [{en: "...", zh: "..."}, ...]
+        scores = new Array(quizData.length).fill(null);
+        document.getElementById('total-display').innerText = quizData.length;
         document.getElementById('setup-zone').style.display = 'none';
         document.getElementById('progress-container').style.display = 'block';
         document.getElementById('studio').style.display = 'block';
         renderWord();
-      }).catch(err => {
-        alert("連線失敗，請檢查網路或 GAS 網址");
-        console.error(err);
-      });
+      }).catch(err => alert("連線失敗"));
   };
 
   function renderWord() {
+    const current = quizData[currentIndex];
     document.getElementById('idx-display').innerText = currentIndex + 1;
-    document.getElementById('word-display').innerText = words[currentIndex];
+    document.getElementById('word-display').innerText = current.en;
+    document.getElementById('zh-display').innerText = current.zh; // 顯示中文
     document.getElementById('feedback').innerText = scores[currentIndex] !== null ? "得分：" + scores[currentIndex] : "";
     document.getElementById('record-btn').style.display = 'block';
-    const fill = ((currentIndex + 1) / words.length) * 100;
+    const fill = ((currentIndex + 1) / quizData.length) * 100;
     document.getElementById('progress-fill').style.width = fill + "%";
     
     if (isReReading) {
@@ -140,27 +135,16 @@
       document.getElementById('next-btn').style.display = 'inline-block';
       document.getElementById('back-summary-btn').style.display = 'none';
       document.getElementById('prev-btn').disabled = currentIndex === 0;
-      document.getElementById('next-btn').innerText = currentIndex === words.length - 1 ? "查看結算" : "下一題 ▶";
+      document.getElementById('next-btn').innerText = currentIndex === quizData.length - 1 ? "查看結算" : "下一題 ▶";
     }
   }
 
-  // --- TTS 標準發音播放功能 ---
   document.getElementById('play-btn').onclick = () => {
-    const text = words[currentIndex];
-    if (!text) return;
-    
-    // 停止目前正在播放的聲音
+    const text = quizData[currentIndex].en;
     window.speechSynthesis.cancel();
-    
     const msg = new SpeechSynthesisUtterance(text);
-    
-    // 嘗試設定為美式發音
-    const voices = window.speechSynthesis.getVoices();
-    const usVoice = voices.find(v => v.lang === 'en-US' || v.lang === 'en_US');
-    if (usVoice) msg.voice = usVoice;
-    
     msg.lang = 'en-US';
-    msg.rate = 0.9; // 稍微放慢一點點方便學習
+    msg.rate = 0.9;
     window.speechSynthesis.speak(msg);
   };
 
@@ -187,7 +171,8 @@
       reader.readAsDataURL(new Blob(chunks, { type: 'audio/webm' }));
       reader.onloadend = () => {
         const base64 = reader.result.split(',')[1];
-        fetch(`${GAS_URL}?action=evaluate_speech&word=${encodeURIComponent(words[currentIndex])}`, { method: 'POST', body: base64 })
+        // 注意這裡傳給 AI 的是 .en 單字
+        fetch(`${GAS_URL}?action=evaluate_speech&word=${encodeURIComponent(quizData[currentIndex].en)}`, { method: 'POST', body: base64 })
           .then(res => res.json()).then(data => {
             scores[currentIndex] = data.score;
             document.getElementById('feedback').innerText = "得分：" + data.score;
@@ -199,14 +184,11 @@
 
   document.getElementById('prev-btn').onclick = () => { if(currentIndex > 0){ currentIndex--; renderWord(); } };
   document.getElementById('next-btn').onclick = () => {
-    if (currentIndex < words.length - 1) { currentIndex++; renderWord(); } 
+    if (currentIndex < quizData.length - 1) { currentIndex++; renderWord(); } 
     else { showSummary(); }
   };
 
-  document.getElementById('back-summary-btn').onclick = () => {
-    isReReading = false;
-    showSummary();
-  };
+  document.getElementById('back-summary-btn').onclick = () => { isReReading = false; showSummary(); };
 
   function showSummary() {
     document.getElementById('studio').style.display = 'none';
@@ -215,15 +197,22 @@
     const list = document.getElementById('word-list');
     list.innerHTML = "";
     
-    words.forEach((w, i) => {
+    quizData.forEach((item, i) => {
       let s = scores[i] || 0;
       sum += s; count++;
-      list.innerHTML += `<tr><td>${w}<br><button class="btn-re" onclick="reRead(${i})">🔄 重唸</button></td><td><span class="score-badge">${s} 分</span></td></tr>`;
+      // 結算列表也顯示中英對照
+      list.innerHTML += `<tr>
+        <td>
+          <b style="color:#0d47a1">${item.en}</b><br>
+          <span style="color:#7f8c8d; font-size:14px">${item.zh}</span><br>
+          <button class="btn-re" onclick="reRead(${i})">🔄 重唸</button>
+        </td>
+        <td><span class="score-badge">${s} 分</span></td>
+      </tr>`;
     });
     
     const avg = Math.round(sum / count);
     document.getElementById('total-avg').innerText = avg;
-    
     const submitBtn = document.getElementById('submit-btn');
     const rewardHint = document.getElementById('reward-hint');
     const lockMsg = document.getElementById('lock-msg');
@@ -239,7 +228,7 @@
     } else {
       submitBtn.disabled = true;
       submitBtn.style.backgroundColor = "#636e72";
-      lockMsg.innerText = "❌ 平均需達 70 分才能領獎，請重唸低分題目";
+      lockMsg.innerText = "❌ 平均需達 70 分才能領獎";
       rewardHint.innerText = "尚未達標";
       rewardHint.style.color = "#d63031";
       rewardHint.style.background = "#fff5f5";
@@ -259,7 +248,7 @@
     document.getElementById('submit-btn').innerText = "正在儲存點數...";
     fetch(`${GAS_URL}?id=${STUDENT_ID}&action=add_score&score=${avg}`)
       .then(() => { 
-        alert("🎉 恭喜完成挑戰！點數已入帳。"); 
+        alert("🎉 挑戰完成！點數已入帳。"); 
         window.location.href = `${GAS_URL}?id=${STUDENT_ID}`; 
       });
   };
