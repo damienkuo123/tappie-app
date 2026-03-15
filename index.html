@@ -64,7 +64,8 @@
 </div>
 
 <script>
-  const GAS_URL = "您的GAS網址"; 
+  // 偵探修正：補回正確的 GAS 網址
+  const GAS_URL = "https://script.google.com/macros/s/AKfycbziI4_b3WDoy4em5kXL75lDT4kx6ZwFTSVTBOWzaLCqcDQgk-e0t5JPERXs8jzOx9NJ/exec"; 
   const params = new URLSearchParams(window.location.search);
   const STUDENT_ID = params.get('id') || "S001";
   const TARGET_UNIT = params.get('unit') || "";
@@ -85,6 +86,12 @@
     document.getElementById('info-text').innerText = "正在載入題目...";
     fetch(`${GAS_URL}?id=${STUDENT_ID}&action=get_data&unit=${encodeURIComponent(TARGET_UNIT)}`)
       .then(res => res.json()).then(data => {
+        // 偵錯日誌：讓你知道後台傳了什麼
+        console.log("後台資料回傳:", data);
+        if (!data.words || data.words.length === 0) {
+          alert("後台回傳題目為空，請檢查 Word_Bank 是否有正確填寫中英單字。");
+          return;
+        }
         quizData = data.words;
         scores = new Array(quizData.length).fill(null);
         document.getElementById('total-display').innerText = quizData.length;
@@ -92,6 +99,10 @@
         document.getElementById('progress-container').style.display = 'block';
         document.getElementById('studio').style.display = 'block';
         renderWord();
+      })
+      .catch(err => {
+        alert("連線失敗！請確認 GAS 是否有成功『部署為新版本』，且權限設為『任何人』。");
+        console.error("錯誤細節:", err);
       });
   };
 
