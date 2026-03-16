@@ -322,9 +322,6 @@
       }).catch(err => alert("戰場連接失敗"));
   }
 
-  let opponentWaitTimer = null; // 🛡️ GitHub 戰場內的 60 秒掛網偵測
-  let syncTimer = null; 
-
   // 🛡️ 偵探：雙向 60 秒等待對手同步機制
   function initArena(roomId) {
     currentBattleRound = 0;
