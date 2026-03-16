@@ -298,6 +298,8 @@
     currentBattleRound = 0;
     document.getElementById('target-word').innerText = "戰場同步中...";
     document.getElementById('battle-timer').innerText = "60";
+    // 🛡️ 偵探修正：同步時就顯示規則
+    document.getElementById('round-num').innerText = "規則：先得 5 分者勝";
     document.getElementById('battle-info').innerText = "正在等待雙方就緒...";
     document.getElementById('battle-controls').style.visibility = 'hidden';
     
@@ -354,13 +356,15 @@
     if(currentLimitTimer) clearInterval(currentLimitTimer);
     if(waitOpTimer) clearInterval(waitOpTimer);
     
+    // 如果打到 10 題還沒分出勝負（雖然機率極低），強制結束
     if (currentBattleRound >= 10) { 
        setTimeout(() => { showImpactOverlay(myTotalWins, opTotalWins, true); setTimeout(() => window.location.href = `${GAS_URL}?id=${STUDENT_ID}`, 5000); }, 1000);
        return; 
     }
     
     let count = 3; roundSubmitted = false;
-    document.getElementById('round-num').innerText = `第 ${currentBattleRound + 1} 局 / 共 10 局`;
+    // 🛡️ 偵探修正：標題改為更直觀的進度顯示
+    document.getElementById('round-num').innerText = `第 ${currentBattleRound + 1} 局 / 先得 5 分獲勝`;
     document.getElementById('target-word').innerText = "READY?";
     document.getElementById('battle-timer').innerText = "";
     document.getElementById('battle-controls').style.visibility = 'hidden';
@@ -373,6 +377,7 @@
         document.getElementById('target-word').innerText = battleQuizArr[currentBattleRound].en;
         document.getElementById('battle-timer').innerText = "";
         document.getElementById('battle-controls').style.visibility = 'visible';
+        document.getElementById('battle-info').innerText = "限時 10 秒發動攻擊！";
         startRecordingBattle(roomId);
       }
     }, 1000);
