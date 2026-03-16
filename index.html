@@ -139,7 +139,6 @@
   const STUDENT_ID = params.get('id') || "S001";
   const TARGET_UNIT = params.get('unit') || "";
   const MODE = params.get('mode') || "challenge";
-  
   const ROOM_ID = params.get('roomId');
 
   let stream, mediaRecorder, chunks = [], quizData = [], scores = [], currentIndex = 0, isReReading = false;
@@ -282,20 +281,20 @@
   function reRead(i) { currentIndex = i; isReReading = true; document.getElementById('summary').style.display = 'none'; document.getElementById('studio').style.display = 'block'; renderWord(); }
   document.getElementById('submit-btn').onclick = () => { const avg = parseInt(document.getElementById('total-avg').innerText); fetch(`${GAS_URL}?id=${STUDENT_ID}&action=add_score&score=${avg}&mode=${MODE}`).then(() => { alert(MODE === 'review' ? "👍 練習辛苦了！" : "🎉 挑戰完成！"); window.location.href = `${GAS_URL}?id=${STUDENT_ID}`; }); };
 
-// =======================================================
+  // =======================================================
   // ⚔️ 偵探外掛引擎：對戰室模組 (徹底封印時空暴走 Bug)
   // =======================================================
   let battleQuizArr = [], currentBattleRound = 0;
-  let readyTimer = null, currentLimitTimer = null, waitOpTimer = null; // 🛡️ 嚴格掌控所有計時器
+  let readyTimer = null, currentLimitTimer = null, waitOpTimer = null; 
   let myTotalWins = 0, opTotalWins = 0;
-  let roundSubmitted = false; // 🔒 每局的防重複送出鎖
-  let isChecking = false; // 🔒 防重疊查詢鎖
-  let opponentWaitTimer = null; // 🛡️ 60 秒掛網偵測
-  let syncTimer = null; // 🛡️ 戰場同步偵測
+  let roundSubmitted = false; 
+  let isChecking = false; 
+  let opponentWaitTimer = null; 
+  let syncTimer = null; 
 
   function normalizeStr(val) { if (val === null || val === undefined) return ""; return String(val).replace(/(%20|\s)+/ig, "").toUpperCase(); }
 
-// 🚪 路由入口
+  // 🚪 路由入口
   window.onload = async (e) => {
     if (MODE === 'battle' && ROOM_ID) {
       try {
