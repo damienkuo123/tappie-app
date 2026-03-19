@@ -25,6 +25,19 @@
     .btn-re { background: var(--marian-red); font-size: 13px; padding: 6px 12px; border-radius: 8px; color: white; border: none; cursor: pointer; font-weight: bold; }
     #zh-display { font-size: 20px; color: #7f8c8d; margin: -10px 0 20px 0; font-weight: bold; }
 
+    .portal-container {
+      /* 確保圖片填滿且置中 */
+      background-size: cover; 
+      background-position: center center;
+      background-repeat: no-repeat;
+      /* 確保容器有正確的長寬 */
+      width: 100%;
+      height: 100%; /* 或是你設定的固定高度 px */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
     /* 🌌 戰場背景：暗黑漸層 + 開放滾動防止按鈕被吃掉 */
     #battle-arena { 
       position: fixed; top: 0; left: 0; width: 100vw; 
@@ -98,6 +111,18 @@
     @keyframes cardCharge {
       0% { box-shadow: 0 0 15px #0fb9b1, inset 0 0 15px #0fb9b1; border-color: #eb3b5a; transform: translateY(0px); }
       100% { box-shadow: 0 0 50px #26de81, inset 0 0 25px #26de81; border-color: #ff4757; transform: translateY(-5px); }
+    }
+
+    /* 贏家攻擊動畫：稍微後退後，快速突進 */
+    @keyframes attack-strike {
+      0% { transform: scale(1) translateY(0); }
+      20% { transform: scale(0.9) translateY(20px); } /* 蓄力後退 */
+      50% { transform: scale(1.2) translateY(-100px); filter: drop-shadow(0 0 20px rgba(255, 50, 0, 0.8)); z-index: 10; } /* 衝擊！ */
+      100% { transform: scale(1) translateY(0); z-index: 1; }
+    }
+    
+    .winner-attack {
+      animation: attack-strike 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
     }
 
     /* 🩸 燃特效：受擊晃動與閃紅光 */
