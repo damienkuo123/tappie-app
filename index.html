@@ -273,6 +273,7 @@
       await originalOnload();
     }
   };
+  
   // 🛡️ 補齊缺失器官：對戰傳送門與圖片加載邏輯
   function showPortal() {
     const portal = document.getElementById('battle-portal-overlay');
@@ -289,16 +290,25 @@
     // 去後端抓圖片與名字
     fetch(`${GAS_URL}?action=get_battle_status&roomId=${ROOM_ID}&t=${new Date().getTime()}`)
       .then(res => res.json()).then(data => {
-        document.getElementById('vs-names-portal').innerText = `${data.hostName} VS ${data.guestName}`;
+        document.getElementById('vs-names-portal').innerText = `${data.hostName} VS ${data.guestName || "等待對手中..."}`;
         
-        // 塞入正式戰場的立繪背景
-        const vh = document.getElementById('vs-host');
-        const vg = document.getElementById('vs-guest');
-        if(data.hostImg) vh.style.backgroundImage = `url('${data.hostImg}')`;
-        if(data.guestImg) vg.style.backgroundImage = `url('${data.guestImg}')`;
+        // 🚀 修正：對齊新的卡片 ID (op-card, my-card) 並判斷身分
+        const isMeHost = (normalizeStr(STUDENT_ID) === normalizeStr(data.hostId));
+        const myCard = document.getElementById('my-card');
+        const opCard = document.getElementById('op-card');
+
+        // 根據身分塞入對應的立繪背景
+        if (isMeHost) {
+            if(data.hostImg && myCard) myCard.style.backgroundImage = `url('${data.hostImg}')`;
+            if(data.guestImg && opCard) opCard.style.backgroundImage = `url('${data.guestImg}')`;
+        } else {
+            if(data.guestImg && myCard) myCard.style.backgroundImage = `url('${data.guestImg}')`;
+            if(data.hostImg && opCard) opCard.style.backgroundImage = `url('${data.hostImg}')`;
+        }
         
         // AI 補位
-        if (data.guestId === "AI_BOT") vg.style.backgroundImage = `url('https://cdn-icons-png.flaticon.com/512/4712/4712139.png')`;
+        if (!isMeHost && data.hostId === "AI_BOT" && opCard) opCard.style.backgroundImage = `url('https://cdn-icons-png.flaticon.com/512/4712/4712139.png')`;
+        if (isMeHost && data.guestId === "AI_BOT" && opCard) opCard.style.backgroundImage = `url('https://cdn-icons-png.flaticon.com/512/4712/4712139.png')`;
 
         // 定義傳送按鈕點擊後的動作
         window.portalJump = () => {
@@ -310,7 +320,15 @@
           fetchBattleDataAndStart(ROOM_ID);
         };
       }).catch(err => {
-        document.getElementById('vs-names-portal').innerText = "連線中，請稍候...";
+        console.error("Portal Error:", err);
+        document.getElementById('vs-names-portal').innerText = "連線稍有延遲，請直接進入";
+        // 容錯機制：即使抓取資料失敗，也要把按鈕綁上去，讓學生能強行破門進入
+        window.portalJump = () => {
+          clearInterval(pTimer);
+          portal.style.display = 'none';
+          document.getElementById('battle-arena').style.display = 'flex';
+          fetchBattleDataAndStart(ROOM_ID);
+        };
       });
   }
 
