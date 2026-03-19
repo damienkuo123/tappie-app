@@ -28,61 +28,73 @@
     /* ======================================================= */
     /* ⚔️ 偵探外掛：史詩戰場 CSS (絕對防禦，不污染原版) */
     /* ======================================================= */
-    :root { --gold: #ffd700; }
-    body.battle-active { background: #000; padding: 0; margin: 0; overflow: hidden; }
-    
-    #battle-arena { 
-      position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
-      background: radial-gradient(circle, #2c3e50 0%, #050505 100%); 
-      z-index: 2000; color: white; 
-      display: none; flex-direction: column; justify-content: space-between; 
-      padding: 4vh 15px; box-sizing: border-box; 
-    }
-    
-    .arena-section { display: flex; flex-direction: column; align-items: center; width: 100%; }
-    .opponent-zone { flex: 1; justify-content: flex-start; }
-    .stage-zone { flex: 2; justify-content: center; }
-    .player-zone { flex: 1.5; justify-content: flex-end; }
-    
-    .arena-p-name { font-weight: bold; color: var(--gold); font-size: 26px; text-shadow: 0 0 10px rgba(255,215,0,0.5); margin-bottom: 5px; }
-    .round-dot { width: 16px; height: 16px; border-radius: 50%; background: #333; border: 2px solid #555; display: inline-block; }
-    .dot-me { background: var(--marian-green); border-color: #fff; box-shadow: 0 0 12px var(--marian-green); }
-    .dot-op { background: var(--marian-red); border-color: #fff; box-shadow: 0 0 12px var(--marian-red); }
-    
-    #battle-controls { visibility: hidden; height: 140px; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; margin-top: 10px; }
-    #battle-record-btn { width: 90px; height: 90px; border-radius: 50%; border: 6px solid white; background: var(--primary-blue); font-size: 40px; color: white; cursor: pointer; outline: none; transition: 0.2s; }
-    #battle-record-btn.active { transform: scale(0.9); background: #333; box-shadow: 0 0 20px var(--primary-blue); }
+    /* ⚔️ 史詩戰場 2.0 VS 樣式 - 精準防護 */
+  :root { --energy-gold: linear-gradient(90deg, transparent, rgba(255,215,0,1), transparent); }
 
-    #impact-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.9); z-index: 3000; flex-direction: column; justify-content: center; align-items: center; color: white; animation: fadeIn 0.3s ease-out; }
-    @keyframes fadeIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
-    /* ⚔️ 戰場巨型立繪 CSS */
-    .hero-portrait {
-      position: absolute; bottom: 0; width: 70%; height: 60vh;
-      background-size: contain; background-repeat: no-repeat;
-      z-index: 1; opacity: 0.5; pointer-events: none; transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.5s;
-    }
-    /* 你在左邊，對手在右邊 */
-    #hero-me { left: -15%; background-position: left bottom; transform: translateX(-100%); }
-    #hero-op { right: -15%; background-position: right bottom; transform: translateX(100%) scaleX(-1); } /* 對手鏡像反轉 */
-    
-    /* 進場動畫狀態 */
-    .battle-ready #hero-me { transform: translateX(0); opacity: 0.6; }
-    .battle-ready #hero-op { transform: translateX(0) scaleX(-1); opacity: 0.6; }
+  /* 戰場背景 (增加層級，確保內容在上面) */
+  #battle-arena { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 2000; color: white; display: none; overflow: hidden; }
+  #battle-arena * { position: relative; z-index: 10; } /* 預設 UI 在立繪上方 */
 
-    /* 💥 受傷震動效果 */
-    .take-damage { animation: shake 0.5s infinite; filter: sepia(1) saturate(10000%) hue-rotate(-50deg) brightness(1.5) !important; opacity: 1 !important; }
-    @keyframes shake {
-      0% { transform: translate(1px, 1px) scaleX(-1); }
-      20% { transform: translate(-3px, 0px) scaleX(-1); }
-      40% { transform: translate(3px, 2px) scaleX(-1); }
-      60% { transform: translate(-3px, 1px) scaleX(-1); }
-      80% { transform: translate(-1px, -1px) scaleX(-1); }
-      100% { transform: translate(1px, -2px) scaleX(-1); }
-    }
-    
-    /* 確保文字不會被擋住 */
-    .stage-zone { position: relative; z-index: 10; }
-    .arena-p-name, .round-dot { position: relative; z-index: 10; }
+  /* 能量對抗線 (用來擋住對手立繪切面) */
+  #arena-divide-line {
+    position: absolute; left: 0; width: 100%; height: 3px;
+    background: var(--energy-gold);
+    top: 35vh; /* 線條位置在螢幕偏上 */
+    z-index: 5; /* 線要在立繪下面一點，或擋住立繪底部 */
+    box-shadow: 0 0 15px rgba(255,215,0,0.8);
+    display: block; transform: scaleX(0); transition: transform 0.5s 0.3s;
+  }
+  .vs-active #arena-divide-line { transform: scaleX(1); }
+
+  /* 立繪通用設定 */
+  .vs-hero {
+    position: absolute; background-size: contain; background-repeat: no-repeat;
+    transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 4; /* 立繪要在能量線下方，以便能量線擋住底部 */
+    filter: drop-shadow(0 0 15px rgba(255,255,255,0.3));
+  }
+
+  /* 房主 (通常是學生自己，放左下角) */
+  #vs-host {
+    width: 60%; height: 60vh; left: -10%; bottom: -5vh; /* 底部稍微下沉，看起來比較穩 */
+    background-position: left bottom; transform: translateX(-120%);
+    opacity: 0.5;
+  }
+  
+  /* 挑戰者/對手 (站在能量線上，不翻轉) */
+  #vs-guest {
+    width: 50%; height: 50vh; right: -5%;
+    /* 🚀 關鍵位置：底部對齊能量線，頂部稍微偏上 */
+    top: calc(35vh - 50vh + 2px); /* 35vh 是線的位置，向上平移一個立繪高度，+2px 修正遮擋 */
+    background-position: center bottom; transform: translateX(120%); /* 🛑 取消 scaleX(-1) */
+    opacity: 0.5;
+  }
+
+  /* 進場與受傷動畫狀態 */
+  .vs-active #vs-host { transform: translateX(0); opacity: 0.6; }
+  .vs-active #vs-guest { transform: translateX(0); opacity: 0.6; } /* 🛑 取消 scaleX(-1) */
+  
+  /* 擊中震動特效 (不翻轉) */
+  .take-damage { animation: shake 0.5s infinite; filter: sepia(1) saturate(10000%) hue-rotate(-50deg) brightness(1.5) !important; opacity: 1 !important; z-index: 6; }
+  @keyframes shake {
+    0% { transform: translate(1px, 1px); } /* 🛑 取消所有反轉 */
+    20% { transform: translate(-3px, 0px); }
+    40% { transform: translate(3px, 2px); }
+    60% { transform: translate(-3px, 1px); }
+    80% { transform: translate(-1px, -1px); }
+    100% { transform: translate(1px, -2px); }
+  }
+
+  /* 中央 VS 圓圈 */
+  .vs-mid {
+    position: absolute; left: 50%; top: 35vh; /* 與能量線同步 */
+    transform: translate(-50%, -50%) scale(0); transition: 0.5s 0.8s;
+    z-index: 100; width: 60px; height: 60px; background: #e74c3c;
+    border: 3px solid #ffd700; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 24px; font-weight: 900; color: white; font-style: italic;
+    box-shadow: 0 0 20px rgba(231, 76, 60, 0.8);
+  }
+  .vs-active .vs-mid { transform: translate(-50%, -50%) scale(1); }
   </style>
 </head>
 <body>
