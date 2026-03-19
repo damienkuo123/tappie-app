@@ -24,70 +24,42 @@
     .score-badge { float: right; font-weight: bold; color: var(--primary-blue); font-size: 18px; }
     .btn-re { background: var(--marian-red); font-size: 13px; padding: 6px 12px; border-radius: 8px; color: white; border: none; cursor: pointer; font-weight: bold; }
     #zh-display { font-size: 20px; color: #7f8c8d; margin: -10px 0 20px 0; font-weight: bold; }
-    /* ⚔️ 史詩戰場 2.0 VS 樣式 - 精準防護 */
-  :root { --energy-gold: linear-gradient(90deg, transparent, rgba(255,215,0,1), transparent); }
 
-  /* 戰場背景 (增加層級，確保內容在上面) */
-  #battle-arena { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 2000; color: white; display: none; overflow: hidden; flex-direction: column; justify-content: space-between; }
-  #battle-arena * { position: relative; z-index: 10; } /* 預設 UI 在立繪上方 */
-
-  /* 對戰結果彈窗 - 最高防禦層級 */
-  #impact-overlay { 
-    display: none !important; /* 預設徹底隱藏 */
-    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 
-    background: rgba(0,0,0,0.95); z-index: 99999 !important; /* 最高層級 */
-    flex-direction: column; justify-content: center; align-items: center; color: white; backdrop-filter: blur(5px);
-  }
-
-  /* 能量對抗線 (用來擋住對手立繪切面) */
-  #arena-divide-line {
-    position: absolute; left: 0; width: 100%; height: 3px;
-    background: var(--energy-gold);
-    top: 35vh; /* 線條位置在螢幕偏上 */
-    z-index: 5; /* 線要在立繪下面一點，或擋住立繪底部 */
-    box-shadow: 0 0 15px rgba(255,215,0,0.8);
-    display: block; transform: scaleX(0); transition: transform 0.5s 0.3s;
-  }
-  .vs-active #arena-divide-line { transform: scaleX(1); }
-
-  /* 立繪通用設定 */
-  .vs-hero {
-    position: absolute; background-size: contain; background-repeat: no-repeat;
-    transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    z-index: 4; /* 立繪要在能量線下方，以便能量線擋住底部 */
-    filter: drop-shadow(0 0 15px rgba(255,255,255,0.3));
-  }
-
-  /* 房主 (放左下角) */
-  #vs-host {
-    width: 60%; height: 60vh; left: -10%; bottom: -5vh; 
-    background-position: left bottom; transform: translateX(-120%);
-    opacity: 0.5;
-  }
+      /* ⚔️ 史詩戰場：絕對顯影與動畫 */
+    #battle-portal-overlay {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.9); z-index: 5000; display: none;
+      flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(10px);
+    }
+    .portal-box { width: 80%; max-width: 320px; text-align: center; border: 2px solid var(--gold); border-radius: 30px; padding: 30px; background: #000; }
+    .portal-timer { font-size: 60px; font-weight: 900; color: var(--gold); margin: 10px 0; }
   
-  /* 挑戰者/對手 (站在能量線上，不翻轉) */
-  #vs-guest {
-    width: 50%; height: 50vh; right: -5%;
-    /* 位置對齊能量線 */
-    top: calc(35vh - 50vh + 2px); 
-    background-position: center bottom; transform: translateX(120%);
-    opacity: 0.5;
-  }
-
-  /* 進場與受傷動畫狀態 */
-  .vs-active #vs-host { transform: translateX(0); opacity: 0.6; }
-  .vs-active #vs-guest { transform: translateX(0); opacity: 0.6; } 
+    #battle-arena { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 2000; display: none; overflow: hidden; flex-direction: column; justify-content: space-between; padding: 2vh 15px; }
+    
+    /* 英雄對峙容器 */
+    .vs-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+    .vs-hero { position: absolute; width: 80%; height: 50vh; background-size: contain; background-repeat: no-repeat; transition: 1s; opacity: 0; }
+    
+    #vs-host { bottom: 0; left: -10%; background-position: left bottom; transform: translateX(-100%); }
+    #vs-guest { top: 10%; right: -10%; background-position: right top; transform: translateX(100%); }
+    
+    /* 動畫觸發 */
+    .vs-active #vs-host { transform: translateX(0); opacity: 0.6; }
+    .vs-active #vs-guest { transform: translateX(0); opacity: 0.6; }
+    
+    .vs-mid { 
+      position: absolute; left: 50%; top: 40%; transform: translate(-50%, -50%) scale(0);
+      width: 80px; height: 80px; background: #d63031; border: 4px solid var(--gold);
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-size: 30px; font-weight: 900; color: white; transition: 0.5s 0.8s;
+    }
+    .vs-active .vs-mid { transform: translate(-50%, -50%) scale(1); }
   
-  /* 擊中震動特效 (不翻轉) */
-  .take-damage { animation: shake 0.5s infinite; filter: sepia(1) saturate(10000%) hue-rotate(-50deg) brightness(1.5) !important; opacity: 1 !important; z-index: 6; }
-  @keyframes shake {
-    0% { transform: translate(1px, 1px); } 
-    20% { transform: translate(-3px, 0px); }
-    40% { transform: translate(3px, 2px); }
-    60% { transform: translate(-3px, 1px); }
-    80% { transform: translate(-1px, -1px); }
-    100% { transform: translate(1px, -2px); }
-  }
+    #arena-divide-line { position: absolute; left: 0; width: 100%; height: 4px; background: var(--energy-gold); top: 40%; z-index: 2; transform: scaleX(0); transition: 0.8s; }
+    .vs-active #arena-divide-line { transform: scaleX(1); }
+    
+    .take-damage { animation: shake 0.5s infinite; filter: sepia(1) brightness(2) !important; }
+    @keyframes shake { 0%, 100% { transform: translate(0,0); } 25% { transform: translate(-5px,-5px); } 75% { transform: translate(5px,5px); } }
   </style>
 </head>
 <body>
@@ -128,6 +100,15 @@
   </div>
 </div>
 
+<div id="battle-portal-overlay" style="display:none;">
+  <div class="portal-box">
+    <h2 style="color:var(--gold); margin-top:0;">⚔️ 傳送至戰場</h2>
+    <div class="portal-timer" id="portal-countdown">60</div>
+    <div id="vs-names-portal" style="color:white; font-weight:bold; margin-bottom:15px;">載入對手資訊...</div>
+    <button class="btn" style="background:var(--marian-green); width:100%; font-size:20px;" onclick="portalJump()">🚀 立即進入</button>
+  </div>
+</div>
+
 <div id="battle-arena">
   <div id="arena-divide-line"></div>
 
@@ -136,6 +117,27 @@
     <div class="vs-mid">VS</div>
     <div id="vs-guest" class="vs-hero"></div>
   </div>
+
+  <div class="arena-section opponent-zone">
+    <div style="font-size:12px; color:#aaa; font-weight:bold;">對手 OPPONENT</div>
+    <div id="op-name" class="arena-p-name" style="color:var(--marian-red);">連線中...</div>
+    <div id="op-rounds" style="display:flex; justify-content:center; gap:8px;"></div>
+  </div>
+
+  <div class="arena-section stage-zone">
+    <div id="round-num" style="color:#aaa; font-size: 14px; font-weight:bold;">準備中...</div>
+    <h1 id="target-word" style="font-size:11vw; margin:10px 0;">READY?</h1>
+    <div id="battle-timer" style="font-size:15vw; font-weight:900; color:var(--gold);"></div>
+  </div>
+
+  <div class="arena-section player-zone">
+    <div id="my-rounds" style="display:flex; justify-content:center; gap:8px;"></div>
+    <div id="my-name" class="arena-p-name" style="color:var(--marian-green);">YOU</div>
+    <div id="battle-controls">
+      <button id="battle-record-btn" oncontextmenu="return false;">🎤</button>
+    </div>
+  </div>
+</div>
 
   <div class="arena-section opponent-zone">
     <div style="font-size:12px; color:#aaa; font-weight:bold; letter-spacing:2px;">對手 OPPONENT</div>
