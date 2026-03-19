@@ -25,55 +25,29 @@
     .btn-re { background: var(--marian-red); font-size: 13px; padding: 6px 12px; border-radius: 8px; color: white; border: none; cursor: pointer; font-weight: bold; }
     #zh-display { font-size: 20px; color: #7f8c8d; margin: -10px 0 20px 0; font-weight: bold; }
 
-      /* ⚔️ 史詩戰場 5.0：層級大排整 */
-    #battle-arena { 
-      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 
-      background: radial-gradient(circle, #1a2a3a 0%, #000 100%) !important; 
-      z-index: 2000; color: white; display: none; overflow: hidden; 
-    }
+        /* ⚔️ 史詩戰場：層級大排整 */
+    #battle-arena { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: radial-gradient(circle, #1a2a3a 0%, #000 100%) !important; z-index: 2000; color: white; display: none; overflow: hidden; flex-direction: column; justify-content: space-between; padding: 4vh 15px; box-sizing: border-box; }
   
-    /* 能量線：層級 2 */
-    #arena-divide-line {
-      position: absolute; left: 0; width: 100%; height: 4px;
-      background: linear-gradient(90deg, transparent, #ffd700, transparent);
-      top: 38%; z-index: 2; box-shadow: 0 0 20px #ffd700;
-      transform: scaleX(0); transition: 0.8s;
-    }
+    #arena-divide-line { position: absolute; left: 0; width: 100%; height: 3px; background: linear-gradient(90deg, transparent, #ffd700, transparent); top: 38%; z-index: 2; transform: scaleX(0); transition: 0.8s; box-shadow: 0 0 15px #ffd700; }
     .battle-ready #arena-divide-line { transform: scaleX(1); }
   
-    /* 立繪容器：層級 1 (最底層，但比背景高) */
-    .vs-container {
-      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-      pointer-events: none; z-index: 1; 
-    }
-  
-    .vs-hero {
-      position: absolute; width: 85%; height: 60vh; 
-      background-size: contain; background-repeat: no-repeat;
-      transition: 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      opacity: 0;
-    }
-  
-    /* 調整位置：避免被瀏海或底線擋住過多 */
+    .vs-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
+    .vs-hero { position: absolute; width: 85%; height: 60vh; background-size: contain; background-repeat: no-repeat; transition: 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); opacity: 0; }
+    
+    /* 房主：左下角 / 挑戰者：能量線上 */
     #vs-host { bottom: -2vh; left: -10%; background-position: left bottom; transform: translateX(-100%); }
     #vs-guest { top: calc(38% - 55vh); right: -10%; background-position: right bottom; transform: translateX(100%); }
-  
-    /* 顯示開關 */
     .battle-ready #vs-host, .battle-ready #vs-guest { transform: translateX(0); opacity: 0.6; }
   
-    /* VS 圖標：層級 3 (在線條上面) */
-    .vs-mid {
-      position: absolute; left: 50%; top: 38%;
-      transform: translate(-50%, -50%) scale(0); transition: 0.5s 0.8s;
-      z-index: 3; width: 70px; height: 70px; background: #d63031;
-      border: 3px solid #ffd700; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 28px; font-weight: 900; color: white; opacity: 0;
-    }
+    .vs-mid { position: absolute; left: 50%; top: 38%; transform: translate(-50%, -50%) scale(0); z-index: 3; width: 70px; height: 70px; background: #d63031; border: 3px solid #ffd700; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 900; color: white; transition: 0.5s 0.8s; opacity: 0; }
     .battle-ready .vs-mid { transform: translate(-50%, -50%) scale(1); opacity: 1; }
   
-    /* 數據 UI：層級 10 (最頂層，確保能點擊) */
-    .arena-section, .stage-zone, #battle-controls { position: relative; z-index: 10 !important; }
+    #impact-overlay { display: none !important; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.95); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; color: white; }
+    #impact-overlay.active { display: flex !important; }
+  
+    #battle-record-btn { width: 100px; height: 100px; border-radius: 50%; border: 6px solid white; background: var(--marian-red); font-size: 40px; color: white; cursor: pointer; box-shadow: 0 0 20px rgba(214, 48, 49, 0.6); outline: none; }
+    .take-damage { animation: shake 0.5s infinite; filter: sepia(1) brightness(2) !important; opacity: 1 !important; }
+    @keyframes shake { 0%, 100% { transform: translate(0,0); } 25% { transform: translate(-5px,-5px); } 75% { transform: translate(5px,5px); } }
   </style>
 </head>
 <body>
@@ -131,19 +105,19 @@
     <div id="vs-guest" class="vs-hero"></div>
   </div>
 
-  <div class="arena-section">
+  <div class="arena-section opponent-zone">
     <div style="font-size:12px; color:#aaa; font-weight:bold; letter-spacing:2px;">對手 OPPONENT</div>
     <div id="op-name" class="arena-p-name" style="color:var(--marian-red);">連線中...</div>
     <div id="op-rounds" style="display:flex; justify-content:center; gap:8px;"></div>
   </div>
 
-  <div class="arena-section">
+  <div class="arena-section stage-zone" style="position:relative; z-index:100;">
     <div id="round-num" style="color:#aaa; font-size: 14px; font-weight:bold;">準備中...</div>
     <h1 id="target-word" style="font-size:11vw; margin:10px 0; text-shadow: 0 0 20px #000;">READY?</h1>
     <div id="battle-timer" style="font-size:15vw; font-weight:900; color:var(--gold);">60</div>
   </div>
 
-  <div class="arena-section">
+  <div class="arena-section player-zone">
     <div id="my-rounds" style="display:flex; justify-content:center; gap:8px; margin-bottom:5px;"></div>
     <div id="my-name" class="arena-p-name" style="color:var(--marian-green);">YOU</div>
     <div id="battle-controls">
@@ -223,6 +197,46 @@
       await originalOnload();
     }
   };
+  // 🛡️ 補齊缺失器官：對戰傳送門與圖片加載邏輯
+  function showPortal() {
+    const portal = document.getElementById('battle-portal-overlay');
+    portal.style.display = 'flex';
+    let pCount = 60;
+    
+    // 啟動 60 秒進入倒數
+    const pTimer = setInterval(() => {
+      pCount--;
+      document.getElementById('portal-countdown').innerText = pCount;
+      if(pCount <= 0) { clearInterval(pTimer); location.reload(); }
+    }, 1000);
+
+    // 去後端抓圖片與名字
+    fetch(`${GAS_URL}?action=get_battle_status&roomId=${ROOM_ID}&t=${new Date().getTime()}`)
+      .then(res => res.json()).then(data => {
+        document.getElementById('vs-names-portal').innerText = `${data.hostName} VS ${data.guestName}`;
+        
+        // 塞入正式戰場的立繪背景
+        const vh = document.getElementById('vs-host');
+        const vg = document.getElementById('vs-guest');
+        if(data.hostImg) vh.style.backgroundImage = `url('${data.hostImg}')`;
+        if(data.guestImg) vg.style.backgroundImage = `url('${data.guestImg}')`;
+        
+        // AI 補位
+        if (data.guestId === "AI_BOT") vg.style.backgroundImage = `url('https://cdn-icons-png.flaticon.com/512/4712/4712139.png')`;
+
+        // 定義傳送按鈕點擊後的動作
+        window.portalJump = () => {
+          clearInterval(pTimer);
+          portal.style.display = 'none';
+          document.getElementById('battle-arena').style.display = 'flex';
+          // 啟動圖片滑入動畫
+          setTimeout(() => { document.getElementById('battle-arena').classList.add('battle-ready'); }, 100);
+          fetchBattleDataAndStart(ROOM_ID);
+        };
+      }).catch(err => {
+        document.getElementById('vs-names-portal').innerText = "連線中，請稍候...";
+      });
+  }
 
   // =======================================================
   // 🔒 原版練習功能
