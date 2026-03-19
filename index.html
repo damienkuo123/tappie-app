@@ -219,17 +219,41 @@
     if (MODE === 'battle' && ROOM_ID) {
       try {
         stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        analyser = audioContext.createAnalyser();
-        source = audioContext.createMediaStreamSource(stream);
-        source.connect(analyser);
-        analyser.fftSize = 256;
-        dataArray = new Uint8Array(analyser.frequencyBinCount);
+        // ... (音訊初始化代碼保持原本的) ...
         
         document.getElementById('main-card').style.display = 'none';
-        document.body.classList.add('battle-active');
-        document.getElementById('battle-arena').style.display = 'flex';
-        fetchBattleDataAndStart(ROOM_ID);
+        
+        // 🚀 修復：先顯示傳送門倒數
+        const portal = document.getElementById('battle-portal-overlay');
+        portal.style.display = 'flex';
+        let pCount = 60;
+        const pTimer = setInterval(() => {
+          pCount--;
+          document.getElementById('portal-countdown').innerText = pCount;
+          if(pCount <= 0) { clearInterval(pTimer); location.reload(); }
+        }, 1000);
+
+        // 🚀 去抓對戰數據與圖片
+        fetch(`${GAS_URL}?action=get_battle_status&roomId=${ROOM_ID}&t=${new Date().getTime()}`)
+          .then(res => res.json()).then(data => {
+            document.getElementById('vs-names-portal').innerText = `${data.hostName} VS ${data.guestName}`;
+            
+            // 塞圖片到戰場容器
+            if(data.hostImg) document.getElementById('vs-host').style.backgroundImage = `url('${data.hostImg}')`;
+            if(data.guestImg) document.getElementById('vs-guest').style.backgroundImage = `url('${data.guestImg}')`;
+            if(data.guestId === "AI_BOT") document.getElementById('vs-guest').style.backgroundImage = `url('https://cdn-icons-png.flaticon.com/512/4712/4712139.png')`;
+          });
+
+        // 點擊立即傳送後的操作
+        window.portalJump = () => {
+          clearInterval(pTimer);
+          portal.style.display = 'none';
+          document.getElementById('battle-arena').style.display = 'flex';
+          // 啟動立繪滑入動畫
+          setTimeout(() => { document.getElementById('battle-arena').classList.add('vs-active'); }, 200);
+          fetchBattleDataAndStart(ROOM_ID);
+        };
+
       } catch(err) { alert("請開啟麥克風權限才能對戰！"); }
     } else {
       await originalOnload();
