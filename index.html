@@ -533,48 +533,43 @@
       .then(res => res.json()).then(data => {
         const hS = data.hostScores.filter(s => s !== -1);
         const gS = data.guestScores.filter(s => s !== -1);
+
         if (hS.length > currentBattleRound && gS.length > currentBattleRound) {
           clearInterval(waitOpTimer);
           
-          // 🛡️ 修復：受傷震動邏輯 (根據身分)
-          const hostHero = document.getElementById('vs-host');
-          const guestHero = document.getElementById('vs-guest');
+          // 1. 判斷勝負並顯示畫面
+          const isMeHost = (normalizeStr(STUDENT_ID) === normalizeStr(data.hostId));
+          const myS = isMeHost ? hS[currentBattleRound] : gS[currentBattleRound];
+          const opS = isMeHost ? gS[currentBattleRound] : hS[currentBattleRound];
           
-          hostHero.classList.remove('take-damage');
-          guestHero.classList.remove('take-damage');
+          // 震動特效
+          if (myS > opS) document.getElementById('vs-guest').classList.add('take-damage');
+          else if (opS > myS) document.getElementById('vs-host').classList.add('take-damage');
 
-          if (hS[currentBattleRound] > gS[currentBattleRound]) {
-            guestHero.classList.add('take-damage'); // Host 勝，Guest 震動
-          } else if (gS[currentBattleRound] > hS[currentBattleRound]) {
-            hostHero.classList.add('take-damage'); // Guest 勝，Host 震動
-          }
-
+          // 計算總局數勝負
           myTotalWins = 0; opTotalWins = 0;
           for(let i=0; i <= currentBattleRound; i++) {
-              if(hS[i] > gS[i]) myTotalWins++; // 簡化計算，這裡先計算 Host 勝場
+              if(hS[i] > gS[i]) myTotalWins++; else if(gS[i] > hS[i]) opTotalWins++;
           }
           const isFinal = (myTotalWins >= 5 || opTotalWins >= 5 || currentBattleRound >= 9);
           
-          // 🛡️ 修復：顯示對戰結果彈窗，並控制隱藏練習模式卡片
-          const meHost = (normalizeStr(STUDENT_ID) === normalizeStr(data.hostId));
-          const myS = meHost ? hS[currentBattleRound] : gS[currentBattleRound];
-          const opScore = meHost ? gS[currentBattleRound] : hS[currentBattleRound];
-          
-          // 先讓練習卡片隱藏，防止衝突
-          document.getElementById('studio').style.display = 'none';
-          document.getElementById('impact-overlay').style.display = 'none'; // 先重置
+          showImpactOverlay(myS, opS, isFinal);
 
-          showImpactOverlay(myS, opScore, isFinal);
-
+          // 🚀 核心修正：3.5 秒後準時「撤掉」獲勝畫面並進入下一題
           setTimeout(() => {
-            document.getElementById('impact-overlay').style.display = 'none !important'; // 隱藏結果彈窗
-            document.getElementById('my-rounds').innerHTML = renderDots(myTotalWins, true);
-            document.getElementById('op-rounds').innerHTML = renderDots(opTotalWins, false);
+            // 關鍵：使用 classList 移除畫面
+            document.getElementById('impact-overlay').classList.remove('active'); 
+            
+            // 移除震動特效
+            document.getElementById('vs-host').classList.remove('take-damage');
+            document.getElementById('vs-guest').classList.remove('take-damage');
             
             if (isFinal) { 
-                setTimeout(() => window.location.href = `${GAS_URL}?id=${STUDENT_ID}`, 2500); 
+              window.location.href = `${GAS_URL}?id=${STUDENT_ID}`; 
             } else { 
-                currentBattleRound++; startRoundCountdown(roomId); 
+              // 跳下一題
+              currentBattleRound++; 
+              startRoundCountdown(roomId); 
             }
           }, 3500);
         }
@@ -596,7 +591,7 @@
     const r = document.getElementById('impact-result'); 
     r.innerText = t; r.style.color = c;
     
-    // 🚀 使用 active class 來控制顯示
+    // 開門！
     o.classList.add('active');
   }
   // =======================================================
