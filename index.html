@@ -25,50 +25,30 @@
     .btn-re { background: var(--marian-red); font-size: 13px; padding: 6px 12px; border-radius: 8px; color: white; border: none; cursor: pointer; font-weight: bold; }
     #zh-display { font-size: 20px; color: #7f8c8d; margin: -10px 0 20px 0; font-weight: bold; }
 
-    .portal-container {
-      /* 確保圖片填滿且置中 */
-      background-size: cover; 
-      background-position: center center;
-      background-repeat: no-repeat;
-      /* 確保容器有正確的長寬 */
-      width: 100%;
-      height: 100%; /* 或是你設定的固定高度 px */
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-
-    /* 🌌 戰場背景：暗黑漸層 + 開放滾動防止按鈕被吃掉 */
+    /* 🌌 戰場背景：暗黑漸層 + 完美適應 Safari */
     #battle-arena { 
       position: fixed; top: 0; left: 0; width: 100vw; 
-      height: 100dvh; /* 使用 dvh 完美適應手機瀏覽器高度 */
+      /* 關鍵修改：使用 height: 100% 配合 position: fixed，避免 Safari 工具列遮擋 */
+      height: 100%; 
       background: radial-gradient(circle at 50% 50%, #1c2331 0%, #0b0f19 100%) !important; 
-      z-index: 2000; color: white; display: none; flex-direction: column; 
-      justify-content: space-between; align-items: center; padding: 3vh 15px; box-sizing: border-box; 
-      overflow-y: auto; overflow-x: hidden; /* 開放上下滾動，確保按鈕絕對能按到 */
-    }
-    
-    /* 網格紋路疊加層 (增加科技感) */
-    #battle-arena::before {
-      content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-      background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
-      background-size: 30px 30px; pointer-events: none; z-index: 0;
+      z-index: 2000; display: none; flex-direction: column; 
+      justify-content: space-between; align-items: center; 
+      padding: 2vh 15px; /* 稍微縮小上下 padding */
+      box-sizing: border-box; 
+      overflow: hidden; /* 防止整個畫面亂滾動 */
     }
 
     /* 🎴 實體卡片設計 (自適應縮放) */
     .arena-section { z-index: 10; width: 100%; display: flex; flex-direction: column; align-items: center; }
     
-    /* 🎴 實體卡片設計 (自適應縮放，變得更大更燃) */
+    /* 🎴 實體卡片設計 (改成橫式，並適應你的 16:9 圖片) */
     .card-entity {
-      /* 移除原本的 height: 22vh; 改用 width 來撐滿畫面 */
-      width: 42vw; /* 佔據螢幕寬度的 42%，讓雙方卡片夠大 */
-      min-width: 140px; 
-      max-width: 280px; /* 限制最大寬度，避免電腦螢幕上失控 */
-      height: auto; 
-      aspect-ratio: 3 / 4; /* 保持立繪的完美比例 */
+      width: 95vw; /* 佔據螢幕絕大部分寬度 */
+      max-width: 500px; /* 電腦版最大寬度 */
+      aspect-ratio: 16 / 9; /* 👉 關鍵：改成你的橫圖比例！ */
       
       background-size: cover; 
-      background-position: center top; /* 確保角色的頭部不會被裁掉 */
+      background-position: center center; /* 置中顯示 */
       background-repeat: no-repeat;
       
       border-radius: 12px; 
@@ -81,10 +61,13 @@
 
     /* 磨砂玻璃 (Frosted Glass) 資訊面板 */
     .glass-panel {
-      background: rgba(30, 39, 46, 0.6); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      background: rgba(30, 39, 46, 0.8); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
       border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px;
-      padding: 6px 15px; margin-top: -12px; z-index: 2; display: flex; flex-direction: column; align-items: center;
+      padding: 8px 20px; 
+      margin-top: -20px; /* 讓面板稍微往上重疊在橫圖上 */
+      z-index: 2; display: flex; flex-direction: column; align-items: center;
       box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+      width: 80%; max-width: 400px; /* 給面板一個固定寬度 */
     }
 
     /* 💎 質感比分點點 (五個燈) */
@@ -98,8 +81,12 @@
     #target-word { font-size: 8vw; text-transform: uppercase; letter-spacing: 2px; color: #f1f2f6; text-shadow: 0 0 15px rgba(255,255,255,0.5), 0px 4px 0px #576574; margin: 0; text-align: center; }
     #battle-timer { font-size: 38px; font-weight: 900; color: #f6e58d; text-shadow: 0 0 15px rgba(246, 229, 141, 0.5); min-height: 45px; }
     
-    /* 🎤 科技感錄音按鈕 */
-    #battle-controls { margin-top: 2vh; margin-bottom: 2vh; }
+    /* 🎤 科技感錄音按鈕 (拉開與底部的距離，確保好按) */
+    #battle-controls { 
+      margin-top: 1vh; 
+      margin-bottom: 4vh; /* 增加下方空間，讓它在 Safari 絕對能按到 */
+      z-index: 20; /* 確保按鈕在最上層 */
+    }
     #battle-record-btn {
       width: 75px; height: 75px; border-radius: 50%; font-size: 30px; cursor: pointer;
       background: linear-gradient(145deg, #2d3436, #1e272b);
