@@ -131,11 +131,24 @@
     <div id="vs-guest" class="vs-hero"></div>
   </div>
 
-  <div class="arena-section opponent-zone">
+  <div class="arena-section">
     <div style="font-size:12px; color:#aaa; font-weight:bold; letter-spacing:2px;">對手 OPPONENT</div>
     <div id="op-name" class="arena-p-name" style="color:var(--marian-red);">連線中...</div>
     <div id="op-rounds" style="display:flex; justify-content:center; gap:8px;"></div>
   </div>
+
+  <div class="arena-section">
+    <div id="round-num" style="color:#aaa; font-size: 14px; font-weight:bold;">準備中...</div>
+    <h1 id="target-word" style="font-size:11vw; margin:10px 0; text-shadow: 0 0 20px #000;">READY?</h1>
+    <div id="battle-timer" style="font-size:15vw; font-weight:900; color:var(--gold);">60</div>
+  </div>
+
+  <div class="arena-section">
+    <div id="my-rounds" style="display:flex; justify-content:center; gap:8px; margin-bottom:5px;"></div>
+    <div id="my-name" class="arena-p-name" style="color:var(--marian-green);">YOU</div>
+    <div id="battle-controls">
+      <button id="battle-record-btn" oncontextmenu="return false;">🎤</button>
+    </div>
   </div>
 </div>
 
@@ -192,43 +205,19 @@
   // 🚪 核心路由入口
   window.onload = async () => {
     if (MODE === 'battle' && ROOM_ID) {
+      // 🛡️ 強制隱藏所有練習模式的卡片
+      document.getElementById('main-card').style.display = 'none';
+      document.getElementById('impact-overlay').classList.remove('active');
+      
       try {
         stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        // ... (音訊初始化代碼保持原本的) ...
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        analyser = audioContext.createAnalyser();
+        source = audioContext.createMediaStreamSource(stream);
+        source.connect(analyser);
         
-        document.getElementById('main-card').style.display = 'none';
-        
-        // 🚀 修復：先顯示傳送門倒數
-        const portal = document.getElementById('battle-portal-overlay');
-        portal.style.display = 'flex';
-        let pCount = 60;
-        const pTimer = setInterval(() => {
-          pCount--;
-          document.getElementById('portal-countdown').innerText = pCount;
-          if(pCount <= 0) { clearInterval(pTimer); location.reload(); }
-        }, 1000);
-
-        // 🚀 去抓對戰數據與圖片
-        fetch(`${GAS_URL}?action=get_battle_status&roomId=${ROOM_ID}&t=${new Date().getTime()}`)
-          .then(res => res.json()).then(data => {
-            document.getElementById('vs-names-portal').innerText = `${data.hostName} VS ${data.guestName}`;
-            
-            // 塞圖片到戰場容器
-            if(data.hostImg) document.getElementById('vs-host').style.backgroundImage = `url('${data.hostImg}')`;
-            if(data.guestImg) document.getElementById('vs-guest').style.backgroundImage = `url('${data.guestImg}')`;
-            if(data.guestId === "AI_BOT") document.getElementById('vs-guest').style.backgroundImage = `url('https://cdn-icons-png.flaticon.com/512/4712/4712139.png')`;
-          });
-
-        // 點擊立即傳送後的操作
-        window.portalJump = () => {
-          clearInterval(pTimer);
-          portal.style.display = 'none';
-          document.getElementById('battle-arena').style.display = 'flex';
-          // 啟動立繪滑入動畫
-          setTimeout(() => { document.getElementById('battle-arena').classList.add('vs-active'); }, 200);
-          fetchBattleDataAndStart(ROOM_ID);
-        };
-
+        // 啟動傳送門
+        showPortal();
       } catch(err) { alert("請開啟麥克風權限才能對戰！"); }
     } else {
       await originalOnload();
@@ -417,20 +406,29 @@
         document.getElementById('my-name').innerText = isMeHost ? data.hostName : (data.guestName || "挑戰者");
         document.getElementById('op-name').innerText = isMeHost ? (data.guestName || "對手") : data.hostName;
 
-        // 🚀 手術 3：立繪注入與開關觸發
+        // 🚀 注入圖片
         const hostHero = document.getElementById('vs-host');
         const guestHero = document.getElementById('vs-guest');
-        
         if(data.hostImg) hostHero.style.backgroundImage = `url('${data.hostImg}')`;
         if(data.guestImg) guestHero.style.backgroundImage = `url('${data.guestImg}')`;
-        
-        // AI 專用立繪
         if (data.guestId === "AI_BOT") guestHero.style.backgroundImage = `url('https://cdn-icons-png.flaticon.com/512/4712/4712139.png')`;
 
-        // 開燈！這行沒跑，圖就不會滑出來
+        // 啟動動畫
         document.getElementById('battle-arena').classList.add('battle-ready');
 
-        // ... 分數點點邏輯維持原本的 ...
+        // 更新分數點點
+        const hS = data.hostScores.filter(s => s !== -1);
+        const gS = data.guestScores.filter(s => s !== -1);
+        myTotalWins = 0; opTotalWins = 0;
+        const commonLen = Math.min(hS.length, gS.length);
+        for(let i=0; i < commonLen; i++) { 
+           if(hS[i] > gS[i]) isMeHost ? myTotalWins++ : opTotalWins++; 
+           else if(gS[i] > hS[i]) isMeHost ? opTotalWins++ : myTotalWins++; 
+        }
+        document.getElementById('my-rounds').innerHTML = renderDots(myTotalWins, true);
+        document.getElementById('op-rounds').innerHTML = renderDots(opTotalWins, false);
+      });
+  } // <--- 剛才就是少了這一個括號，害全家陪葬！
 
   function renderDots(wins, isMe) {
     let html = ''; const winClass = isMe ? 'dot-me' : 'dot-op';
