@@ -25,41 +25,55 @@
     .btn-re { background: var(--marian-red); font-size: 13px; padding: 6px 12px; border-radius: 8px; color: white; border: none; cursor: pointer; font-weight: bold; }
     #zh-display { font-size: 20px; color: #7f8c8d; margin: -10px 0 20px 0; font-weight: bold; }
 
-      /* ⚔️ 史詩戰場：絕對顯影與動畫 */
-    #battle-portal-overlay {
-      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-      background: rgba(0,0,0,0.9); z-index: 5000; display: none;
-      flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(10px);
+      /* ⚔️ 史詩戰場 3.0：絕對顯影與層級鎖定 */
+    #battle-arena { 
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 
+      background: radial-gradient(circle, #1a2a3a 0%, #000 100%); 
+      z-index: 2000; color: white; display: none; overflow: hidden; 
+      flex-direction: column; justify-content: space-between; padding: 4vh 15px; box-sizing: border-box;
     }
-    .portal-box { width: 80%; max-width: 320px; text-align: center; border: 2px solid var(--gold); border-radius: 30px; padding: 30px; background: #000; }
-    .portal-timer { font-size: 60px; font-weight: 900; color: var(--gold); margin: 10px 0; }
   
-    #battle-arena { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 2000; display: none; overflow: hidden; flex-direction: column; justify-content: space-between; padding: 2vh 15px; }
-    
-    /* 英雄對峙容器 */
-    .vs-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
-    .vs-hero { position: absolute; width: 80%; height: 50vh; background-size: contain; background-repeat: no-repeat; transition: 1s; opacity: 0; }
-    
+    /* 能量對抗線 */
+    #arena-divide-line {
+      position: absolute; left: 0; width: 100%; height: 3px;
+      background: linear-gradient(90deg, transparent, #ffd700, transparent);
+      top: 38%; z-index: 2; box-shadow: 0 0 15px #ffd700;
+      transform: scaleX(0); transition: 0.8s;
+    }
+    .battle-ready #arena-divide-line { transform: scaleX(1); }
+  
+    /* 🦸 英雄立繪容器 (置於文字後方) */
+    .vs-container {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none; z-index: 1; /* 關鍵：設為 1，文字 UI 設為 10 */
+    }
+  
+    .vs-hero {
+      position: absolute; width: 80%; height: 50vh; 
+      background-size: contain; background-repeat: no-repeat;
+      transition: 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      opacity: 0;
+    }
+  
     #vs-host { bottom: 0; left: -10%; background-position: left bottom; transform: translateX(-100%); }
-    #vs-guest { top: 10%; right: -10%; background-position: right top; transform: translateX(100%); }
-    
-    /* 動畫觸發 */
-    .vs-active #vs-host { transform: translateX(0); opacity: 0.6; }
-    .vs-active #vs-guest { transform: translateX(0); opacity: 0.6; }
-    
-    .vs-mid { 
-      position: absolute; left: 50%; top: 40%; transform: translate(-50%, -50%) scale(0);
-      width: 80px; height: 80px; background: #d63031; border: 4px solid var(--gold);
-      border-radius: 50%; display: flex; align-items: center; justify-content: center;
-      font-size: 30px; font-weight: 900; color: white; transition: 0.5s 0.8s;
-    }
-    .vs-active .vs-mid { transform: translate(-50%, -50%) scale(1); }
+    #vs-guest { top: calc(38% - 48vh); right: -10%; background-position: right bottom; transform: translateX(100%); }
   
-    #arena-divide-line { position: absolute; left: 0; width: 100%; height: 4px; background: var(--energy-gold); top: 40%; z-index: 2; transform: scaleX(0); transition: 0.8s; }
-    .vs-active #arena-divide-line { transform: scaleX(1); }
-    
-    .take-damage { animation: shake 0.5s infinite; filter: sepia(1) brightness(2) !important; }
-    @keyframes shake { 0%, 100% { transform: translate(0,0); } 25% { transform: translate(-5px,-5px); } 75% { transform: translate(5px,5px); } }
+    .battle-ready #vs-host { transform: translateX(0); opacity: 0.5; }
+    .battle-ready #vs-guest { transform: translateX(0); opacity: 0.5; }
+  
+    /* 中央 VS 圖標 */
+    .vs-mid {
+      position: absolute; left: 50%; top: 38%;
+      transform: translate(-50%, -50%) scale(0); transition: 0.5s 0.8s;
+      z-index: 3; width: 60px; height: 60px; background: #d63031;
+      border: 3px solid #ffd700; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px; font-weight: 900; color: white; opacity: 0;
+    }
+    .battle-ready .vs-mid { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  
+    /* 確保原本的 UI 浮在立繪上面 */
+    .arena-section, .stage-zone, #battle-controls { position: relative; z-index: 10; pointer-events: auto; }
   </style>
 </head>
 <body>
