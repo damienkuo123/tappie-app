@@ -25,55 +25,55 @@
     .btn-re { background: var(--marian-red); font-size: 13px; padding: 6px 12px; border-radius: 8px; color: white; border: none; cursor: pointer; font-weight: bold; }
     #zh-display { font-size: 20px; color: #7f8c8d; margin: -10px 0 20px 0; font-weight: bold; }
 
-       /* ⚔️ 史詩戰場 5.0：層級與位置鎖定 */
+      /* ⚔️ 史詩戰場 5.0：層級大排整 */
     #battle-arena { 
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 
       background: radial-gradient(circle, #1a2a3a 0%, #000 100%) !important; 
       z-index: 2000; color: white; display: none; overflow: hidden; 
-      flex-direction: column; justify-content: space-between; padding: 4vh 15px; box-sizing: border-box;
     }
   
-    /* 🛑 史詩視覺：立繪容器 */
-    .vs-container {
-      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-      pointer-events: none; z-index: 2; /* 設為 2，確保在背景 0 之上 */
-    }
-  
-    .vs-hero {
-      position: absolute; width: 80%; height: 50vh; 
-      background-size: contain; background-repeat: no-repeat;
-      transition: 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      opacity: 0;
-    }
-  
-    /* 你的位置 (左下角) */
-    #vs-host { bottom: 0; left: -10%; background-position: left bottom; transform: translateX(-100%); }
-    /* 對手的位置 (右上角，站在 35% 線上) */
-    #vs-guest { bottom: 65%; right: -10%; background-position: right bottom; transform: translateX(100%); }
-  
-    .battle-ready #vs-host { transform: translateX(0); opacity: 0.6; }
-    .battle-ready #vs-guest { transform: translateX(0); opacity: 0.6; }
-  
-    /* 能量對抗線 */
+    /* 能量線：層級 2 */
     #arena-divide-line {
-      position: absolute; left: 0; width: 100%; height: 3px;
+      position: absolute; left: 0; width: 100%; height: 4px;
       background: linear-gradient(90deg, transparent, #ffd700, transparent);
-      top: 35%; z-index: 5; box-shadow: 0 0 15px #ffd700;
+      top: 38%; z-index: 2; box-shadow: 0 0 20px #ffd700;
       transform: scaleX(0); transition: 0.8s;
     }
     .battle-ready #arena-divide-line { transform: scaleX(1); }
   
-    /* 🏆 結果彈窗：預設徹底鎖死隱藏 */
-    #impact-overlay { 
-      display: none !important; /* 強制不顯示 */
-      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 
-      background: rgba(0,0,0,0.9); z-index: 99999; 
-      flex-direction: column; justify-content: center; align-items: center;
+    /* 立繪容器：層級 1 (最底層，但比背景高) */
+    .vs-container {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none; z-index: 1; 
     }
-    #impact-overlay.active { display: flex !important; } /* 只有加了 active 才會現身 */
   
-    /* 確保 UI 在最前層 */
-    .arena-section, .stage-zone, #battle-controls { position: relative; z-index: 10; }
+    .vs-hero {
+      position: absolute; width: 85%; height: 60vh; 
+      background-size: contain; background-repeat: no-repeat;
+      transition: 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      opacity: 0;
+    }
+  
+    /* 調整位置：避免被瀏海或底線擋住過多 */
+    #vs-host { bottom: -2vh; left: -10%; background-position: left bottom; transform: translateX(-100%); }
+    #vs-guest { top: calc(38% - 55vh); right: -10%; background-position: right bottom; transform: translateX(100%); }
+  
+    /* 顯示開關 */
+    .battle-ready #vs-host, .battle-ready #vs-guest { transform: translateX(0); opacity: 0.6; }
+  
+    /* VS 圖標：層級 3 (在線條上面) */
+    .vs-mid {
+      position: absolute; left: 50%; top: 38%;
+      transform: translate(-50%, -50%) scale(0); transition: 0.5s 0.8s;
+      z-index: 3; width: 70px; height: 70px; background: #d63031;
+      border: 3px solid #ffd700; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px; font-weight: 900; color: white; opacity: 0;
+    }
+    .battle-ready .vs-mid { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  
+    /* 數據 UI：層級 10 (最頂層，確保能點擊) */
+    .arena-section, .stage-zone, #battle-controls { position: relative; z-index: 10 !important; }
   </style>
 </head>
 <body>
@@ -395,11 +395,12 @@
     currentBattleRound = 0;
     document.getElementById('target-word').innerText = "戰場同步中...";
     document.getElementById('battle-timer').innerText = "60";
-    // 🛡️ 偵探修正：同步時就顯示規則
     document.getElementById('round-num').innerText = "規則：先得 5 分者勝";
     document.getElementById('battle-info').innerText = "正在等待雙方就緒...";
-    document.getElementById('battle-controls').style.visibility = 'hidden';
     
+    // 🚀 手術 1：先抓圖並啟動立繪動畫，不用等同步完成
+    updateArenaUI(roomId, true);
+
     fetch(`${GAS_URL}?action=arena_ready&id=${STUDENT_ID}&roomId=${roomId}&t=${new Date().getTime()}`)
       .then(() => {
         let waitCount = 60;
@@ -407,43 +408,43 @@
         syncTimer = setInterval(() => {
           waitCount--;
           document.getElementById('battle-timer').innerText = waitCount;
+          
           fetch(`${GAS_URL}?action=get_battle_status&roomId=${roomId}&t=${new Date().getTime()}`)
             .then(res => res.json()).then(data => {
-              if (data.hostScores.length > 0 && data.guestScores.length > 0) {
+              // 🚀 手術 2：更寬鬆的就緒判斷，只要雙方都有資料就開打
+              if (data.hostScores && data.guestScores && data.hostScores.length > 0 && data.guestScores.length > 0) {
                 clearInterval(syncTimer);
-                updateArenaUI(roomId, true); 
                 startRoundCountdown(roomId);
               }
-              if (data.status === "Canceled") { clearInterval(syncTimer); alert("對戰取消"); window.location.href = `${GAS_URL}?id=${STUDENT_ID}`; }
+              if (data.status === "Canceled") { clearInterval(syncTimer); alert("對戰取消"); location.reload(); }
             });
-          if (waitCount <= 0) { clearInterval(syncTimer); alert("等待超時"); window.location.href = `${GAS_URL}?id=${STUDENT_ID}`; }
+
+          if (waitCount <= 0) { clearInterval(syncTimer); alert("等待超時"); location.reload(); }
         }, 2000);
       });
   }
 
   function updateArenaUI(roomId, isInit = false) {
-    // 每次更新 UI 時，確保把誤跳的獲勝彈窗關掉
-    document.getElementById('impact-overlay').classList.remove('active');
-    
     fetch(`${GAS_URL}?action=get_battle_status&roomId=${roomId}&t=${new Date().getTime()}`)
       .then(res => res.json()).then(data => {
         const isMeHost = (normalizeStr(STUDENT_ID) === normalizeStr(data.hostId));
         document.getElementById('my-name').innerText = isMeHost ? data.hostName : (data.guestName || "挑戰者");
         document.getElementById('op-name').innerText = isMeHost ? (data.guestName || "對手") : data.hostName;
 
-        // 🚀 立繪注入
+        // 🚀 手術 3：立繪注入與開關觸發
         const hostHero = document.getElementById('vs-host');
         const guestHero = document.getElementById('vs-guest');
+        
         if(data.hostImg) hostHero.style.backgroundImage = `url('${data.hostImg}')`;
         if(data.guestImg) guestHero.style.backgroundImage = `url('${data.guestImg}')`;
+        
+        // AI 專用立繪
         if (data.guestId === "AI_BOT") guestHero.style.backgroundImage = `url('https://cdn-icons-png.flaticon.com/512/4712/4712139.png')`;
 
-        // 🚀 啟動動畫關鍵：對大容器加 class
+        // 開燈！這行沒跑，圖就不會滑出來
         document.getElementById('battle-arena').classList.add('battle-ready');
 
-        // ... 分數計算邏輯維持原本的 ...
-      });
-  }
+        // ... 分數點點邏輯維持原本的 ...
 
   function renderDots(wins, isMe) {
     let html = ''; const winClass = isMe ? 'dot-me' : 'dot-op';
