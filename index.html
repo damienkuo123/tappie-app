@@ -73,12 +73,13 @@
     .arena-section { z-index: 10; width: 100%; display: flex; flex-direction: column; align-items: center; }
     
     .card-entity {
-      height: 17vh; min-height: 100px; max-height: 150px; /* 壓低高度防止破版 */
+      height: 17vh; min-height: 100px; max-height: 150px; 
       aspect-ratio: 16 / 9; width: auto; max-width: 95vw; 
       background-size: cover; background-position: center center; background-repeat: no-repeat;
       border-radius: 12px; border: 3px solid #576574; 
       box-shadow: 0 10px 30px rgba(0,0,0,0.8), inset 0 0 15px rgba(255,255,255,0.2);
-      position: relative; transition: all 0.4s ease;
+      position: relative; z-index: 5; /* 🚀 確保圖層在玻璃面板之下 */
+      transition: all 0.4s ease;
     }
 
     /* 磨砂玻璃 (Frosted Glass) 資訊面板 */
@@ -86,7 +87,7 @@
       background: rgba(30, 39, 46, 0.8); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
       border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px;
       padding: 8px 20px; margin-top: -20px; 
-      z-index: 20; /* 🚀 關鍵：提高層級，才不會被裂痕蓋住 */
+      position: relative; z-index: 20; /* 🚀 加上 position 與高 z-index，完美壓住卡片裂痕！ */
       display: flex; flex-direction: column; align-items: center;
       box-shadow: 0 4px 15px rgba(0,0,0,0.5); width: 80%; max-width: 400px; 
     }
@@ -97,38 +98,48 @@
     .dot-me { background: #0fb9b1; box-shadow: 0 0 15px #0fb9b1, inset 0 0 5px #fff; border-color: #fff; } 
     .dot-op { background: #eb3b5a; box-shadow: 0 0 15px #eb3b5a, inset 0 0 5px #fff; border-color: #fff; } 
 
-    .stage-zone { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; max-height: 35vh; }
-    #target-word { font-size: 8vw; text-transform: uppercase; letter-spacing: 2px; color: #f1f2f6; text-shadow: 0 0 15px rgba(255,255,255,0.5), 0px 4px 0px #576574; margin: 0 0 5px 0; text-align: center; }
-    #battle-timer { font-size: 38px; font-weight: 900; color: #f6e58d; text-shadow: 0 0 15px rgba(246, 229, 141, 0.5); margin: 0; }
-
     /* ⚔️ 中間交戰區 (金屬切割字體) */
-    .stage-zone { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; margin: 1vh 0; }
-    #target-word { font-size: 8vw; text-transform: uppercase; letter-spacing: 2px; color: #f1f2f6; text-shadow: 0 0 15px rgba(255,255,255,0.5), 0px 4px 0px #576574; margin: 0; text-align: center; }
-    #battle-timer { font-size: 38px; font-weight: 900; color: #f6e58d; text-shadow: 0 0 15px rgba(246, 229, 141, 0.5); min-height: 45px; }
+    .stage-zone { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; margin: 1vh 0; max-height: 35vh; }
+    #target-word { font-size: 8vw; text-transform: uppercase; letter-spacing: 2px; color: #f1f2f6; text-shadow: 0 0 15px rgba(255,255,255,0.5), 0px 4px 0px #576574; margin: 0 0 5px 0; text-align: center; }
+    
+    /* 🛡️ 鎖死中央區域高度，倒數與分數共用同一個籠子 */
+    #battle-timer-container { height: 55px; display: flex; justify-content: center; align-items: center; }
+    #battle-timer { font-size: 38px; font-weight: 900; color: #f6e58d; text-shadow: 0 0 15px rgba(246, 229, 141, 0.5); margin: 0; min-height: 45px; }
   
+    /* 🚀 修復：讓 Player Zone 有額外底邊距，並把錄音按鈕釘在下方 */
+    .player-zone { position: relative; padding-bottom: 90px; }
+    #battle-controls { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); z-index: 50; width: 100%; }
+
     #battle-record-btn {
       width: 75px; height: 75px; border-radius: 50%; font-size: 30px; cursor: pointer;
-      background: linear-gradient(145deg, #2d3436, #1e272b);
-      border: 3px solid #0fb9b1; color: white; outline: none;
-      box-shadow: 0 10px 20px rgba(0,0,0,0.5), inset 0 2px 5px rgba(255,255,255,0.1);
-      transition: all 0.2s;
+      background: linear-gradient(145deg, #2d3436, #1e272b); border: 3px solid #0fb9b1; color: white; outline: none;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.5), inset 0 2px 5px rgba(255,255,255,0.1); transition: all 0.2s;
+    }
+    #battle-record-btn.active { transform: scale(0.9); animation: manaCharge 0.5s infinite alternate; border-color: #26de81; }
+    @keyframes manaCharge { 0% { box-shadow: 0 0 10px #0fb9b1, 0 0 20px #0fb9b1; } 100% { box-shadow: 0 0 30px #26de81, 0 0 60px #26de81; } }
+
+    /* 🌟 燃特效：火力集結 (改用 outline，完美避開戰損 border 衝突！) */
+    .charging-mana { outline: 4px solid #0fb9b1; animation: cardChargePulse 0.4s infinite alternate; }
+    @keyframes cardChargePulse {
+      0% { outline-color: #0fb9b1; outline-offset: 2px; box-shadow: 0 0 20px #0fb9b1; }
+      100% { outline-color: #26de81; outline-offset: 10px; box-shadow: 0 0 50px #26de81; }
     }
 
-    /* 🌟 燃特效：火力集結 (按鈕) */
-    #battle-record-btn.active {
-      transform: scale(0.9); animation: manaCharge 0.5s infinite alternate; border-color: #26de81;
+    /* 👊 技能重擊按鈕 (大招 UI) */
+    #skill-btn {
+      position: absolute; bottom: 85px; left: 50%; transform: translateX(-50%);
+      background: linear-gradient(135deg, #f39c12, #e74c3c); color: white; border: 2px solid #f1c40f; border-radius: 20px;
+      padding: 8px 20px; font-size: 16px; font-weight: 900; box-shadow: 0 5px 15px rgba(231, 76, 60, 0.5); cursor: pointer;
+      z-index: 40; transition: all 0.3s; animation: float-btn 2s infinite ease-in-out;
     }
-    @keyframes manaCharge {
-      0% { box-shadow: 0 0 10px #0fb9b1, 0 0 20px #0fb9b1; }
-      100% { box-shadow: 0 0 30px #26de81, 0 0 60px #26de81; }
-    }
+    #skill-btn:active { transform: translateX(-50%) scale(0.9); }
+    @keyframes float-btn { 0%, 100% { bottom: 85px; } 50% { bottom: 95px; box-shadow: 0 10px 20px rgba(231, 76, 60, 0.7); } }
 
-    /* 🌟 燃特效：火力集結 (卡片本體爆發！) */
-    .charging-mana { animation: cardCharge 0.5s infinite alternate; }
-    @keyframes cardCharge {
-      0% { box-shadow: 0 0 15px #0fb9b1, inset 0 0 15px #0fb9b1; border-color: #0fb9b1; transform: translateY(0px); }
-      100% { box-shadow: 0 0 50px #26de81, inset 0 0 25px #26de81; border-color: #26de81; transform: translateY(-5px); }
-    }
+    /* 🌈 進入大招蓄力狀態的特效 */
+    .ultimate-mode-bg { background: radial-gradient(circle at 50% 50%, #2c0000 0%, #000 100%) !important; }
+    .ultimate-word { color: #ff4757 !important; text-shadow: 0 0 20px #ff4757, 0 0 40px #ff4757 !important; animation: word-pulse 0.5s infinite alternate; }
+    @keyframes word-pulse { 0% { transform: scale(1); } 100% { transform: scale(1.1); } }
+    .ultimate-record-btn { background: linear-gradient(145deg, #1e0000, #3a0000) !important; border: 4px solid #ff4757 !important; box-shadow: 0 0 30px #ff4757, inset 0 0 15px #ff4757 !important; }
 
     /* 💎 螢光得分字體 (用來取代原本的倒數計時) */
     .neon-score {
@@ -231,8 +242,8 @@
       100% { transform: scale(0.2) rotate(45deg) translateY(300px); filter: blur(20px); opacity: 0; } /* 墜落消失 */
     }
 
-    /* 🏆 最終勝利的耀眼光芒 */
-    .winner-glory { animation: glory-shine 1.5s ease-in-out infinite alternate !important; border-color: #f1c40f !important; z-index: 20; }
+    /* 🏆 最終勝利的耀眼光芒 (加冕黃金特效) */
+    .winner-glory { animation: glory-shine 1.5s ease-in-out infinite alternate !important; border: 4px solid #f1c40f !important; z-index: 30 !important; }
     @keyframes glory-shine {
       0% { box-shadow: 0 0 20px #f1c40f, inset 0 0 20px #f1c40f; transform: translateY(0); filter: brightness(1.2); }
       100% { box-shadow: 0 0 60px #f1c40f, 0 0 100px #f1c40f, inset 0 0 40px #f1c40f; transform: translateY(-10px); filter: brightness(1.5); }
@@ -328,6 +339,7 @@
     <div id="my-card" class="card-entity"></div>
     
     <div id="battle-controls">
+      <button id="skill-btn" onclick="activateSkill()">👊 技能重擊 (1/1)</button>
       <button id="battle-record-btn" oncontextmenu="return false;">🎤</button>
     </div>
   </div>
@@ -353,10 +365,13 @@
   const MODE = params.get('mode') || "challenge";
   const ROOM_ID = params.get('roomId');
 
-  // 全域變數宣告
+  // 全域變數宣告 (加上技能變數)
   let stream, mediaRecorder, chunks = [], quizData = [], scores = [], currentIndex = 0, isReReading = false;
   let audioContext, analyser, dataArray, source, gradingInterval;
   let maxVolume = 0;
+  
+  let hasUsedSkill = false; // 紀錄大招是否用過
+  let isUltimateMode = false; // 紀錄當下是否暴走
 
   // 對戰室專用變數
   let battleQuizArr = [], currentBattleRound = 0;
