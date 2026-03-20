@@ -381,6 +381,25 @@
 
   function normalizeStr(val) { if (!val) return ""; return String(val).replace(/(%20|\s)+/ig, "").toUpperCase(); }
 
+  // 👊 啟動大招技能
+  function activateSkill() {
+    if (hasUsedSkill) return;
+    hasUsedSkill = true;
+    isUltimateMode = true;
+
+    // 隱藏技能按鈕
+    document.getElementById('skill-btn').style.display = 'none';
+
+    // 畫面進入暴走狀態
+    document.getElementById('battle-arena').classList.add('ultimate-mode-bg');
+    document.getElementById('target-word').classList.add('ultimate-word');
+    
+    // 按鈕切換成拳頭
+    const rb = document.getElementById('battle-record-btn');
+    rb.classList.add('ultimate-record-btn');
+    rb.innerHTML = "👊";
+  }
+
   // 📝 儲存原版啟動邏輯
   const originalOnload = async () => {
     if(MODE === 'review') document.getElementById('title-text').innerText = "📖 自由練習模式";
@@ -782,14 +801,25 @@
     if(currentLimitTimer) clearInterval(currentLimitTimer);
     if(waitOpTimer) clearInterval(waitOpTimer);
     
-    // 如果打到 10 題還沒分出勝負（雖然機率極低），強制結束
     if (currentBattleRound >= 10) { 
        setTimeout(() => { showImpactOverlay(myTotalWins, opTotalWins, true); setTimeout(() => window.location.href = `${GAS_URL}?id=${STUDENT_ID}`, 5000); }, 1000);
        return; 
     }
     
     let count = 3; roundSubmitted = false;
-    // 🛡️ 偵探修正：標題改為更直觀的進度顯示
+    
+    // 🚀 新增：每回合重置大招視覺狀態
+    isUltimateMode = false;
+    document.getElementById('battle-arena').classList.remove('ultimate-mode-bg');
+    document.getElementById('target-word').classList.remove('ultimate-word');
+    const rb = document.getElementById('battle-record-btn');
+    rb.classList.remove('ultimate-record-btn');
+    rb.innerHTML = "🎤";
+
+    // 判斷技能按鈕是否顯示
+    const skillBtn = document.getElementById('skill-btn');
+    if (skillBtn) skillBtn.style.display = hasUsedSkill ? 'none' : 'block';
+
     document.getElementById('round-num').innerText = `第 ${currentBattleRound + 1} 局 / 先得 5 分獲勝`;
     document.getElementById('target-word').innerText = "READY?";
     document.getElementById('battle-timer').innerText = "";
@@ -863,11 +893,11 @@
     // 隱藏錄音按鈕
     document.getElementById('battle-controls').style.visibility = 'hidden';
 
-    // 🚀 關鍵修復：確保強制移除卡片的蓄力特效，避免超時送出導致特效卡住
+    // 🚀 安全清除：把錄音發光強制拿掉，保證下一局還能觸發
     const myCard = document.getElementById('my-card');
     if(myCard) myCard.classList.remove('charging-mana');
 
-    // 將分數填入倒數計時的位子
+    // 🌟 將分數填入
     document.getElementById('battle-timer').innerHTML = `<span class="neon-score">得分：${score}</span>`;
     document.getElementById('battle-info').innerText = "等待對手...";
 
@@ -979,9 +1009,25 @@
     document.getElementById('impact-title').innerText = isFinal ? "最終結算" : "單局結果";
     
     let t = "", c = "";
-    if (myNum > opNum) { t = isFinal ? "🏆 挑戰成功！" : "獲勝！"; c = "#27ae60"; }
-    else if (myNum < opNum) { t = isFinal ? "☠️ 挑戰失敗" : "敗北..."; c = "#e74c3c"; }
-    else { t = "平手"; c = "#ffd700"; }
+    const myCard = document.getElementById('my-card'); 
+    const opCard = document.getElementById('op-card');
+
+    if (myNum > opNum) { 
+      t = isFinal ? "🏆 挑戰成功！" : "獲勝！"; 
+      c = "#27ae60"; 
+      // 🏆 最終勝利：我方卡片加冕黃金閃耀！
+      if(isFinal && myCard) myCard.classList.add('winner-glory');
+    }
+    else if (myNum < opNum) { 
+      t = isFinal ? "☠️ 挑戰失敗" : "敗北..."; 
+      c = "#e74c3c"; 
+      // 🏆 對手獲勝：對手卡片加冕黃金閃耀！
+      if(isFinal && opCard) opCard.classList.add('winner-glory');
+    }
+    else { 
+      t = "平手"; 
+      c = "#ffd700"; 
+    }
     
     const r = document.getElementById('impact-result'); 
     r.innerText = t; r.style.color = c;
