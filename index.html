@@ -249,12 +249,98 @@
       100% { box-shadow: 0 0 60px #f1c40f, 0 0 100px #f1c40f, inset 0 0 40px #f1c40f; transform: translateY(-10px); filter: brightness(1.5); }
     }
 
+    /* ========================================= */
+    /* 🏆 動態斬擊與碎裂結算系統 (Anime Finisher) */
+    /* ========================================= */
     #impact-overlay { 
       display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 
-      background: rgba(11, 15, 25, 0.5); 
-      z-index: 9999; flex-direction: column; justify-content: center; align-items: center; color: white; 
+      z-index: 9999; overflow: hidden; justify-content: center; align-items: center; flex-direction: column;
     }
     #impact-overlay.active { display: flex; }
+
+    /* 💥 衝擊波光環 */
+    .shockwave-ring {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      width: 10px; height: 10px; border-radius: 50%; border: 50px solid rgba(255,255,255,0.8);
+      opacity: 0; z-index: 1; pointer-events: none;
+    }
+    .active .shockwave-ring { animation: shock-explode 0.6s cubic-bezier(0.1, 0.8, 0.2, 1) forwards; }
+    @keyframes shock-explode { 0% { width: 10px; height: 10px; opacity: 1; border-width: 100px; } 100% { width: 200vw; height: 200vw; opacity: 0; border-width: 0px; } }
+
+    /* 🗡️ 空間斬擊背景 (傾斜色塊) */
+    .impact-bg-slash { position: absolute; width: 200%; height: 60vh; z-index: 2; opacity: 0.9; }
+    .top-slash { top: -20vh; transform: rotate(-15deg) translateY(-100%); }
+    .bottom-slash { bottom: -20vh; transform: rotate(-15deg) translateY(100%); }
+    
+    .active .top-slash { animation: slash-in-top 0.4s 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+    .active .bottom-slash { animation: slash-in-bottom 0.4s 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+    
+    @keyframes slash-in-top { to { transform: rotate(-15deg) translateY(20%); } }
+    @keyframes slash-in-bottom { to { transform: rotate(-15deg) translateY(-20%); } }
+
+    /* 🏆 勝負主題顏色 */
+    .theme-win .top-slash { background: linear-gradient(to bottom, rgba(10,10,15,0.9), rgba(39, 174, 96, 0.9)); box-shadow: 0 10px 50px #27ae60; }
+    .theme-win .bottom-slash { background: linear-gradient(to top, rgba(10,10,15,0.9), rgba(241, 196, 15, 0.9)); box-shadow: 0 -10px 50px #f1c40f; }
+    
+    .theme-lose .top-slash { background: linear-gradient(to bottom, rgba(10,10,15,0.95), rgba(192, 57, 43, 0.9)); box-shadow: 0 10px 50px #c0392b; }
+    .theme-lose .bottom-slash { background: linear-gradient(to top, rgba(10,10,15,0.95), rgba(0, 0, 0, 0.9)); box-shadow: 0 -10px 50px #000; }
+
+    /* ☄️ 狂暴砸字 (VICTORY / DEFEAT) */
+    #impact-result {
+      position: relative; z-index: 10; font-size: 85px; font-weight: 900; font-style: italic;
+      text-transform: uppercase; letter-spacing: 5px; margin: 0; line-height: 1;
+      transform: scale(5) rotate(-20deg); opacity: 0;
+    }
+    .active #impact-result { animation: text-slam 0.4s 0.4s cubic-bezier(0.1, 0.9, 0.2, 1) forwards; }
+    @keyframes text-slam {
+      0% { transform: scale(5) rotate(-20deg); opacity: 0; filter: blur(20px); }
+      50% { transform: scale(0.8) rotate(5deg); opacity: 1; filter: blur(0px); }
+      100% { transform: scale(1) rotate(-5deg); opacity: 1; }
+    }
+
+    .theme-win #impact-result { color: #fff; text-shadow: 6px 6px 0px #f39c12, -2px -2px 0px #f1c40f, 0 0 40px #2ecc71; }
+    .theme-lose #impact-result { color: #fff; text-shadow: 6px 6px 0px #c0392b, -2px -2px 0px #e74c3c, 0 0 40px #000; animation: text-slam 0.4s 0.4s forwards, glitch-shake 0.3s 0.8s infinite; }
+    @keyframes glitch-shake { 0% { transform: scale(1) rotate(-5deg) translate(2px, 2px); } 50% { transform: scale(1) rotate(-5deg) translate(-2px, -2px); filter: hue-rotate(90deg); } 100% { transform: scale(1) rotate(-5deg) translate(0px, 0px); } }
+
+    /* 🥊 分數全息碰撞 */
+    .score-collision-box {
+      display: flex; align-items: center; justify-content: center; gap: 20px;
+      margin-top: 40px; z-index: 10;
+    }
+    .col-score { font-size: 60px; font-weight: 900; background: rgba(0,0,0,0.6); padding: 10px 30px; border-radius: 15px; border: 2px solid rgba(255,255,255,0.2); }
+    .col-vs { font-size: 30px; color: #a4b0be; font-style: italic; font-weight: 900; transform: scale(0); transition: 0.3s; }
+    
+    /* 從兩側飛入撞擊 */
+    #col-my-score { transform: translateX(-150vw) rotate(-20deg); color: #2ecc71; }
+    #col-op-score { transform: translateX(150vw) rotate(20deg); color: #e74c3c; }
+    
+    .active #col-my-score { animation: fly-in-left 0.4s 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+    .active #col-op-score { animation: fly-in-right 0.4s 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+    .active .col-vs { animation: vs-pop 0.3s 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+
+    @keyframes fly-in-left { to { transform: translateX(0) rotate(0deg); } }
+    @keyframes fly-in-right { to { transform: translateX(0) rotate(0deg); } }
+    @keyframes vs-pop { to { transform: scale(1); } }
+
+    /* 撞擊後，贏家放大發光，輸家縮小變暗 */
+    .theme-win .active #col-my-score { animation: fly-in-left 0.4s 0.8s forwards, winner-pop 0.5s 1.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+    .theme-win .active #col-op-score { animation: fly-in-right 0.4s 0.8s forwards, loser-shrink 0.5s 1.3s forwards; }
+    
+    .theme-lose .active #col-op-score { animation: fly-in-right 0.4s 0.8s forwards, winner-pop-red 0.5s 1.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+    .theme-lose .active #col-my-score { animation: fly-in-left 0.4s 0.8s forwards, loser-shrink 0.5s 1.3s forwards; }
+
+    @keyframes winner-pop { to { transform: scale(1.4); box-shadow: 0 0 30px #27ae60; border-color: #2ecc71; z-index: 20; } }
+    @keyframes winner-pop-red { to { transform: scale(1.4); box-shadow: 0 0 30px #c0392b; border-color: #e74c3c; z-index: 20; } }
+    @keyframes loser-shrink { to { transform: scale(0.8) translateY(20px); filter: grayscale(1) brightness(0.5); opacity: 0.7; } }
+
+    /* 全畫面震動 (套用在 body 上) */
+    .shake-body { animation: global-shake 0.4s 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both; }
+    @keyframes global-shake { 
+      10%, 90% { transform: translate3d(-5px, 5px, 0); } 
+      20%, 80% { transform: translate3d(5px, -5px, 0); } 
+      30%, 50%, 70% { transform: translate3d(-10px, 10px, 0) rotate(-1deg); } 
+      40%, 60% { transform: translate3d(10px, -10px, 0) rotate(1deg); } 
+    }
 
     /* ========================================= */
     /* 🗡️ 大招立繪切入 (Cut-in) 系統 CSS */
@@ -409,14 +495,18 @@
 </div>
 
 <div id="impact-overlay">
-  <div style="font-size:24px; color:#aaa; font-weight:bold; margin-bottom:10px;" id="impact-title">局數結算</div>
-  <h1 id="impact-result" style="font-size:64px; text-shadow: 0 4px 15px rgba(0,0,0,0.8), 0 0 5px rgba(0,0,0,0.5); margin:0; line-height:1.2;">獲勝！</h1>
-  <div style="font-size:56px; margin:30px 0; font-weight:900; display:flex; align-items:center; justify-content:center; gap:20px;">
-    <span id="impact-my-score" style="color:var(--marian-green);">0</span> 
-    <span style="font-size:30px; color:#888;">VS</span> 
-    <span id="impact-op-score" style="color:var(--marian-red);">0</span>
+  <div class="shockwave-ring"></div>
+  <div class="impact-bg-slash top-slash"></div>
+  <div class="impact-bg-slash bottom-slash"></div>
+  
+  <p id="impact-subtitle" style="position:relative; z-index:10; font-size:18px; color:#f1f2f6; font-weight:bold; letter-spacing:3px; margin:0 0 -15px 0;">ROUND RESULT</p>
+  <h1 id="impact-result">WIN</h1>
+  
+  <div class="score-collision-box">
+    <div id="col-my-score" class="col-score">0</div>
+    <div class="col-vs">VS</div>
+    <div id="col-op-score" class="col-score">0</div>
   </div>
-  <p id="impact-subtitle" style="font-size:18px; color:#ccc;"></p>
 </div>
 
 <script>
@@ -1120,32 +1210,40 @@
 
   function showImpactOverlay(myNum, opNum, isFinal) {
     const o = document.getElementById('impact-overlay');
-    document.getElementById('impact-my-score').innerText = myNum;
-    document.getElementById('impact-op-score').innerText = opNum;
-    document.getElementById('impact-title').innerText = isFinal ? "最終結算" : "單局結果";
-    
-    let t = "", c = "";
+    const r = document.getElementById('impact-result'); 
+    const sub = document.getElementById('impact-subtitle');
     const myCard = document.getElementById('my-card'); 
     const opCard = document.getElementById('op-card');
 
+    // 清除所有舊狀態
+    o.classList.remove('theme-win', 'theme-lose', 'active');
+    document.body.classList.remove('shake-body');
+    void o.offsetWidth; // 觸發重繪
+
+    // 填入分數
+    document.getElementById('col-my-score').innerText = myNum;
+    document.getElementById('col-op-score').innerText = opNum;
+    sub.innerText = isFinal ? "FINAL MATCH RESULT" : "ROUND RESULT";
+    
+    // 判定勝負與套用主題
     if (myNum > opNum) { 
-      t = isFinal ? "🏆 挑戰成功！" : "獲勝！"; 
-      c = "#27ae60"; 
+      r.innerText = isFinal ? "VICTORY" : "YOU WIN"; 
+      o.classList.add('theme-win');
       if(isFinal && myCard) myCard.classList.add('winner-glory');
     }
     else if (myNum < opNum) { 
-      t = isFinal ? "☠️ 挑戰失敗" : "敗北..."; 
-      c = "#e74c3c"; 
+      r.innerText = isFinal ? "DEFEAT" : "YOU LOSE"; 
+      o.classList.add('theme-lose');
       if(isFinal && opCard) opCard.classList.add('winner-glory');
     }
     else { 
-      t = "平手"; 
-      c = "#ffd700"; 
+      r.innerText = "DRAW"; 
+      o.classList.add('theme-win'); // 平手借用贏家的金色調，但把字改掉
     }
     
-    const r = document.getElementById('impact-result'); 
-    r.innerText = t; r.style.color = c;
+    // 啟動動畫與全螢幕震動！
     o.classList.add('active'); 
+    document.body.classList.add('shake-body'); // 讓整個畫面在字砸下來時震動
   }
 
   let nfcBuffer = "";
