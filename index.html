@@ -250,117 +250,61 @@
     }
 
     /* ========================================= */
-    /* 🗡️ 異想天開：動態斬擊與碎裂結算系統 (Anime Finisher) */
+    /* 🏆 電影級英雄展現結算 (Cinematic Hero Reveal) */
     /* ========================================= */
-    :root { 
-      /* 🚀 主題顏色定義 (重要，請勿更動) */
-      --my-theme-color: #0fb9b1; /* 我方青藍色 */
-      --op-theme-color: #eb3b5a; /* 對手紅色 */
-    }
-
-    /* 全畫面震動修飾符 (套用在 document.body 上) */
-    .shake-body { animation: global-shake 0.3s cubic-bezier(0.36, 0.07, 0.19, 0.97) both; }
-    @keyframes global-shake { 
-      10%, 90% { transform: translate3d(-8px, 8px, 0); } 
-      20%, 80% { transform: translate3d(8px, -8px, 0); } 
-      30%, 50%, 70% { transform: translate3d(-15px, 15px, 0) rotate(-2deg); } 
-      40%, 60% { transform: translate3d(15px, -15px, 0) rotate(2deg); } 
-    }
-
     #impact-overlay { 
       display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 
-      z-index: 9999; overflow: hidden; justify-content: center; align-items: center; flex-direction: column;
-      /* 🚀 真正的異想天開，把 PPT 半透明黑布丟掉，改成直接覆蓋畫面 */
-      opacity: 0; transition: opacity 0.3s ease;
+      /* 沉穩的極深色毛玻璃背景 */
+      background: rgba(15, 20, 30, 0.85); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+      z-index: 9999; flex-direction: column; justify-content: center; align-items: center; color: white; 
+      opacity: 0; transition: opacity 0.5s ease;
     }
     #impact-overlay.active { display: flex; opacity: 1; }
 
-    /* 💥 真正巨型的「白色衝擊波」 */
-    .shockwave-ring {
-      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-      width: 10px; height: 10px; border-radius: 50%; border: 5px solid rgba(255,255,255,0.8);
-      opacity: 0; z-index: 1; pointer-events: none;
+    /* 🌟 英雄全圖霸氣背景展現 */
+    #impact-hero-bg {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background-size: cover; background-position: center top;
+      opacity: 0; transform: scale(1.05);
+      /* 讓圖片底部平滑過渡融入黑底，像精緻的浮水印 */
+      -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 70%);
+      mask-image: linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 70%);
+      transition: all 1.5s cubic-bezier(0.2, 0.8, 0.2, 1);
     }
-    .active .shockwave-ring { animation: shock-explode 0.6s cubic-bezier(0.1, 0.8, 0.2, 1) forwards; }
-    @keyframes shock-explode { 0% { width: 10px; height: 10px; opacity: 1; border-width: 10px; } 100% { width: 300vw; height: 300vw; opacity: 0; border-width: 0px; } }
+    .active #impact-hero-bg { opacity: 1; transform: scale(1); }
 
-    /* 🗡️ 空間撕裂與能量佔領背景 (傾斜色塊) */
-    .impact-bg-slash { position: absolute; width: 200%; height: 50vh; z-index: 2; opacity: 0.9; pointer-events: none; }
-    .top-slash { top: -20vh; transform: rotate(-15deg) translateY(-100%); }
-    .bottom-slash { bottom: -20vh; transform: rotate(-15deg) translateY(100%); }
-    
-    .active .top-slash { animation: slash-in-top 0.4s 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
-    .active .bottom-slash { animation: slash-in-bottom 0.4s 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
-    
-    @keyframes slash-in-top { to { transform: rotate(-15deg) translateY(20%); } }
-    @keyframes slash-in-bottom { to { transform: rotate(-15deg) translateY(-20%); } }
+    /* 內容層 */
+    #impact-content { position: relative; z-index: 10; display: flex; flex-direction: column; align-items: center; width: 100%; }
 
-    /* 🏆 異想天開配色佔領邏輯：我方勝利，青藍色佔領並推開紅色 */
-    .theme-win { background-color: rgba(11,15,25,0.9); } /* 底色加深 */
-    .theme-win .top-slash { background: linear-gradient(to bottom, rgba(10,10,15,0.95), var(--my-theme-color) 90%); box-shadow: 0 10px 50px var(--my-theme-color); }
-    .theme-win .bottom-slash { background: linear-gradient(to top, rgba(10,10,15,0.95), var(--op-theme-color) 10%); box-shadow: 0 -10px 50px var(--op-theme-color); }
+    #impact-subtitle { font-size: 16px; color: #a4b0be; letter-spacing: 6px; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; }
     
-    /* 對手勝利，紅色佔領並推開青藍色 */
-    .theme-lose { background-color: rgba(15,10,11,0.95); }
-    .theme-lose .top-slash { background: linear-gradient(to bottom, rgba(10,10,15,0.95), var(--op-theme-color) 90%); box-shadow: 0 10px 50px var(--op-theme-color); }
-    .theme-lose .bottom-slash { background: linear-gradient(to top, rgba(10,10,15,0.95), var(--my-theme-color) 10%); box-shadow: 0 -10px 50px var(--my-theme-color); }
-
-    /* ☄️ 狂暴砸字 (VICTORY / DEFEAT) (丟掉 PPT 風格) */
-    #impact-result {
-      position: relative; z-index: 10; font-size: 85px; font-weight: 900; font-style: italic;
-      text-transform: uppercase; letter-spacing: 5px; margin: 0; line-height: 1;
-      transform: scale(5) rotate(-20deg); opacity: 0;
+    #impact-result { 
+      font-size: 68px; font-weight: 900; letter-spacing: 4px; margin: 0; text-transform: uppercase; 
+      transform: translateY(20px); opacity: 0; transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
-    .active #impact-result { animation: text-slam 0.4s 0.4s cubic-bezier(0.1, 0.9, 0.2, 1) forwards; }
-    @keyframes text-slam {
-      0% { transform: scale(5) rotate(-20deg); opacity: 0; filter: blur(20px); }
-      50% { transform: scale(0.8) rotate(5deg); opacity: 1; filter: blur(0px); }
-      100% { transform: scale(1) rotate(-5deg); opacity: 1; }
+    .active #impact-result { transform: translateY(0); opacity: 1; }
+
+    /* 高級發光字體 */
+    .result-win { color: #fff; text-shadow: 0 0 30px rgba(0, 210, 211, 0.8), 0 0 60px rgba(0, 210, 211, 0.4); }
+    .result-lose { color: #fff; text-shadow: 0 0 30px rgba(255, 107, 107, 0.8), 0 0 60px rgba(255, 107, 107, 0.4); }
+    .result-draw { color: #fff; text-shadow: 0 0 30px rgba(241, 196, 15, 0.8), 0 0 60px rgba(241, 196, 15, 0.4); }
+
+    /* 🥊 現代感發光分數版 */
+    .impact-score-board {
+      display: flex; align-items: center; justify-content: center; gap: 30px; margin-top: 30px;
+      background: rgba(255, 255, 255, 0.05); padding: 25px 50px; border-radius: 25px;
+      border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+      transform: translateY(20px); opacity: 0; transition: all 0.6s 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
+    .active .impact-score-board { transform: translateY(0); opacity: 1; }
 
-    .theme-win #impact-result { color: #fff; text-shadow: 6px 6px 0px var(--op-theme-color), -2px -2px 0px #fff, 0 0 40px var(--my-theme-color); }
-    .theme-lose #impact-result { color: #fff; text-shadow: 6px 6px 0px #000, -2px -2px 0px #fff, 0 0 40px var(--op-theme-color); animation: text-slam 0.4s 0.4s forwards, glitch-shake 0.3s 0.8s infinite; }
-    @keyframes glitch-shake { 0% { transform: scale(1) rotate(-5deg) translate(2px, 2px); } 50% { transform: scale(1) rotate(-5deg) translate(-2px, -2px); filter: hue-rotate(90deg) contrast(1.5); } 100% { transform: scale(1) rotate(-5deg) translate(0px, 0px); } }
+    .score-col { display: flex; flex-direction: column; align-items: center; }
+    .score-number { font-size: 72px; font-weight: 900; line-height: 1; }
+    .score-label { font-size: 13px; color: #a4b0be; letter-spacing: 2px; margin-top: 8px; text-transform: uppercase; font-weight: bold; }
 
-    /* 🥊 分數全息碰撞 */
-    .score-collision-box {
-      display: flex; align-items: center; justify-content: center; gap: 20px;
-      margin-top: 40px; z-index: 10;
-    }
-    .col-score { font-size: 60px; font-weight: 900; background: rgba(0,0,0,0.6); padding: 10px 30px; border-radius: 15px; border: 2px solid rgba(255,255,255,0.2); }
-    .col-vs { font-size: 30px; color: #a4b0be; font-style: italic; font-weight: 900; transform: scale(0); transition: 0.3s; }
-    
-    /* 從兩側飛入撞擊 */
-    #col-my-score { transform: translateX(-150vw) rotate(-20deg); color: var(--my-theme-color); }
-    #col-op-score { transform: translateX(150vw) rotate(20deg); color: var(--op-theme-color); }
-    
-    .active #col-my-score { animation: fly-in-left 0.4s 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
-    .active #col-op-score { animation: fly-in-right 0.4s 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
-    .active .col-vs { animation: vs-pop 0.3s 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
-
-    @keyframes fly-in-left { to { transform: translateX(0) rotate(0deg); } }
-    @keyframes fly-in-right { to { transform: translateX(0) rotate(0deg); } }
-    @keyframes vs-pop { to { transform: scale(1); } }
-
-    /* 撞擊後，贏家放大發光，輸家縮小變暗 */
-    .theme-win .active #col-my-score { animation: fly-in-left 0.4s 0.8s forwards, winner-pop 0.5s 1.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
-    .theme-win .active #col-op-score { animation: fly-in-right 0.4s 0.8s forwards, loser-shrink 0.5s 1.3s forwards; }
-    
-    .theme-lose .active #col-op-score { animation: fly-in-right 0.4s 0.8s forwards, winner-pop-red 0.5s 1.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
-    .theme-lose .active #col-my-score { animation: fly-in-left 0.4s 0.8s forwards, loser-shrink 0.5s 1.3s forwards; }
-
-    @keyframes winner-pop { to { transform: scale(1.4); box-shadow: 0 0 30px #27ae60; border-color: #2ecc71; z-index: 20; } }
-    @keyframes winner-pop-red { to { transform: scale(1.4); box-shadow: 0 0 30px #c0392b; border-color: #e74c3c; z-index: 20; } }
-    @keyframes loser-shrink { to { transform: scale(0.8) translateY(20px); filter: grayscale(1) brightness(0.5); opacity: 0.7; } }
-
-    /* 全畫面震動修飾符 (套用在 document.body 上) */
-    .shake-body { animation: global-shake 0.3s cubic-bezier(0.36, 0.07, 0.19, 0.97) both; }
-    @keyframes global-shake { 
-      10%, 90% { transform: translate3d(-8px, 8px, 0); } 
-      20%, 80% { transform: translate3d(8px, -8px, 0); } 
-      30%, 50%, 70% { transform: translate3d(-15px, 15px, 0) rotate(-2deg); } 
-      40%, 60% { transform: translate3d(15px, -15px, 0) rotate(2deg); } 
-    }
+    #impact-my-score { color: #00d2d3; text-shadow: 0 0 30px rgba(0, 210, 211, 0.6); }
+    #impact-op-score { color: #ff6b6b; text-shadow: 0 0 30px rgba(255, 107, 107, 0.6); }
+    .score-vs { font-size: 24px; color: #576574; font-style: italic; font-weight: 900; }
 
     /* ========================================= */
     /* 🗡️ 大招立繪切入 (Cut-in) 系統 CSS */
@@ -515,17 +459,23 @@
 </div>
 
 <div id="impact-overlay">
-  <div class="shockwave-ring"></div>
-  <div class="impact-bg-slash top-slash"></div>
-  <div class="impact-bg-slash bottom-slash"></div>
+  <div id="impact-hero-bg"></div>
   
-  <p id="impact-subtitle" style="position:relative; z-index:10; font-size:18px; color:#f1f2f6; font-weight:bold; letter-spacing:3px; margin:0 0 -15px 0; text-align:center;">ROUND RESULT</p>
-  <h1 id="impact-result">WIN</h1>
-  
-  <div class="score-collision-box">
-    <div id="col-my-score" class="col-score">0</div>
-    <div class="col-vs">VS</div>
-    <div id="col-op-score" class="col-score">0</div>
+  <div id="impact-content">
+    <p id="impact-subtitle">ROUND RESULT</p>
+    <h1 id="impact-result">WIN</h1>
+    
+    <div class="impact-score-board">
+      <div class="score-col">
+        <span id="impact-my-score" class="score-number">0</span>
+        <span class="score-label">YOU</span>
+      </div>
+      <div class="score-vs">VS</div>
+      <div class="score-col">
+        <span id="impact-op-score" class="score-number">0</span>
+        <span class="score-label">OPPONENT</span>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1095,19 +1045,18 @@
       popup.classList.add('popup-anim');
   }
 
-  function triggerBattleAnimations(myNum, opNum, isFinal, myTotalWins, opTotalWins, isMyUlt, isOpUlt) {
+  // 🛡️ [未改動原邏輯] 僅在括號內新增 myImgUrl, opImgUrl
+  function triggerBattleAnimations(myNum, opNum, isFinal, myTotalWins, opTotalWins, isMyUlt, isOpUlt, myImgUrl, opImgUrl) {
     const myCard = document.getElementById('my-card'); 
     const opCard = document.getElementById('op-card');
     const arenaBg = document.getElementById('battle-arena');
 
-    // 清除特效
     const animations = ['cast-me', 'cast-me-ult', 'cast-op', 'cast-op-ult', 'blast-up', 'blast-down', 'blast-ultimate', 'blast-ultimate-down', 'loser-shatter', 'take-damage', 'screen-flash-red', 'screen-flash-cyan', 'screen-flash-gold', 'winner-glory'];
     if(myCard) myCard.classList.remove(...animations); 
     if(opCard) opCard.classList.remove(...animations);
     if(arenaBg) arenaBg.classList.remove('screen-flash-red', 'screen-flash-cyan', 'screen-flash-gold');
     void myCard.offsetWidth; void opCard.offsetWidth;
 
-    // 🚀 大招切入動畫判斷
     let delayBeforeAttack = 0;
     if (myNum > opNum && isMyUlt) {
         playCutinAnimation(myCard.style.backgroundImage, true);
@@ -1133,9 +1082,7 @@
           if(opCard) opCard.classList.add(isFinal ? 'loser-shatter' : 'take-damage'); 
         }
         else if (myNum < opNum) { 
-          if (isMyUlt) {
-              showSkillPopup("❌ 技能被打斷...", "#e74c3c");
-          }
+          if (isMyUlt) showSkillPopup("❌ 技能被打斷...", "#e74c3c");
           if(opCard) {
             if (isOpUlt) {
                 opCard.classList.add('cast-op-ult', 'blast-ultimate-down'); 
@@ -1150,21 +1097,21 @@
           if(myCard) myCard.classList.add(isFinal ? 'loser-shatter' : 'take-damage');
         }
         else {
-          if (isMyUlt) {
-              showSkillPopup("⚠️ 技能被抵銷 (平手)", "#f39c12");
-          }
+          if (isMyUlt) showSkillPopup("⚠️ 技能被抵銷 (平手)", "#f39c12");
         }
 
         updateCardDamage(myCard, opTotalWins);
         updateCardDamage(opCard, myTotalWins);
 
         setTimeout(() => {
-          showImpactOverlay(myNum, opNum, isFinal);
+          // 🚀 [唯一更動]：把圖片參數傳遞給顯示畫面的函數
+          showImpactOverlay(myNum, opNum, isFinal, myImgUrl, opImgUrl);
         }, 1600); 
 
     }, delayBeforeAttack); 
   }
 
+  // 🛡️ [未改動原邏輯]
   function checkBoth(roomId) {
     if(isChecking) return; isChecking = true;
     fetch(`${GAS_URL}?action=get_battle_status&roomId=${roomId}&t=${new Date().getTime()}`)
@@ -1178,6 +1125,10 @@
           const isMeHost = (normalizeStr(STUDENT_ID) === normalizeStr(data.hostId));
           const rawMyS = isMeHost ? hS[currentBattleRound] : gS[currentBattleRound];
           const rawOpS = isMeHost ? gS[currentBattleRound] : hS[currentBattleRound];
+
+          // 🚀 [唯一新增]：從抓到的 data 中取出雙方圖片 URL
+          const myImgUrl = isMeHost ? data.hostImg : data.guestImg;
+          const opImgUrl = isMeHost ? data.guestImg : data.hostImg;
 
           const myUltThisRound = rawMyS > 500;
           const opUltThisRound = rawOpS > 500;
@@ -1209,7 +1160,8 @@
 
           const isFinal = (myTotalWins >= 5 || opTotalWins >= 5 || currentBattleRound >= 9);
         
-          triggerBattleAnimations(myS, opS, isFinal, myTotalWins, opTotalWins, myUltThisRound, opUltThisRound);
+          // 🚀 [唯一更動]：把圖片 URL 一起傳入發動機
+          triggerBattleAnimations(myS, opS, isFinal, myTotalWins, opTotalWins, myUltThisRound, opUltThisRound, myImgUrl, opImgUrl);
         
           let delayBeforeAttack = ( (myS > opS && myUltThisRound) || (opS > myS && opUltThisRound) ) ? 1500 : 0;
           let totalWaitTime = delayBeforeAttack + 3600; 
@@ -1228,51 +1180,41 @@
       }).catch(() => isChecking = false);
   }
 
-  function showImpactOverlay(myNum, opNum, isFinal) {
+  // 🚀 重新打造的顯示畫面函數，吃進去圖片 URL 並套用樣式
+  function showImpactOverlay(myNum, opNum, isFinal, myImgUrl, opImgUrl) {
     const o = document.getElementById('impact-overlay');
     const r = document.getElementById('impact-result'); 
     const sub = document.getElementById('impact-subtitle');
-    const myCard = document.getElementById('my-card'); 
-    const opCard = document.getElementById('op-card');
+    const heroBg = document.getElementById('impact-hero-bg');
 
-    // 清除所有舊狀態與主題
-    o.classList.remove('theme-win', 'theme-lose', 'active');
-    document.body.classList.remove('shake-body'); // 清除螢幕震動
-    void o.offsetWidth; // 強制重繪 (重要)
+    // 清除舊狀態
+    r.className = '';
+    heroBg.style.backgroundImage = 'none';
+    void o.offsetWidth; 
 
     // 填入分數
-    document.getElementById('col-my-score').innerText = myNum;
-    document.getElementById('col-op-score').innerText = opNum;
+    document.getElementById('impact-my-score').innerText = myNum;
+    document.getElementById('impact-op-score').innerText = opNum;
     sub.innerText = isFinal ? "FINAL MATCH RESULT" : "ROUND RESULT";
     
-    // 判定勝負與套用主題顏色邏輯
+    // 判定勝負與霸氣背景展現
     if (myNum > opNum) { 
-      r.innerText = isFinal ? "VICTORY" : "YOU WIN"; 
-      o.classList.add('theme-win'); // 套用我方勝利主題
-      if(isFinal && myCard) myCard.classList.add('winner-glory');
+      r.innerText = isFinal ? "VICTORY" : "WIN"; 
+      r.classList.add('result-win');
+      if (myImgUrl) heroBg.style.backgroundImage = `url('${myImgUrl}')`; // 贏了放自己的全圖
     }
     else if (myNum < opNum) { 
-      r.innerText = isFinal ? "DEFEAT" : "YOU LOSE"; 
-      o.classList.add('theme-lose'); // 套用對手勝利主題
-      if(isFinal && opCard) opCard.classList.add('winner-glory');
+      r.innerText = isFinal ? "DEFEAT" : "LOSE"; 
+      r.classList.add('result-lose');
+      if (opImgUrl) heroBg.style.backgroundImage = `url('${opImgUrl}')`; // 輸了放對手的全圖
     }
     else { 
       r.innerText = "DRAW"; 
-      o.classList.add('theme-win'); // 平手借用贏家的配色，文字改 DRAW
+      r.classList.add('result-draw');
+      // 平手就不顯示任何背景圖
     }
     
-    // 啟動動畫舞台！
     o.classList.add('active'); 
-    
-    // 📳 (整個網頁 body）會劇烈晃動！在字砸下來的瞬間 (約0.4秒後)
-    setTimeout(() => {
-        document.body.classList.add('shake-body');
-    }, 400); 
-
-    // 動畫結束後清除 shake class
-    setTimeout(() => {
-        document.body.classList.remove('shake-body');
-    }, 700);
   }
 
   
