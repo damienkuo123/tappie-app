@@ -26,7 +26,7 @@
     #zh-display { font-size: 20px; color: #7f8c8d; margin: -10px 0 20px 0; font-weight: bold; }
 
     /* ========================================= */
-    /* 🚀 傳送門：頂級 3D 全息對峙 Loading 畫面 - 激進分裂版 */
+    /* 🚀 傳送門：頂級 3D 全息對峙 Loading 畫面 */
     /* ========================================= */
     #battle-portal-overlay {
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
@@ -42,7 +42,6 @@
       z-index: 20;
     }
 
-    /* 🚀 提示文字樣式 (不變) */
     .portal-hint {
       font-size: 14px; font-weight: bold; color: #a4b0be; letter-spacing: 2px;
       margin-bottom: 8px; text-transform: uppercase;
@@ -54,18 +53,18 @@
       letter-spacing: 8px;
     }
 
-    /* 對戰卡片對峙區 Container - 增加最大寬度 */
+    /* 對戰卡片對峙區 Container */
     .portal-clash-container {
-      position: relative; width: 100%; flex: 1; max-width: 900px; /* 🚀 增加最大寬度為 900px */
+      position: relative; width: 100%; flex: 1; max-width: 900px; 
       display: flex; align-items: center; justify-content: center;
       transform-style: preserve-3d;
     }
 
-    /* 🛡️ 卡片本體：減小寬度，留出更多空間 */
+    /* 🛡️ 卡片本體：拔除 aspect-ratio，恢復寬大霸氣直立質感 */
     .portal-card {
       position: absolute; 
-      width: 30vw; height: 60vh; /* 🚀 寬度調更小：30vw */
-      max-width: 200px; max-height: 400px; /* 🚀 減小 max-width：200px */
+      width: 40vw; height: 60vh; /* 🚀 恢復大張的直立感 */
+      max-width: 280px; max-height: 450px; 
       background: rgba(255, 255, 255, 0.1); 
       border-radius: 25px; 
       box-shadow: 
@@ -88,24 +87,26 @@
       text-shadow: 0 0 10px rgba(255,255,255,0.5);
     }
 
-    /* 🚀 動態進場：增加位移，推得更遠 */
+    /* 🚀 動態進場：使用 calc() 確保兩張卡片中間必定留有 80px 的物理空隙！ */
     .clash-in-my { animation: slide-in-my 1.2s cubic-bezier(0.1, 0.9, 0.2, 1) forwards; }
     @keyframes slide-in-my {
       0% { transform: translateX(-100vw) translateY(50px) rotateY(45deg) rotateZ(-15deg) scale(0.8); opacity: 0; filter: brightness(2) blur(10px); }
-      100% { transform: translateX(-45%) translateY(0) rotateY(15deg) rotateZ(-5deg) scale(1); opacity: 1; filter: brightness(1) blur(0px); } /* 🚀 位移從 -35% 增加到 -45% */
+      /* 往左推 50% 自身寬度，再多退 40px */
+      100% { transform: translateX(calc(-50% - 40px)) translateY(0) rotateY(15deg) rotateZ(-5deg) scale(1); opacity: 1; filter: brightness(1) blur(0px); } 
     }
 
     .clash-in-op { animation: slide-in-op 1.2s cubic-bezier(0.1, 0.9, 0.2, 1) forwards; }
     @keyframes slide-in-op {
       0% { transform: translateX(100vw) translateY(-50px) rotateY(-45deg) rotateZ(15deg) scale(0.8); opacity: 0; filter: brightness(2) blur(10px); }
-      100% { transform: translateX(45%) translateY(0) rotateY(-15deg) rotateZ(5deg) scale(1); opacity: 1; filter: brightness(1) blur(0px); } /* 🚀 位移從 35% 增加到 45% */
+      /* 往右推 50% 自身寬度，再多退 40px */
+      100% { transform: translateX(calc(50% + 40px)) translateY(0) rotateY(-15deg) rotateZ(5deg) scale(1); opacity: 1; filter: brightness(1) blur(0px); } 
     }
 
-    /* ✨ 乾淨發光的 VS 標誌 (拔除廉價白光) */
+    /* ✨ 乾淨發光的 VS 標誌 */
     .portal-vs-spark {
       position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
       font-size: 50px; font-weight: 900; font-style: italic; color: #fff;
-      text-shadow: 0 0 15px rgba(0, 210, 211, 0.8), 0 0 30px rgba(0, 210, 211, 0.4);
+      text-shadow: 0 0 15px rgba(241, 196, 15, 0.8), 0 0 30px rgba(241, 196, 15, 0.4);
       z-index: 10; opacity: 0; letter-spacing: 5px;
     }
     .spark-active { animation: portal-vs-pop 0.6s 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
@@ -128,7 +129,7 @@
     .btn-cyber:hover { background: rgba(255,255,255,0.15); box-shadow: 0 0 20px rgba(0, 210, 211, 0.5); border-color: #00d2d3; }
     .btn-cyber:active { transform: scale(0.95); }
 
-        /* ========================================= */
+    /* ========================================= */
     /* 對戰頁面 */
     /* ========================================= */
 
@@ -208,7 +209,7 @@
     .glass-panel {
       background: rgba(30, 39, 46, 0.8); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
       border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 15px;
-      padding: 6px 15px; margin: 8px 0; /* 改為上下外距，不再是負數重疊 */
+      padding: 6px 15px; margin: 8px 0; 
       position: relative; z-index: 20; 
       display: flex; flex-direction: row; justify-content: space-between; align-items: center;
       box-shadow: 0 4px 15px rgba(0,0,0,0.5); width: 90%; max-width: 450px; 
@@ -303,10 +304,10 @@
     }
     @keyframes blast-downward { 0% { transform: translate(-50%, -50%) scale(1); opacity: 1; } 100% { transform: translate(-50%, 65vh) scale(3); opacity: 0; } }
 
-    /* 🩸 戰損碎裂系統 (完整保留您的精美設計！) */
+    /* 🩸 戰損碎裂系統 */
     .card-entity::before { 
       content: ''; position: absolute; top:0; left:0; right:0; bottom:0; 
-      border-radius: inherit; /* 🚀 加上這行：讓裂痕自動繼承卡片的 12px 圓角，就不會刺出去了！ */
+      border-radius: inherit; 
       pointer-events: none; opacity: 0; transition: opacity 0.5s; z-index: 15; 
     }
     .dmg-1 { border-color: #f1c40f !important; }
@@ -373,7 +374,6 @@
       
       background-size: cover; background-repeat: no-repeat; background-position: center top;
       transform: translate(150%, 100%) scale(0.5); opacity: 0;
-      /* 🚀 已經將 mask-image 刪除，立繪絕對不會再變黑了！ */
     }
     
     /* 🚀 我方單局勝利 (Win)：滑入與緩飄 */
@@ -531,7 +531,6 @@
     }
     @keyframes cutinFade { 0% { opacity: 0; } 10% { opacity: 1; } 85% { opacity: 1; } 100% { opacity: 0; } }
 
-    /* 🚀 修復：移除 hue-rotate，保留原色並加上不同顏色的強光 */
     .theme-fire #cutin-bg { background: radial-gradient(circle, #b33939 0%, #000 80%); }
     .theme-fire #cutin-text { color: #ff5252; text-shadow: 0 0 20px #ff5252, 0 5px 15px #000; }
     .theme-fire #cutin-char { filter: drop-shadow(0 0 25px #ff5252); }
