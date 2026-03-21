@@ -1433,7 +1433,7 @@
     // 填入分數
     document.getElementById('impact-my-score').innerText = myNum;
     document.getElementById('impact-op-score').innerText = opNum;
-    sub.innerText = isFinal ? "FINAL MATCH RESULT" : "ROUND RESULT";
+    sub.innerText = isFinal ? "FINAL MATCH RESULT" : "回合結果";
     
     // 👑 如果是拿到 5 分的最終決戰，加上專屬的 is-final 標籤！
     if (isFinal) {
@@ -1442,13 +1442,13 @@
 
     // 判定勝負與霸氣背景展現
     if (myNum > opNum) { 
-      r.innerText = isFinal ? "VICTORY" : "WIN"; 
+      r.innerText = isFinal ? "對戰獲勝" : "WIN"; 
       r.classList.add('result-win');
       o.classList.add('theme-win'); // 觸發我方勝利動畫方向
       if (myImgUrl) standStage.style.backgroundImage = `url('${myImgUrl}')`; 
     }
     else if (myNum < opNum) { 
-      r.innerText = isFinal ? "DEFEAT" : "LOSE"; 
+      r.innerText = isFinal ? "對戰失敗" : "LOSE"; 
       r.classList.add('result-lose');
       o.classList.add('theme-lose'); // 觸發對手勝利動畫方向
       if (opImgUrl) standStage.style.backgroundImage = `url('${opImgUrl}')`; 
