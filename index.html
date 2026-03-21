@@ -188,16 +188,15 @@
     #battle-record-btn.ult-active { transform: scale(0.9); animation: ultManaCharge 0.5s infinite alternate; border-color: #fff; }
     @keyframes ultManaCharge { 0% { box-shadow: 0 0 20px #f1c40f, 0 0 30px #f1c40f; } 100% { box-shadow: 0 0 50px #f39c12, 0 0 80px #fff; } }
 
-    /* 🎴 實體卡片設計 */
+    /* 🎴 實體卡片設計 (🚀 變成手遊直式 5:7 比例) */
     .arena-section { z-index: 10; width: 100%; display: flex; flex-direction: column; align-items: center; }
     .card-entity {
-      height: 20vh; min-height: 120px; max-height: 180px; 
-      aspect-ratio: 2816 / 1271; width: auto; max-width: 95vw; 
+      height: 25vh; min-height: 160px; max-height: 240px; 
+      aspect-ratio: 5 / 7; width: auto; max-width: 95vw; /* 🚀 完美直式比例 */
       background-size: cover; background-position: center center; background-repeat: no-repeat;
       border-radius: 12px; border: 3px solid #576574; 
       box-shadow: 0 10px 30px rgba(0,0,0,0.8), inset 0 0 15px rgba(255,255,255,0.2);
       position: relative; z-index: 5; transition: all 0.4s ease;
-      /* 🚀 已經移除 overflow: hidden; 讓光球可以順利飛出卡片結界！ */
     }
 
     /* 🌟 一般錄音：卡片本體爆發 (青藍色) */
@@ -1949,64 +1948,48 @@
   // 🌈 頂級 3D 互動閃卡引擎 (追蹤手指與滑鼠)
   // =======================================================
   function initInteractiveHoloCards() {
-      // 找到對戰畫面的兩張卡片
-      const cards = [document.getElementById('my-card'), document.getElementById('op-card')];
+      // 🚀 一次抓取「Portal 畫面」和「對戰畫面」的所有卡片！
+      const cards = document.querySelectorAll('.portal-card, .card-entity');
       
       cards.forEach(card => {
           if(!card) return;
           
-          // 如果卡片裡面還沒有全息膜，幫它加一層
           if(!card.querySelector('.holo-layer')) {
               const holo = document.createElement('div');
               holo.className = 'holo-layer';
               card.appendChild(holo);
           }
-          
           const holoLayer = card.querySelector('.holo-layer');
 
-          // --- 觸控與滑鼠互動核心 ---
           const handleInteract = (e) => {
-              // ⚠️ 如果卡片正在播放攻擊、受傷、大招等動畫，就暫時不給摸，避免動畫衝突
               if(card.classList.contains('blast-up') || card.classList.contains('take-damage') || card.classList.contains('loser-shatter') || card.classList.contains('blast-ultimate')) return;
 
               const rect = card.getBoundingClientRect();
-              
-              // 取得手指或滑鼠的座標
               const clientX = e.touches ? e.touches[0].clientX : e.clientX;
               const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-              
-              // 計算點擊位置相對於卡片左上角的 X, Y
               const x = clientX - rect.left;
               const y = clientY - rect.top;
-              
-              // 找出卡片的正中心點
               const centerX = rect.width / 2;
               const centerY = rect.height / 2;
               
-              // 🚀 物理計算：根據點擊位置遠離中心的程度，計算傾斜角度 (最大 ±15 度)
               const rotateX = ((y - centerY) / centerY) * -15; 
               const rotateY = ((x - centerX) / centerX) * 15;
               
-              // 切換成極短的 transition，讓卡片無延遲緊跟手指
               card.style.transition = 'transform 0.1s ease-out';
               card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.05, 1.05, 1.05)`;
               
-              // 🚀 光影計算：讓反光漸層跟著手指位置跑！
               const bgX = (x / rect.width) * 100;
               const bgY = (y / rect.height) * 100;
               holoLayer.style.backgroundPosition = `${bgX}% ${bgY}%`;
-              holoLayer.style.opacity = '1'; // 摸下去瞬間爆發光芒
+              holoLayer.style.opacity = '1'; 
           };
 
-          // 手指離開時，恢復原狀
           const handleRelease = () => {
-              // 恢復平滑的 Q 彈回彈動畫
               card.style.transition = 'transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
               card.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`;
-              holoLayer.style.opacity = '0'; // 光芒消退
+              holoLayer.style.opacity = '0'; 
           };
 
-          // 綁定所有事件 (同時支援電腦滑鼠與手機觸控)
           card.addEventListener('mousemove', handleInteract);
           card.addEventListener('mouseleave', handleRelease);
           card.addEventListener('touchmove', handleInteract, {passive: true});
