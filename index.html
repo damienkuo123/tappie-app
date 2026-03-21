@@ -284,32 +284,57 @@
       transform: translate(150%, 100%) scale(0.5); opacity: 0;
     }
     
-    /* 🚀 我方勝利 (Win/Draw)：從右下角飛入，往左上方緩飄，最後向左上飛出 */
-    .theme-win.active #impact-stand-stage { animation: card-enter-win 3s cubic-bezier(0.1, 0.9, 0.2, 1) forwards; }
-    .theme-win.fade-out #impact-stand-stage { animation: card-exit-win 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+    /* 🚀 我方勝利 (Win/Draw)：滑入與緩飄的無縫銜接 */
+    .theme-win.active #impact-stand-stage { 
+      /* 外層改用 linear，避免在關鍵影格切換時重新加速 */
+      animation: card-enter-win 3s linear forwards; 
+    }
+    .theme-win.fade-out #impact-stand-stage { 
+      animation: card-exit-win 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards; 
+    }
 
     @keyframes card-enter-win {
-      0% { transform: translate(100%, 100%) rotateZ(-25deg) rotateY(30deg) rotateX(20deg) scale(0.6); opacity: 0; filter: brightness(3) blur(10px); }
-      15% { transform: translate(5%, 5%) rotateZ(-10deg) rotateY(15deg) rotateX(5deg) scale(1); opacity: 1; filter: brightness(1.2) blur(0px); }
-      100% { transform: translate(-5%, -5%) rotateZ(-15deg) rotateY(0deg) rotateX(0deg) scale(1.05); opacity: 1; filter: brightness(1) blur(0px); }
-    }
-    @keyframes card-exit-win {
-      0% { transform: translate(-5%, -5%) rotateZ(-15deg) rotateY(0deg) rotateX(0deg) scale(1.05); opacity: 1; }
-      100% { transform: translate(-150%, -100%) rotateZ(-30deg) rotateY(-20deg) rotateX(-20deg) scale(0.5); opacity: 0; filter: brightness(2) blur(10px); }
+      0% { 
+        transform: translate(100%, 100%) rotateZ(-25deg) rotateY(30deg) rotateX(20deg) scale(0.6); 
+        opacity: 0; filter: brightness(3) blur(10px); 
+        /* 第一段衝刺：在這裡套用減速曲線，讓它在 25% 時完美減速到緩飄的初速 */
+        animation-timing-function: cubic-bezier(0.1, 0.9, 0.2, 1); 
+      }
+      25% { 
+        transform: translate(2%, 2%) rotateZ(-12deg) rotateY(5deg) rotateX(2deg) scale(1.02); 
+        opacity: 1; filter: brightness(1) blur(0px); 
+        /* 第二段緩飄：改用 linear，保持等速漂浮直到 100% 結束 */
+        animation-timing-function: linear; 
+      }
+      100% { 
+        transform: translate(-5%, -5%) rotateZ(-15deg) rotateY(0deg) rotateX(0deg) scale(1.05); 
+      }
     }
 
-    /* 🚀 對手勝利 (Lose)：從左上角充滿壓迫感地砸入，往右下方緩飄，最後向右下飛出 */
-    .theme-lose.active #impact-stand-stage { animation: card-enter-lose 3s cubic-bezier(0.1, 0.9, 0.2, 1) forwards; }
-    .theme-lose.fade-out #impact-stand-stage { animation: card-exit-lose 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+    /* 🚀 對手勝利 (Lose)：同理修正頓挫感 */
+    .theme-lose.active #impact-stand-stage { 
+      animation: card-enter-lose 3s linear forwards; 
+    }
+    .theme-lose.fade-out #impact-stand-stage { 
+      animation: card-exit-lose 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards; 
+    }
 
     @keyframes card-enter-lose {
-      0% { transform: translate(-100%, -100%) rotateZ(15deg) rotateY(-30deg) rotateX(-20deg) scale(0.6); opacity: 0; filter: brightness(3) blur(10px); }
-      15% { transform: translate(-5%, -5%) rotateZ(-5deg) rotateY(-15deg) rotateX(-5deg) scale(1); opacity: 1; filter: brightness(1.2) blur(0px); }
-      100% { transform: translate(5%, 5%) rotateZ(-10deg) rotateY(0deg) rotateX(0deg) scale(1.05); opacity: 1; filter: brightness(1) blur(0px); }
-    }
-    @keyframes card-exit-lose {
-      0% { transform: translate(5%, 5%) rotateZ(-10deg) rotateY(0deg) rotateX(0deg) scale(1.05); opacity: 1; }
-      100% { transform: translate(150%, 100%) rotateZ(5deg) rotateY(20deg) rotateX(20deg) scale(0.5); opacity: 0; filter: brightness(2) blur(10px); }
+      0% { 
+        transform: translate(-100%, -100%) rotateZ(15deg) rotateY(-30deg) rotateX(-20deg) scale(0.6); 
+        opacity: 0; filter: brightness(3) blur(10px); 
+        /* 衝刺減速 */
+        animation-timing-function: cubic-bezier(0.1, 0.9, 0.2, 1);
+      }
+      25% { 
+        transform: translate(-2%, -2%) rotateZ(-8deg) rotateY(-5deg) rotateX(-2deg) scale(1.02); 
+        opacity: 1; filter: brightness(1) blur(0px); 
+        /* 緩飄等速 */
+        animation-timing-function: linear;
+      }
+      100% { 
+        transform: translate(5%, 5%) rotateZ(-10deg) rotateY(0deg) rotateX(0deg) scale(1.05); 
+      }
     }
 
     /* ✨ 掃過立繪的流光特效 */
