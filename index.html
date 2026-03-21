@@ -26,106 +26,91 @@
     #zh-display { font-size: 20px; color: #7f8c8d; margin: -10px 0 20px 0; font-weight: bold; }
 
     /* ========================================= */
-    /* 🚀 傳送門：全息對峙 Loading 畫面 (VS Clash) */
+    /* 🚀 傳送門：頂級 3D 全息對峙 Loading 畫面 */
     /* ========================================= */
     #battle-portal-overlay {
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-      background: radial-gradient(circle at center, #1c2331 0%, #050914 100%);
+      background: rgba(5, 10, 15, 0.95); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
       z-index: 9999; flex-direction: column; align-items: center; justify-content: space-between; 
-      padding: 40px 0; box-sizing: border-box; overflow: hidden;
+      padding: 50px 0; box-sizing: border-box; overflow: hidden;
+      perspective: 1200px; /* 🚀 沿用 3D 視角 */
     }
-    
-    /* 頂部倒數計時 */
+
     .portal-timer-modern {
-      font-size: 24px; font-weight: 900; color: #f1c40f; text-shadow: 0 0 15px rgba(241,196,15,0.8);
-      letter-spacing: 5px; z-index: 20;
+      font-size: 20px; font-weight: 900; color: #a4b0be; letter-spacing: 8px; z-index: 20;
     }
 
-    /* 對戰區容器 (讓卡片可以在裡面重疊) */
+    /* 讓兩張卡片可以在這裡面呈現 3D 空間關係 */
     .portal-clash-container {
-      position: relative; width: 100%; flex: 1; max-width: 600px; margin: 20px 0;
+      position: relative; width: 100%; flex: 1; max-width: 800px; 
+      display: flex; align-items: center; justify-content: center;
+      transform-style: preserve-3d;
     }
 
-    /* 卡片共用樣式 */
+    /* 🛡️ 完全複製 impact-stand-stage 的卡片質感 */
     .portal-card {
-      position: absolute; width: 75vw; max-width: 320px; aspect-ratio: 2816/1271;
-      border-radius: 12px; border: 3px solid rgba(255,255,255,0.8);
-      background-size: cover; background-position: center;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.8);
-      display: flex; align-items: flex-end; justify-content: center;
-      opacity: 0; /* 初始隱藏，等待 JS 觸發飛入 */
+      position: absolute; width: 45vw; max-width: 320px; aspect-ratio: 2816/1271;
+      background: rgba(255, 255, 255, 0.05); 
+      border-radius: 15px; 
+      box-shadow: 
+        15px 20px 40px rgba(0,0,0,0.6), 
+        inset 2px 2px 4px rgba(255,255,255,0.3), 
+        inset -2px -2px 4px rgba(0,0,0,0.3), 
+        0 0 0 1px rgba(255,255,255,0.15); 
+      background-size: cover; background-repeat: no-repeat; background-position: center top;
+      -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%);
+      mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%);
+      display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding-bottom: 20px;
+      opacity: 0;
     }
 
-    /* 姓名條 (直接黏在卡片底部) */
+    /* 姓名條：也跟著微微傾斜反向扭曲，融入卡片 */
     .portal-name-tag {
-      background: rgba(0,0,0,0.85); color: white; padding: 6px 25px; font-size: 14px; font-weight: 900;
-      letter-spacing: 2px; text-transform: uppercase; border-top-left-radius: 12px; border-top-right-radius: 12px;
-      transform: translateY(3px); border: 1px solid rgba(255,255,255,0.3); border-bottom: none;
-      backdrop-filter: blur(5px);
+      font-size: 16px; color: #fff; font-weight: 900; letter-spacing: 4px; text-transform: uppercase;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+      transform: skewX(-5deg); 
     }
 
-    /* 對手卡片 (從右上角殺出) */
-    .op-card {
-      top: 15%; right: -100vw; transform: rotate(15deg); 
-      border-color: #ff6b6b; box-shadow: 0 20px 50px rgba(0,0,0,0.8), 0 0 40px rgba(255,107,107,0.4);
-    }
-    
-    /* 我方卡片 (從左下角殺出) */
-    .my-card {
-      bottom: 15%; left: -100vw; transform: rotate(-15deg); 
-      border-color: #00d2d3; box-shadow: 0 20px 50px rgba(0,0,0,0.8), 0 0 40px rgba(0,210,211,0.4);
+    /* 🚀 動態進場：我方 (左下飛入，懸浮對峙) */
+    .clash-in-my { animation: portal-my-enter 2s cubic-bezier(0.1, 0.9, 0.2, 1) forwards; }
+    @keyframes portal-my-enter {
+      0% { transform: translate(-100%, 100%) rotateZ(-20deg) rotateY(20deg) scale(0.6); opacity: 0; filter: brightness(2.5) blur(10px); }
+      100% { transform: translate(-45%, 15%) rotateZ(-10deg) rotateY(15deg) scale(1); opacity: 1; filter: brightness(1) blur(0px); }
     }
 
-    /* 🚀 雙卡飛入動畫 + 摩擦震動 (Friction) */
-    .clash-in-op { animation: slide-in-op 0.4s cubic-bezier(0.1, 0.9, 0.2, 1) forwards, friction-op 0.15s 0.4s infinite alternate; }
-    .clash-in-my { animation: slide-in-my 0.4s cubic-bezier(0.1, 0.9, 0.2, 1) forwards, friction-my 0.15s 0.4s infinite alternate; }
-
-    @keyframes slide-in-op {
-      0% { right: -100vw; top: -20%; transform: rotate(25deg) scale(1.2); opacity: 0; }
-      100% { right: 5%; top: 20%; transform: rotate(8deg) scale(1); opacity: 1; }
-    }
-    @keyframes slide-in-my {
-      0% { left: -100vw; bottom: -20%; transform: rotate(-25deg) scale(1.2); opacity: 0; }
-      100% { left: 5%; bottom: 20%; transform: rotate(-8deg) scale(1); opacity: 1; }
+    /* 🚀 動態進場：對手 (右上飛入，懸浮對峙) */
+    .clash-in-op { animation: portal-op-enter 2s cubic-bezier(0.1, 0.9, 0.2, 1) forwards; }
+    @keyframes portal-op-enter {
+      0% { transform: translate(100%, -100%) rotateZ(20deg) rotateY(-20deg) scale(0.6); opacity: 0; filter: brightness(2.5) blur(10px); }
+      100% { transform: translate(45%, -15%) rotateZ(-10deg) rotateY(-15deg) scale(1); opacity: 1; filter: brightness(1) blur(0px); }
     }
 
-    /* 高頻摩擦震動 (製造力量抗衡的緊繃感) */
-    @keyframes friction-op { to { transform: rotate(8.5deg) translate(-2px, 2px); filter: brightness(1.2); } }
-    @keyframes friction-my { to { transform: rotate(-8.5deg) translate(2px, -2px); filter: brightness(1.2); } }
-
-    /* ⚡ 中間的 VS 閃電特效 */
+    /* ✨ 乾淨質感的 VS 標誌 */
     .portal-vs-spark {
       position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
-      font-size: 90px; font-weight: 900; font-style: italic; color: #fff;
-      text-shadow: 0 0 20px #f39c12, 0 0 40px #f1c40f, 0 0 80px #e67e22;
-      z-index: 10; opacity: 0; pointer-events: none;
+      font-size: 32px; font-weight: 900; font-style: italic; color: #fff;
+      text-shadow: 0 0 15px rgba(0, 210, 211, 0.8), 0 0 30px rgba(0, 210, 211, 0.4);
+      z-index: 10; opacity: 0; letter-spacing: 5px;
     }
-    .spark-active { animation: vs-slam 0.4s 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, vs-pulse 0.1s 0.7s infinite alternate; }
-    
-    @keyframes vs-slam { 0% { transform: translate(-50%, -50%) scale(5); opacity: 0; filter: blur(10px); } 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; filter: blur(0px); } }
-    @keyframes vs-pulse { to { transform: translate(-50%, -50%) scale(1.05) skewX(-5deg); text-shadow: 0 0 30px #f39c12, 0 0 80px #fff; } }
+    .spark-active { animation: portal-vs-pop 0.6s 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+    @keyframes portal-vs-pop {
+      0% { transform: translate(-50%, -50%) scale(3); opacity: 0; filter: blur(10px); }
+      100% { transform: translate(-50%, -50%) scale(1); opacity: 1; filter: blur(0px); }
+    }
 
-    /* 🚀 現代化進入按鈕 */
+    /* 🚀 進入戰場按鈕 (改為高級毛玻璃按鈕) */
     .portal-btn-hidden { opacity: 0; transform: translateY(30px); pointer-events: none; }
-    .portal-btn-show { 
-      opacity: 1; pointer-events: auto; transform: translateY(0); 
-      transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
+    .portal-btn-show { opacity: 1; pointer-events: auto; transform: translateY(0); transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    
     .btn-cyber {
-      background: linear-gradient(135deg, #00d2d3, #0fb9b1); color: white;
-      font-size: 22px; font-weight: 900; letter-spacing: 4px; padding: 18px 50px;
-      border: none; border-radius: 15px; cursor: pointer; outline: none;
-      box-shadow: 0 10px 30px rgba(0, 210, 211, 0.5); position: relative; overflow: hidden;
-      text-transform: uppercase;
+      background: rgba(255,255,255,0.05); color: white;
+      font-size: 16px; font-weight: bold; letter-spacing: 6px; padding: 15px 40px;
+      border: 1px solid rgba(255,255,255,0.2); border-radius: 30px; cursor: pointer;
+      backdrop-filter: blur(10px); box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      text-transform: uppercase; transition: 0.3s;
     }
-    /* 按鈕上的掃光特效 */
-    .btn-cyber::after {
-      content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
-      transform: skewX(-25deg); animation: btn-sweep 2s infinite;
-    }
-    @keyframes btn-sweep { 0% { left: -100%; } 100% { left: 200%; } }
-    .btn-cyber:active { transform: scale(0.95); box-shadow: 0 5px 15px rgba(0, 210, 211, 0.8); }
+    .btn-cyber:hover { background: rgba(255,255,255,0.15); box-shadow: 0 0 20px rgba(0, 210, 211, 0.5); border-color: #00d2d3; }
+    .btn-cyber:active { transform: scale(0.95); }
 
         /* ========================================= */
     /* 對戰頁面 */
@@ -595,13 +580,13 @@
 
   <div class="portal-clash-container">
     
-    <div id="portal-op-card" class="portal-card op-card">
+    <div id="portal-op-card" class="portal-card">
       <div class="portal-name-tag" id="portal-op-name">OPPONENT</div>
     </div>
 
     <div class="portal-vs-spark">VS</div>
 
-    <div id="portal-my-card" class="portal-card my-card">
+    <div id="portal-my-card" class="portal-card">
       <div class="portal-name-tag" id="portal-my-name">YOU</div>
     </div>
     
