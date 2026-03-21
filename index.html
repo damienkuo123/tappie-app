@@ -250,38 +250,38 @@
     }
 
     /* ========================================= */
-    /* 💎 頂級 3D 全息英雄結算 (Cinematic Live 2D) */
+    /* 💎 頂級 3D 全息英雄結算 (Cinematic Live 2D Fusion) */
     /* ========================================= */
     #impact-overlay { 
       display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 
       background: rgba(10, 15, 20, 0); backdrop-filter: blur(0px); -webkit-backdrop-filter: blur(0px);
       z-index: 9999; flex-direction: column; justify-content: center; align-items: center; color: white; 
       transition: all 0.5s ease; overflow: hidden;
-      perspective: 1200px; /* 🚀 啟動 3D 視角，讓卡片有空間感 */
+      perspective: 1200px; /* 🚀 啟動 3D 視角，讓卡片有立體空間感 */
     }
     #impact-overlay.active { display: flex; background: rgba(5, 10, 15, 0.85); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); }
     #impact-overlay.fade-out { opacity: 0; backdrop-filter: blur(0px); -webkit-backdrop-filter: blur(0px); }
 
-    /* 🛡️ 3D 全息投影卡片舞台 (帶厚度與緩慢漂浮) */
+    /* 🛡️ 3D 全息投影卡片舞台 (UI 全部裝在裡面！) */
     #impact-stand-stage {
       position: relative; width: 90vw; height: 75vh; max-width: 500px;
-      /* 🚀 模擬卡片的厚度與高光邊緣 */
       background: rgba(255, 255, 255, 0.05);
       border-radius: 25px; 
       box-shadow: 
-        20px 30px 50px rgba(0,0,0,0.8), /* 極深層的陰影，製造浮空感 */
-        inset 3px 3px 5px rgba(255,255,255,0.3), /* 卡片左上角高光 */
-        inset -3px -3px 5px rgba(0,0,0,0.5), /* 卡片右下角暗角 */
-        0 0 0 1px rgba(255,255,255,0.15); /* 極細的外框線 */
+        20px 30px 50px rgba(0,0,0,0.8), 
+        inset 3px 3px 5px rgba(255,255,255,0.3), 
+        inset -3px -3px 5px rgba(0,0,0,0.5), 
+        0 0 0 1px rgba(255,255,255,0.15); 
       overflow: hidden; z-index: 1; 
       display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 40px 0;
       transform-style: preserve-3d;
       
-      /* ✨ 英雄全圖立繪背景 */
       background-size: cover; background-repeat: no-repeat; background-position: center top;
-      /* 讓圖片下方完美融入黑底 */
       -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 50%, rgba(0,0,0,0) 95%);
       mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 50%, rgba(0,0,0,0) 95%);
+      
+      /* 預設隱藏在畫面外，防呆 */
+      transform: translate(150%, 100%) scale(0.5); opacity: 0;
     }
     
     /* 🚀 我方勝利 (Win/Draw)：從右下角飛入，往左上方緩飄，最後向左上飛出 */
@@ -312,33 +312,43 @@
       100% { transform: translate(150%, 100%) rotateZ(5deg) rotateY(20deg) rotateX(20deg) scale(0.5); opacity: 0; filter: brightness(2) blur(10px); }
     }
 
-    /* 內容層：完全服貼卡片角度，不額外做旋轉 */
+    /* ✨ 掃過立繪的流光特效 */
+    #impact-stand-stage::after {
+      content: ''; position: absolute; top: 0; left: -150%; width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), rgba(0,210,211,0.2), transparent);
+      transform: skewX(-25deg); z-index: 5; pointer-events: none;
+    }
+    .active #impact-stand-stage::after { animation: light-sweep 1.2s 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+    @keyframes light-sweep { 0% { left: -150%; } 100% { left: 150%; } }
+
+    /* 內容層：反向扭曲，抵銷舞台歪斜，創造偽 3D 感 */
     #impact-content { 
       position: relative; z-index: 10; display: flex; flex-direction: column; align-items: center; 
       width: 100%; height: 100%; justify-content: space-between;
+      transform: skewX(-5deg); 
     }
 
     #impact-subtitle { font-size: 16px; color: #f1f2f6; letter-spacing: 8px; font-weight: bold; margin: 0; text-transform: uppercase; opacity: 0; transform: translateY(-20px); text-shadow: 0 2px 10px #000; }
     .active #impact-subtitle { animation: fade-down 0.5s 0.5s forwards; }
     @keyframes fade-down { to { opacity: 1; transform: translateY(0); } }
     
-    /* ☄️ 狂暴砸字 (修正模糊 Bug) */
+    /* ☄️ 狂暴砸字 (已修正模糊 Bug) */
     #impact-result { 
       font-size: 80px; font-weight: 900; letter-spacing: 15px; margin: -20px 0 0 0; text-transform: uppercase; 
-      opacity: 0; transform: scale(3); /* 不自己旋轉，完全跟著卡片歪 */
+      opacity: 0; transform: scale(3) rotate(-10deg); 
     }
     .active #impact-result { animation: text-slam 0.5s 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
     @keyframes text-slam {
-      0% { opacity: 0; transform: scale(3) translateY(-20px); filter: blur(15px); letter-spacing: 40px; }
-      60% { opacity: 1; transform: scale(0.9) translateY(0); filter: blur(0px); letter-spacing: 4px; }
-      100% { opacity: 1; transform: scale(1); filter: blur(0px); letter-spacing: 6px; } /* 🚀 修復：明確指定 blur(0px) */
+      0% { opacity: 0; transform: scale(3) rotate(-10deg) translateY(-20px); filter: blur(15px); letter-spacing: 40px; }
+      60% { opacity: 1; transform: scale(0.9) rotate(5deg) translateY(0); filter: blur(0px); letter-spacing: 4px; }
+      100% { opacity: 1; transform: scale(1) rotate(0deg); filter: blur(0px); letter-spacing: 6px; } 
     }
 
     .result-win { color: #fff; text-shadow: 0 0 15px rgba(0, 210, 211, 0.8), 0 0 40px rgba(0, 210, 211, 0.6), 0 0 80px rgba(0, 210, 211, 0.4); }
     .result-lose { color: #fff; text-shadow: 0 0 15px rgba(255, 107, 107, 0.8), 0 0 40px rgba(255, 107, 107, 0.6), 0 0 80px rgba(255, 107, 107, 0.4); }
     .result-draw { color: #fff; text-shadow: 0 0 15px rgba(241, 196, 15, 0.8), 0 0 40px rgba(241, 196, 15, 0.6), 0 0 80px rgba(241, 196, 15, 0.4); }
 
-    /* 🥊 完美貼合卡片底部的分數版 */
+    /* 🥊 分數版完美貼合卡片底部 */
     .impact-score-board {
       display: flex; align-items: center; justify-content: center; gap: 25px; 
       background: rgba(0, 0, 0, 0.6); padding: 15px 40px; border-radius: 20px;
