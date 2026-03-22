@@ -1696,22 +1696,24 @@
 
   /* 將此代碼替換您原本的 characterAssets */
   const characterAssets = {
-    'Hero_01': { name: '星際女武神', img: 'https://i.imgur.com/k6lP09F.png', theme: 'theme-tech' }, // 用你的精美角色圖
-    'Hero_02': { name: '火炎紅蓮姬', img: 'https://i.imgur.com/A6C5n6m.png', theme: 'theme-fire' },
-    'Hero_03': { name: '秘術魔導士', img: 'https://i.imgur.com/your-magic-girl.png', theme: 'theme-magic' },
+    'A002': { name: '艾多 Aldo', img: 'https://raw.githubusercontent.com/damienkuo123/marian-app/refs/heads/main/assets/Aldo.webp' }, // 用你的精美角色圖
+    'A003': { name: '菲利克斯 Felix', img: 'https://raw.githubusercontent.com/damienkuo123/marian-app/refs/heads/main/assets/Felix.webp' },
+    'A004': { name: '咕嚕 Glou-Glou', img: 'https://raw.githubusercontent.com/damienkuo123/marian-app/refs/heads/main/assets/Glou-Glou.webp' },
   };
   
   // 🎲 獎池設定
   /* 將此代碼替換您原本的 PRIZE_POOL */
   const PRIZE_POOL = [
-    { type: 'points', value: 10, label: '10 點', class: 'prize-white', glow: 'crack-white', weight: 40 },
-    { type: 'points', value: 30, label: '30 點', class: 'prize-blue', glow: 'crack-blue', weight: 30 },
-    { type: 'points', value: 50, label: '50 點', class: 'prize-purple', glow: 'crack-purple', weight: 15 },
-    { type: 'points', value: 100, label: '💰 100 點', class: 'prize-purple', glow: 'crack-purple', weight: 8 },
+    { type: 'points', value: 10, label: '10 點', class: 'prize-white', glow: 'crack-white', weight: 2 },
+    { type: 'points', value: 30, label: '30 點', class: 'prize-blue', glow: 'crack-blue', weight: 2 },
+    { type: 'points', value: 50, label: '50 點', class: 'prize-purple', glow: 'crack-purple', weight: 2 },
+    { type: 'points', value: 100, label: '💰 100 點', class: 'prize-purple', glow: 'crack-purple', weight: 2 },
     { type: 'points', value: 200, label: '💎 200 點', class: 'prize-gold', glow: 'crack-gold', weight: 2 },
     
     // 🚀 SSR 級角色大獎！(綁定 ID)
-    { type: 'avatar', value: 'Hero_01', label: 'SSR 神秘角色', class: 'prize-gold', glow: 'crack-gold', weight: 5 }
+    { type: 'avatar', value: 'A002', label: 'SSR', class: 'prize-gold', glow: 'crack-gold', weight: 30 }
+    { type: 'avatar', value: 'A003', label: 'SSR', class: 'prize-gold', glow: 'crack-gold', weight: 30 }
+    { type: 'avatar', value: 'A004', label: 'SSR', class: 'prize-gold', glow: 'crack-gold', weight: 30 }
   ];
 
   function drawPrize() {
