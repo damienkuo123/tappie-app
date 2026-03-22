@@ -231,26 +231,7 @@
     const params = new URLSearchParams(window.location.search);
     const STUDENT_ID = params.get('id') || "S001";
 
-    // 🚀 資料庫：全息卡牌資產 (加入 rarity 與 category)
-    const characterAssets = {
-      'A001': { name: '新手劍士', img: 'https://raw.githubusercontent.com/damienkuo123/marian-app/refs/heads/main/assets/Hero_01.webp', rarity: 'N', category: '一般' }, 
-      'A002': { name: '艾多 Aldo', img: 'https://raw.githubusercontent.com/damienkuo123/marian-app/refs/heads/main/assets/Aldo.webp', rarity: 'R', category: '一般' },
-      'A003': { name: '菲利克斯 Felix', img: 'https://raw.githubusercontent.com/damienkuo123/marian-app/refs/heads/main/assets/Felix.webp', rarity: 'SR', category: '限定' },
-      'A004': { name: '咕嚕 Glou-Glou', img: 'https://raw.githubusercontent.com/damienkuo123/marian-app/refs/heads/main/assets/Glou-Glou.webp', rarity: 'SSR', category: '活動' }
-    };
-
-    let userUnlocked = [];
-    let userEquipped = "";
-    let currentCenteredId = ""; 
-
-    // 1. 初始化：跟後端要資料 (包含點數、已解鎖、已裝備)
-    // ⚠️ 這裡一定要貼上你最新發佈的 GAS URL！！！
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbyWm-WnRO5h3dliEPR36Cq1hCf5DgM4GIgJqXVUREclhtYOHjxq9DptApmQPkU5p5Ys/exec";
-    
-    const params = new URLSearchParams(window.location.search);
-    const STUDENT_ID = params.get('id') || "S001";
-
-    // 🚀 把原本寫死的假資料砍掉，改成空的，等後端餵資料
+    // 🚀 預設為空，等待後端 API 餵真實資料
     let characterAssets = {}; 
     let userUnlocked = [];
     let userEquipped = "";
@@ -446,6 +427,9 @@
     }
 
     function clamp(val, min, max) { return Math.min(Math.max(val, min), max); }
+
+    // 啟動！
+    window.onload = initLobby;
   </script>
 </body>
 </html>
