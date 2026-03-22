@@ -1754,16 +1754,29 @@
 
     // 渲染卡片 (加上 Wrapper 替身)
     gachaCardsData.forEach((card, index) => {
-      // 🚀 建立替身外殼
       const wrapperEl = document.createElement('div');
       wrapperEl.className = 'gacha-card-wrapper';
       wrapperEl.id = `wrapper-${index}`;
 
-      // 建立卡片本體
       const cardEl = document.createElement('div');
       cardEl.className = 'gacha-card';
       cardEl.id = `gacha-card-${index}`;
       
+      // 🚀 [SSR 進化]：判斷獎品類型，動態生成立繪背景與真名
+      let finalLabel = card.prize.label;
+      let finalValueText = card.prize.type === 'points' ? `+${card.prize.value}` : 'SSR';
+      let finalBgStyles = card.prize.bgImg ? `style="background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.8)), url('${card.prize.bgImg}')"` : '';
+      
+      if (card.prize.type === 'avatar') {
+          const charId = card.prize.value;
+          if (typeof characterAssets !== 'undefined' && characterAssets[charId]) {
+              finalLabel = characterAssets[charId].name; // 顯示角色真名
+              // 顯示精美立繪背景 (移除黑洞漸層)
+              finalBgStyles = `style="background-image: url('${characterAssets[charId].img}'); background-size: cover; background-position: center top;"`;
+              finalValueText = "✨"; 
+          }
+      }
+
       cardEl.innerHTML = `
         <div class="gacha-inner">
           <div class="gacha-front">
@@ -1774,26 +1787,21 @@
               <div class="voice-status" id="lock-status-${index}">長按發音解鎖</div>
             </div>
           </div>
-          <div class="gacha-back ${card.prize.class}" ${card.prize.bgImg ? `style="background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.8)), url('${card.prize.bgImg}')"` : ''}>
-            <div class="prize-value">${card.prize.type === 'points' ? `+${card.prize.value}` : '✨'}</div>
-            <div class="prize-label">${card.prize.label}</div>
+          <div class="gacha-back ${card.prize.class}" ${finalBgStyles}>
+            <div class="prize-value">${finalValueText}</div>
+            <div class="prize-label">${finalLabel}</div>
           </div>
         </div>
       `;
       
-      // 第一層互動：點擊卡片放大聚焦
+      // 第一層互動：點擊卡片絕對不會收合，只會觸發放大！
       cardEl.onclick = (e) => {
           if (isGachaResolving || card.flipped || gachaPicksLeft <= 0) return;
-          if (e.target.closest('.voice-lock-btn')) return; 
-
-          if (focusedCardIndex === index) {
-              cancelFocus();
-          } else {
+          if (focusedCardIndex === -1) {
               focusCard(index);
           }
       };
 
-      // 將卡片塞入替身，替身塞入網格
       wrapperEl.appendChild(cardEl);
       board.appendChild(wrapperEl);
       
@@ -1897,52 +1905,61 @@
       const cardEl = document.getElementById(`gacha-card-${index}`);
       const prizeInfo = gachaCardsData[index].prize;
       
-      // 1. 卡片加上稀有度碎裂光芒
       cardEl.classList.add(prizeInfo.glow);
       
-      // 2. 震動 1 秒後，翻開卡片並解除聚焦飛回網格
       setTimeout(() => {
           gachaCardsData[index].flipped = true;
-          gachaWonItems.push(prizeInfo);
           cardEl.classList.add('flipped');
-          cancelFocus(); // 縮回去原位
+          cancelFocus(); 
 
-          // 扣除次數並更新 UI
+          // 🚀 [SSR 進化]：處理重複角色與結算顯示
+          let prizeToAdd = { ...prizeInfo }; // 複製一份獎品資訊
+          
+          if (prizeToAdd.type === 'avatar') {
+              const charId = prizeToAdd.value;
+              // 假設前端有紀錄解鎖列表 (如果沒有，預設當作新角色，交給後端把關防呆)
+              const alreadyOwned = (window.myUnlockedAvatars || []).includes(charId);
+              
+              if (alreadyOwned) {
+                  prizeToAdd.realLabel = `(重複轉點) ${characterAssets[charId] ? characterAssets[charId].name : prizeToAdd.label}`;
+                  window.wonPoints += 500; // 補償 500 點
+              } else {
+                  prizeToAdd.realLabel = characterAssets[charId] ? characterAssets[charId].name : prizeToAdd.label;
+                  window.wonAvatars.push(charId); 
+              }
+          } else {
+              window.wonPoints += prizeToAdd.value; 
+              prizeToAdd.realLabel = prizeToAdd.label;
+          }
+          
+          gachaWonItems.push(prizeToAdd);
+
           gachaPicksLeft--;
           document.getElementById('picks-left').innerText = gachaPicksLeft;
 
-          // 如果沒次數了，進入結算
           if (gachaPicksLeft <= 0) {
               isGachaResolving = true;
               document.getElementById('gacha-subtitle').innerHTML = "<span style='color:#e74c3c'>次數已用盡！</span>";
               
               setTimeout(() => {
-                  // 翻開錯過的卡片
                   const allCards = document.querySelectorAll('.gacha-card');
                   gachaCardsData.forEach((c, i) => {
                       if (!c.flipped) allCards[i].classList.add('flipped', 'missed');
                   });
-                  // 延遲顯示獎勵清單
                   setTimeout(() => showGachaSummary(), 1500);
               }, 1200);
           }
-      }, 1000); // 震動與爆發光芒持續 1 秒
+      }, 1000); 
   }
 
-  
-
-  // 顯示戰利品並發送 GAS (修正後的重複補償版)
+  // 顯示戰利品並發送 GAS
   function showGachaSummary() {
     const listEl = document.getElementById('gacha-won-list');
-    
-    // 🚀 我們已經在 triggerReveal 算好了
-    let totalPoints = window.wonPoints; 
-    let unlockedAvatars = window.wonAvatars;
-    
     let html = "";
+
+    // 顯示所有抽到的獎項真名 (含重複提示)
     gachaWonItems.forEach(item => {
-        // 使用我們在 triggerReveal 存好的真名
-        html += `<div style="font-size: 18px; line-height: 1.6">${item.realLabel}</div>`;
+        html += `<div style="font-size: 18px; line-height: 1.6; font-weight: bold;">${item.realLabel}</div>`;
     });
 
     listEl.innerHTML = html;
@@ -1953,10 +1970,9 @@
         claimBtn.innerText = "發放獎勵中...";
         claimBtn.style.pointerEvents = "none";
         
-        const avatarsParam = unlockedAvatars.length > 0 ? `&avatars=${unlockedAvatars.join(',')}` : '';
-        
-        // 🚀 發送統計好的總點数 (含補償)
-        const finalUrl = `${GAS_URL}?action=claim_gacha&id=${STUDENT_ID}&roomId=${ROOM_ID}&winnerId=${STUDENT_ID}&addPoints=${totalPoints}${avatarsParam}`;
+        // 🚀 將結算好的總點數與新角色送給後端
+        const avatarsParam = window.wonAvatars.length > 0 ? `&avatars=${window.wonAvatars.join(',')}` : '';
+        const finalUrl = `${GAS_URL}?action=claim_gacha&id=${STUDENT_ID}&roomId=${ROOM_ID}&winnerId=${STUDENT_ID}&addPoints=${window.wonPoints}${avatarsParam}`;
         
         fetch(finalUrl, { mode: 'no-cors' }).then(() => {
             window.location.href = `${GAS_URL}?id=${STUDENT_ID}`;
