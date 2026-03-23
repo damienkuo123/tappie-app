@@ -1166,19 +1166,32 @@
         const myName = isMeHost ? data.hostName : (data.guestName || STUDENT_ID);
         const opName = isMeHost ? (data.guestName || "挑戰者") : data.hostName;
 
-        // 🚀 終極精準比對引擎：放棄多餘解碼，原封不動直接比對圖片網址！
+        // 🚀 終極精準比對引擎：加入「自動解碼」與「去空白」雙重防護！
         let myRarity = 'N', opRarity = 'N', myMask = '', opMask = '';
         
+        // 輔助函數：安全解碼並去除前後空白，消除 %20 和空格的誤差
+        const cleanUrl = (url) => {
+            if (!url) return '';
+            try { return decodeURIComponent(url).trim(); } 
+            catch(e) { return url.trim(); }
+        };
+
         if (window.characterAssets) {
+            const safeMyImg = cleanUrl(myImgUrl);
+            const safeOpImg = cleanUrl(opImgUrl);
+
             Object.values(window.characterAssets).forEach(char => {
-               // 只要網址的字串一模一樣，就 100% 絕對命中！
-               if(char.img && myImgUrl && char.img.trim() === myImgUrl.trim()) { 
-                   myRarity = char.rarity || 'N'; 
-                   myMask = char.mask || ''; 
+               const safeCharImg = cleanUrl(char.img);
+               
+               // 1. 只要解碼後的網址一樣，就絕對命中！
+               if(safeCharImg && safeCharImg === safeMyImg) { 
+                   // 2. 用 trim() 確保從 Google Sheet 抓下來的稀有度沒有多餘的隱形空白！
+                   myRarity = char.rarity ? String(char.rarity).trim() : 'N'; 
+                   myMask = char.mask ? String(char.mask).trim() : ''; 
                }
-               if(char.img && opImgUrl && char.img.trim() === opImgUrl.trim()) { 
-                   opRarity = char.rarity || 'N'; 
-                   opMask = char.mask || ''; 
+               if(safeCharImg && safeCharImg === safeOpImg) { 
+                   opRarity = char.rarity ? String(char.rarity).trim() : 'N'; 
+                   opMask = char.mask ? String(char.mask).trim() : ''; 
                }
             });
         }
