@@ -101,17 +101,36 @@
     /* 🚀 對手卡片：在右下角沉穩迎擊 */
     #portal-op-wrapper { bottom: 0; right: 2%; z-index: 2; }
 
-    /* 🚀 動態進場：強烈錯位與傾斜對峙感 */
-    .clash-in-my { animation: slide-in-my 1s cubic-bezier(0.1, 0.9, 0.2, 1) forwards; }
+    /* 🚀 動態進場：加入 Z 軸深度，解除卡片打架危機！ */
+    .clash-in-my { animation: slide-in-my 1.2s cubic-bezier(0.1, 0.9, 0.2, 1) forwards; }
     @keyframes slide-in-my {
-      0% { transform: translate(-30vw, -50px) rotateY(45deg) rotateZ(-20deg) scale(0.8); opacity: 0; filter: brightness(2) blur(10px); }
-      100% { transform: translate(10%, 5%) rotateY(15deg) rotateZ(-10deg) scale(1.05); opacity: 1; filter: brightness(1) blur(0px); } 
+      0% { transform: translate3d(-30vw, -50px, -200px) rotateY(45deg) rotateZ(-20deg) scale(0.8); opacity: 0; filter: brightness(2) blur(10px); }
+      /* 🚀 我方卡片稍微往前凸出 (translateZ 50px) */
+      100% { transform: translate3d(5%, 5%, 50px) rotateY(15deg) rotateZ(-8deg) scale(1.05); opacity: 1; filter: brightness(1) blur(0px); } 
     }
 
-    .clash-in-op { animation: slide-in-op 1s cubic-bezier(0.1, 0.9, 0.2, 1) forwards; }
+    .clash-in-op { animation: slide-in-op 1.2s cubic-bezier(0.1, 0.9, 0.2, 1) forwards; }
     @keyframes slide-in-op {
-      0% { transform: translate(30vw, 50px) rotateY(-45deg) rotateZ(20deg) scale(0.8); opacity: 0; filter: brightness(2) blur(10px); }
-      100% { transform: translate(-10%, -5%) rotateY(-15deg) rotateZ(10deg) scale(1.05); opacity: 1; filter: brightness(1) blur(0px); } 
+      0% { transform: translate3d(30vw, 50px, -500px) rotateY(-45deg) rotateZ(20deg) scale(0.8); opacity: 0; filter: brightness(2) blur(10px); }
+      /* 🚀 對手卡片被推向深淵！(translateZ -150px)，且尺寸稍微縮小營造遠近感 */
+      100% { transform: translate3d(-5%, -5%, -150px) rotateY(-15deg) rotateZ(8deg) scale(0.95); opacity: 1; filter: brightness(0.8) blur(0px); } 
+    }
+
+    /* ✨ VS 疊在正中央防護罩 */
+    .portal-vs-spark {
+      /* 確保 VS 漂浮在兩張卡片之間 */
+      position: absolute; top: 48%; left: 50%; transform: translate3d(-50%, -50%, 100px) scale(0);
+      width: 140px; height: 140px;
+      display: flex; justify-content: center; align-items: center;
+      font-size: 55px; font-weight: 900; font-style: italic; color: #fff;
+      background: radial-gradient(circle, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 40%, rgba(0,0,0,0) 70%);
+      text-shadow: 0 0 10px #000, 0 0 20px #f39c12, 0 0 40px #f1c40f, 0 0 80px #e67e22;
+      z-index: 20; opacity: 0; letter-spacing: 2px; pointer-events: none;
+    }
+    .spark-active { animation: portal-vs-pop 0.6s 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+    @keyframes portal-vs-pop {
+      0% { transform: translate3d(-50%, -50%, 100px) scale(3); opacity: 0; filter: blur(10px); }
+      100% { transform: translate3d(-50%, -50%, 100px) scale(1); opacity: 1; filter: blur(0px); }
     }
 
     /* ✨ VS 疊在正中央防護罩 (確保壓在所有卡片之上) */
@@ -146,11 +165,21 @@
     .card__front { transform: translate3d(0px, 0px, 0.01px); }
     .card__bg { background-size: cover; background-position: center; border: 2px solid transparent; transform: translateZ(0px); z-index: 1; }
 
-    /* 原版基礎眩光 */
+    /* 原版基礎眩光 (N卡的微光) */
     .card__glare {
       transform: translateZ(1.41px); overflow: hidden; z-index: 3;
       background-image: radial-gradient(farthest-corner circle at var(--pointer-x) var(--pointer-y), hsla(0, 0%, 100%, 0.8) 10%, hsla(0, 0%, 100%, 0.65) 20%, hsla(0, 0%, 0%, 0.5) 90%);
       opacity: calc(var(--pointer-from-center) * 0.8); mix-blend-mode: overlay;
+    }
+
+    /* 🚀 移植：你的進化版 Masking (絕對強制挖空，修復遮罩失效問題) */
+    .card.masked .card__shine, .card.masked .card__shine:before, .card.masked .card__shine:after {
+      -webkit-mask-image: linear-gradient(white, white), var(--mask) !important;
+      -webkit-mask-composite: destination-out !important;
+      mask-image: linear-gradient(white, white), var(--mask) !important;
+      mask-composite: exclude !important;
+      -webkit-mask-size: cover !important; mask-size: cover !important;
+      -webkit-mask-position: center center !important; mask-position: center center !important;
     }
 
     /* 姓名條：移到卡片外部的最上方 */
@@ -163,14 +192,47 @@
       pointer-events: none; /* 🚀 關鍵：讓滑鼠能直接穿透名字條，絕不干擾卡片中央的旋轉感應！ */
     }
 
-    /* SSR 閃卡特效 (從 Lobby 移植) */
-    .card[data-rarity="SSR"] .card__shine {
-      display: grid; transform: translateZ(1px); overflow: hidden; z-index: 4; background: transparent; background-size: cover; background-position: center; mix-blend-mode: color-dodge;
-      background-image: var(--foil), repeating-linear-gradient( 0deg, var(--sunpillar-clr-1) calc(var(--space)*1), var(--sunpillar-clr-2) calc(var(--space)*2), var(--sunpillar-clr-3) calc(var(--space)*3), var(--sunpillar-clr-4) calc(var(--space)*4), var(--sunpillar-clr-5) calc(var(--space)*5), var(--sunpillar-clr-6) calc(var(--space)*6), var(--sunpillar-clr-1) calc(var(--space)*7) ), repeating-linear-gradient( var(--angle), #0e152e 0%, hsl(180, 10%, 60%) 3.8%, hsl(180, 29%, 66%) 4.5%, hsl(180, 10%, 60%) 5.2%, #0e152e 10% , #0e152e 12% ), radial-gradient( farthest-corner circle at var(--pointer-x) var(--pointer-y), hsla(0, 0%, 0%, 0.1) 12%, hsla(0, 0%, 0%, 0.15) 20%, hsla(0, 0%, 0%, 0.25) 120% );
-      background-position: center center, 0% var(--pointer-y), calc( var(--pointer-x) + (var(--pointer-y)*0.2) ) var(--pointer-y), var(--pointer-x) var(--pointer-y);
-      background-blend-mode: soft-light, hue, hard-light; background-size: 33%, 200% 700%, 300% 100%, 200% 100%; filter: brightness(calc((var(--pointer-from-center)*.3) + .35)) contrast(2) saturate(1.5);
+    /* =======================================================
+       🎨 100% 滿血還原：對接 cosmos(R), trainer(SR), v-full-art(SSR)
+       ======================================================= */
+    
+    /* 🔵【R卡：Cosmos 星空】 */
+    .card[data-rarity="R"] .card__shine {
+      --space: 4%;
+      background-image: var(--cosmos-bottom), repeating-linear-gradient(82deg, hsl(53, 65%, 60%) calc(var(--space)*1), hsl(93, 56%, 50%) calc(var(--space)*2), hsl(176, 54%, 49%) calc(var(--space)*3), hsl(228, 59%, 55%) calc(var(--space)*4), hsl(283, 60%, 55%) calc(var(--space)*5), hsl(326, 59%, 51%) calc(var(--space)*6), hsl(326, 59%, 51%) calc(var(--space)*7), hsl(283, 60%, 55%) calc(var(--space)*8), hsl(228, 59%, 55%) calc(var(--space)*9), hsl(176, 54%, 49%) calc(var(--space)*10), hsl(93, 56%, 50%) calc(var(--space)*11), hsl(53, 65%, 60%) calc(var(--space)*12) ), radial-gradient(farthest-corner circle at var(--pointer-x) var(--pointer-y), hsla(180, 100%, 89%, 0.5) 5%, hsla(180, 14%, 57%, 0.3) 40%, hsl(0, 0%, 0%) 130% );
+      background-blend-mode: color-burn, multiply; background-position: center, calc(10% + (var(--pointer-from-left)*80%)) calc(10% + (var(--pointer-from-top)*80%)), center;
+      background-size: cover, 400% 900%, cover; filter: brightness(1) contrast(1) saturate(.8); mix-blend-mode: color-dodge;
     }
-    .card[data-rarity="SSR"] .card__bg { border-color: var(--gold); box-shadow: inset 0 0 15px rgba(241,196,15,0.5); }
+    .card[data-rarity="R"] .card__shine:before {
+      background-image: var(--cosmos-mid), repeating-linear-gradient(82deg, hsl(53, 65%, 60%) calc(var(--space)*1), hsl(93, 56%, 50%) calc(var(--space)*2), hsl(176, 54%, 49%) calc(var(--space)*3), hsl(228, 59%, 55%) calc(var(--space)*4), hsl(283, 60%, 55%) calc(var(--space)*5), hsl(326, 59%, 51%) calc(var(--space)*6), hsl(326, 59%, 51%) calc(var(--space)*7), hsl(283, 60%, 55%) calc(var(--space)*8), hsl(228, 59%, 55%) calc(var(--space)*9), hsl(176, 54%, 49%) calc(var(--space)*10), hsl(93, 56%, 50%) calc(var(--space)*11), hsl(53, 65%, 60%) calc(var(--space)*12) );
+      background-blend-mode: lighten, multiply; background-position: center, calc(15% + (var(--pointer-from-left)*70%)) calc(15% + (var(--pointer-from-top)*70%)), center;
+      background-size: cover, 400% 900%, cover; filter: brightness(1.25) contrast(1.75) saturate(.8); mix-blend-mode: overlay;
+    }
+    .card[data-rarity="R"] .card__shine:after {
+      background-image: var(--cosmos-top), repeating-linear-gradient(82deg, hsl(53, 65%, 60%) calc(var(--space)*1), hsl(93, 56%, 50%) calc(var(--space)*2), hsl(176, 54%, 49%) calc(var(--space)*3), hsl(228, 59%, 55%) calc(var(--space)*4), hsl(283, 60%, 55%) calc(var(--space)*5), hsl(326, 59%, 51%) calc(var(--space)*6), hsl(326, 59%, 51%) calc(var(--space)*7), hsl(283, 60%, 55%) calc(var(--space)*8), hsl(228, 59%, 55%) calc(var(--space)*9), hsl(176, 54%, 49%) calc(var(--space)*10), hsl(93, 56%, 50%) calc(var(--space)*11), hsl(53, 65%, 60%) calc(var(--space)*12) );
+      background-blend-mode: multiply, multiply; background-position: center, calc(20% + (var(--pointer-from-left)*60%)) calc(20% + (var(--pointer-from-top)*60%)), center;
+      background-size: cover, 400% 900%, cover; filter: brightness(1.25) contrast(1.75) saturate(.8); mix-blend-mode: multiply;
+    }
+    .card[data-rarity="R"] .card__bg { border-color: #3498db; }
+
+    /* 🟣【SR卡：Trainer Full Art】 */
+    .card[data-rarity="SR"] .card__shine {
+      --imgsize: 33%;
+      mix-blend-mode: color-dodge; 
+    }
+    .card[data-rarity="SR"] .card__shine, .card[data-rarity="SR"] .card__shine:after {
+      background-image: var(--trainer-foil);
+      background-size: var(--imgsize);
+      filter: brightness(calc((var(--pointer-from-center)*0.05) + .6)) contrast(1.5) saturate(1.2);
+    }
+    .card[data-rarity="SR"] .card__shine:before {
+      background-image: radial-gradient(farthest-corner circle at var(--pointer-x) var(--pointer-y), hsl(0, 0%, 100%) 0%, hsla(0, 0%, 0%, 0) 80%);
+      mix-blend-mode: screen; opacity: 0.5;
+    }
+    .card[data-rarity="SR"] .card__glare {
+      opacity: calc(var(--card-opacity) * .75); mix-blend-mode: multiply; filter: brightness(1.5) contrast(1.4) saturate(1); background-size: 170% 170%;
+    }
+    .card[data-rarity="SR"] .card__bg { border-color: #bdc3c7; }
 
     
     .spark-active { animation: portal-vs-pop 0.6s 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
