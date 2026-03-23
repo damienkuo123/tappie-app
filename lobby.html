@@ -159,12 +159,16 @@
     }
     .card[data-rarity="R"] .card__bg { border-color: #3498db; }
 
+    /* 🟣【SR卡：Trainer Full Art】 */
     .card[data-rarity="SR"] .card__shine {
-      filter: brightness(calc((var(--pointer-from-center)*0.05) + .8)) contrast(1.75) saturate(1.2);
-      --mask: none; --imgsize: 20%; background-blend-mode: color-burn, hue, hard-light;
+      --imgsize: 33%;
+      /* 🚀 關鍵修復：拔掉原本會讓單圖隱形的 blend-mode，改用 mix-blend-mode 讓金屬光透出來 */
+      mix-blend-mode: color-dodge; 
     }
-    .card:not(.masked)[data-rarity="SR"] .card__shine, .card:not(.masked)[data-rarity="SR"] .card__shine:after {
-      background-image: var(--trainer-foil); background-size: var(--imgsize);
+    /* 🚀 徹底拔除所有的 :not(.masked) 封印！ */
+    .card[data-rarity="SR"] .card__shine, .card[data-rarity="SR"] .card__shine:after {
+      background-image: var(--trainer-foil);
+      background-size: var(--imgsize);
       filter: brightness(calc((var(--pointer-from-center)*0.05) + .6)) contrast(1.5) saturate(1.2);
     }
     .card[data-rarity="SR"] .card__shine:before {
@@ -176,12 +180,14 @@
     }
     .card[data-rarity="SR"] .card__bg { border-color: #bdc3c7; }
 
-    .card:not(.masked)[data-rarity="SSR"] .card__shine, .card:not(.masked)[data-rarity="SSR"] .card__shine:after {
-      -webkit-mask-image: var(--mask); mask-image: var(--mask); -webkit-mask-size: var(--imgsize); mask-size: var(--imgsize);
-      background-blend-mode: exclusion, hue, hard-light; filter: brightness(calc((var(--pointer-from-center)*.3) + .35)) contrast(2) saturate(1.5);
+    /* 🟡【SSR卡：V-Full Art】 */
+    /* 🚀 徹底拔除 :not(.masked) 以及內部衝突的 mask 綁定！ */
+    .card[data-rarity="SSR"] .card__shine, .card[data-rarity="SSR"] .card__shine:after {
+      background-blend-mode: exclusion, hue, hard-light;
+      filter: brightness(calc((var(--pointer-from-center)*.3) + .35)) contrast(2) saturate(1.5);
     }
-    .card:not(.masked)[data-rarity="SSR"] .card__shine:before { content: none; display: none; }
-    .card:not(.masked)[data-rarity="SSR"] .card__shine:after { filter: brightness(calc((var(--pointer-from-center)*.5) + .8)) contrast(1.6) saturate(1.4); }
+    .card[data-rarity="SSR"] .card__shine:before { content: none; display: none; }
+    .card[data-rarity="SSR"] .card__shine:after { filter: brightness(calc((var(--pointer-from-center)*.5) + .8)) contrast(1.6) saturate(1.4); }
     
     .card[data-rarity="SSR"] .card__shine {
       background-image: var(--foil), repeating-linear-gradient( 0deg, var(--sunpillar-clr-1) calc(var(--space)*1), var(--sunpillar-clr-2) calc(var(--space)*2), var(--sunpillar-clr-3) calc(var(--space)*3), var(--sunpillar-clr-4) calc(var(--space)*4), var(--sunpillar-clr-5) calc(var(--space)*5), var(--sunpillar-clr-6) calc(var(--space)*6), var(--sunpillar-clr-1) calc(var(--space)*7) ), repeating-linear-gradient( var(--angle), #0e152e 0%, hsl(180, 10%, 60%) 3.8%, hsl(180, 29%, 66%) 4.5%, hsl(180, 10%, 60%) 5.2%, #0e152e 10% , #0e152e 12% ), radial-gradient( farthest-corner circle at var(--pointer-x) var(--pointer-y), hsla(0, 0%, 0%, 0.1) 12%, hsla(0, 0%, 0%, 0.15) 20%, hsla(0, 0%, 0%, 0.25) 120% );
