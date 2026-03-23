@@ -1072,19 +1072,19 @@
     window.onload = initLobby;
 
     let nfcBuffer = "";
-  document.addEventListener('keydown', function(e) {
-    if (!isNaN(e.key)) {
-      nfcBuffer += e.key;
-    }
-    if (e.key === 'Enter') {
-      if (nfcBuffer.length > 3) { 
-        console.log("偵測到學生刷卡，準備強制跳轉：" + nfcBuffer);
-        const gatekeeperUrl = "https://script.google.com/macros/s/AKfycbyWm-WnRO5h3dliEPR36Cq1hCf5DgM4GIgJqXVUREclhtYOHjxq9DptApmQPkU5p5Ys/exec";
-        window.location.href = gatekeeperUrl + "?cardId=" + nfcBuffer;
+    document.addEventListener('keydown', function(e) {
+      if (!isNaN(e.key)) {
+        nfcBuffer += e.key;
       }
-      nfcBuffer = ""; 
-    }
-  });
+      if (e.key === 'Enter') {
+        if (nfcBuffer.length > 3) { 
+          console.log("偵測到學生刷卡，準備強制跳轉：" + nfcBuffer);
+          const gatekeeperUrl = "https://script.google.com/macros/s/AKfycbyWm-WnRO5h3dliEPR36Cq1hCf5DgM4GIgJqXVUREclhtYOHjxq9DptApmQPkU5p5Ys/exec";
+          window.location.href = gatekeeperUrl + "?cardId=" + nfcBuffer;
+        }
+        nfcBuffer = ""; 
+      }
+    });
 
     let idleTimer;
     const resetIdleTimer = () => {
@@ -1096,6 +1096,7 @@
     document.addEventListener('touchstart', resetIdleTimer);
     document.addEventListener('mousedown', resetIdleTimer);
     resetIdleTimer();
+    
   </script>
 </body>
 </html>
