@@ -1070,11 +1070,42 @@
         const myName = isMeHost ? data.hostName : (data.guestName || STUDENT_ID);
         const opName = isMeHost ? (data.guestName || "挑戰者") : data.hostName;
 
+        // 🚀 根據圖片 URL 逆推角色的 Rarity 和 Mask
+        let myRarity = 'N', opRarity = 'N', myMask = '', opMask = '';
+        
+        if (window.characterAssets) {
+            Object.values(window.characterAssets).forEach(char => {
+               if(char.img && char.img === myImgUrl) { myRarity = char.rarity || 'N'; myMask = char.mask || ''; }
+               if(char.img && char.img === opImgUrl) { opRarity = char.rarity || 'N'; opMask = char.mask || ''; }
+            });
+        }
+
+        // 🚀 套用我方特效
+        const myCardEl = document.getElementById('portal-my-card');
+        myCardEl.setAttribute('data-rarity', myRarity);
+        if (myMask) {
+            myCardEl.classList.add('masked');
+            myCardEl.style.setProperty('--mask', myMask.includes('url(') ? myMask : `url('${myMask}')`);
+        } else {
+            myCardEl.classList.remove('masked');
+        }
+
+        // 🚀 套用對手特效
+        const opCardEl = document.getElementById('portal-op-card');
+        opCardEl.setAttribute('data-rarity', opRarity);
+        if (opMask) {
+            opCardEl.classList.add('masked');
+            opCardEl.style.setProperty('--mask', opMask.includes('url(') ? opMask : `url('${opMask}')`);
+        } else {
+            opCardEl.classList.remove('masked');
+        }
+
         // 填入卡片背景圖與姓名 Tag
         if(myImgUrl) document.getElementById('portal-my-bg').style.backgroundImage = `url('${myImgUrl}')`;
         if(opImgUrl) document.getElementById('portal-op-bg').style.backgroundImage = `url('${opImgUrl}')`;
         document.getElementById('portal-my-name').innerText = myName;
         document.getElementById('portal-op-name').innerText = opName;
+
 
         // 🚀 資料載入完畢，觸發史詩級「卡牌滑入對峙」動畫！
         // 注意：動畫現在要掛在外層的 wrapper 上
