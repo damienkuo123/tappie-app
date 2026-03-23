@@ -6,19 +6,19 @@
   <title>瑪麗安傳說大廳</title>
   <style>
     /* =======================================================
-       🚀 步驟一對接：請將下面的 URL 換成你 GitHub 上的絕對路徑！
+       🚀 原始對接：100% 保留您的完美特效變數
        ======================================================= */
     :root {
       --bg-color: #1a1e29;
       --gold: #f1c40f;
 
-      --grain: url("https://poke-holo.simey.me/img/grain.webp");
-      --glitter: url("https://poke-holo.simey.me/img/glitter.png");
-      --foil: url("https://poke-holo.simey.me/img/illusion.png");
-      --trainer-foil: url("https://poke-holo.simey.me/img/trainerbg.png");
-      --cosmos-bottom: url("https://poke-holo.simey.me/img/cosmos-bottom.png");
-      --cosmos-mid: url("https://poke-holo.simey.me/img/cosmos-middle-trans.png");
-      --cosmos-top: url("https://poke-holo.simey.me/img/cosmos-top-trans.png");
+      --grain: url("https://raw.githubusercontent.com/damienkuo123/marian-app/refs/heads/main/assets/grain.webp");
+      --glitter: url("https://raw.githubusercontent.com/damienkuo123/marian-app/refs/heads/main/assets/glitter.png");
+      --foil: url("https://raw.githubusercontent.com/damienkuo123/marian-app/refs/heads/main/assets/illusion.png");
+      --trainer-foil: url("https://raw.githubusercontent.com/damienkuo123/marian-app/refs/heads/main/assets/trainerbg.png");
+      --cosmos-bottom: url("https://raw.githubusercontent.com/damienkuo123/marian-app/refs/heads/main/assets/cosmos-bottom.png");
+      --cosmos-mid: url("https://raw.githubusercontent.com/damienkuo123/marian-app/refs/heads/main/assets/cosmos-middle-trans.png");
+      --cosmos-top: url("https://raw.githubusercontent.com/damienkuo123/marian-app/refs/heads/main/assets/cosmos-top-trans.png");
 
       --space: 5%;
       --angle: 133deg;
@@ -48,7 +48,7 @@
 
     body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: var(--bg-color); font-family: -apple-system, sans-serif; color: white; overflow: hidden; }
     
-    /* 大廳 UI (不變) */
+    /* 大廳 UI */
     header { padding: max(20px, env(safe-area-inset-top)) 20px 10px; display: flex; justify-content: space-between; align-items: center; z-index: 100; position: relative; }
     .user-info h2 { margin: 0; font-size: 14px; color: #a4b0be; letter-spacing: 2px; }
     .user-points { font-size: 26px; font-weight: 900; color: #00d2d3; text-shadow: 0 0 15px rgba(0,210,211,0.6); }
@@ -62,11 +62,14 @@
     .badge.category { color: #2ecc71; border-color: #2ecc71; background: rgba(46,204,113,0.1); }
     .hero-name { font-size: 32px; font-weight: 900; letter-spacing: 4px; margin: 0; text-shadow: 0 4px 10px rgba(0,0,0,0.8); }
 
-    /* 🚀 修改1：畫廊滑軌與裝備槽放大 */
+    /* =======================================================
+       🚀 優化：裝備槽放大 (Equip Slot)
+       比卡片(250x348)大一圈，設定為 280x388
+       ======================================================= */
     .gallery-container { position: relative; width: 100%; margin-top: 10px; display: flex; align-items: center; justify-content: center; }
     .center-target-box { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 280px; height: 388px; border: 2px dashed rgba(255, 255, 255, 0.3); border-radius: 25px; pointer-events: none; z-index: 0; transition: 0.3s; }
     .center-target-box::after { content: 'EQUIP SLOT'; position: absolute; bottom: -30px; left: 50%; transform: translateX(-50%); color: rgba(255,255,255,0.3); font-size: 14px; font-weight: bold; letter-spacing: 4px; transition: 0.3s; }
-    .center-target-box.is-equipped { border: 2px solid var(--gold); box-shadow: 0 0 30px rgba(241,196,15,0.4), inset 0 0 20px rgba(241,196,15,0.2); background: rgba(241,196,15,0.05); }
+    .center-target-box.is-equipped { border: 2px solid var(--gold); box-shadow: 0 0 30px rgba(241,196,15,0.4), inset 0 0 20px rgba(241,196,15,0.2); }
     .center-target-box.is-equipped::after { content: 'EQUIPPED'; color: var(--gold); text-shadow: 0 0 10px var(--gold); }
 
     .carousel-track { display: flex; gap: 40px; overflow-x: auto; width: 100%; padding: 40px calc(50vw - 125px); scroll-snap-type: x mandatory; scrollbar-width: none; -webkit-overflow-scrolling: touch; align-items: center; z-index: 5; perspective: 1000px; }
@@ -74,7 +77,6 @@
     
     .holo-card-wrapper { position: relative; scroll-snap-align: center; flex-shrink: 0; width: 250px; height: 348px; cursor: pointer; transition: 0.3s; border-radius: 4.55%/3.5%; }
     .holo-card-wrapper:active { transform: scale(0.95); }
-    
     .tap-to-view { position: absolute; bottom: -15px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); padding: 6px 16px; border-radius: 15px; font-size: 11px; font-weight: bold; letter-spacing: 2px; color: var(--gold); border: 1px solid var(--gold); pointer-events: none; white-space: nowrap; box-shadow: 0 4px 10px rgba(0,0,0,0.5); z-index: 10; }
 
     /* =======================================================
@@ -89,7 +91,6 @@
     #showcase-modal.active { opacity: 1; pointer-events: auto; }
     .close-btn { position: absolute; top: max(20px, env(safe-area-inset-top)); right: 20px; width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white; font-size: 20px; display: flex; justify-content: center; align-items: center; cursor: pointer; z-index: 100; }
 
-    /* 完全照搬 base.css 的 3D 結構設定 */
     .showcase-wrapper { width: 85vw; max-width: 400px; aspect-ratio: var(--card-aspect); perspective: 600px; }
     
     .card {
@@ -102,29 +103,13 @@
       --card-opacity: 1; --card-scale: 1; --translate-x: 0px; --translate-y: 0px;
     }
 
-    .card__translater, .card__rotator {
-      width: 100%; height: 100%;
-      display: grid; perspective: 600px; transform-origin: center; transform-style: preserve-3d;
-    }
-    .card__translater {
-      transform: translate3d(var(--translate-x), var(--translate-y), 0.1px) scale(var(--card-scale));
-    }
-    .card__rotator {
-      transform: rotateY(var(--rotate-x)) rotateX(var(--rotate-y));
-      box-shadow: 0px 10px 20px -5px black, 0 2px 15px -5px black;
-      border-radius: var(--card-radius);
-    }
-    .card__rotator * {
-      width: 100%; height: 100%; display: grid; grid-area: 1/1;
-      border-radius: var(--card-radius); transform-style: preserve-3d; pointer-events: none; overflow: hidden;
-    }
+    .card__translater, .card__rotator { width: 100%; height: 100%; display: grid; perspective: 600px; transform-origin: center; transform-style: preserve-3d; }
+    .card__translater { transform: translate3d(var(--translate-x), var(--translate-y), 0.1px) scale(var(--card-scale)); }
+    .card__rotator { transform: rotateY(var(--rotate-x)) rotateX(var(--rotate-y)); box-shadow: 0px 10px 20px -5px black, 0 2px 15px -5px black; border-radius: var(--card-radius); }
+    .card__rotator * { width: 100%; height: 100%; display: grid; grid-area: 1/1; border-radius: var(--card-radius); transform-style: preserve-3d; pointer-events: none; overflow: hidden; }
 
     .card__front { transform: translate3d(0px, 0px, 0.01px); }
-    
-    .card__bg {
-      background-size: cover; background-position: center; border: 2px solid transparent;
-      transform: translateZ(0px); z-index: 1;
-    }
+    .card__bg { background-size: cover; background-position: center; border: 2px solid transparent; transform: translateZ(0px); z-index: 1; }
 
     /* 原版基礎眩光 */
     .card__glare {
@@ -142,26 +127,24 @@
     .card__shine:before { transform: translateZ(1px); }
     .card__shine:after { transform: translateZ(1.2px); }
 
-    /* 🚀 你的進化版 Masking (完全不動！) */
+    /* 🚀 你的進化版 Masking (絕對強制挖空) */
     .card.masked .card__shine, .card.masked .card__shine:before, .card.masked .card__shine:after {
-      -webkit-mask-image: linear-gradient(white, white), var(--mask);
-      -webkit-mask-composite: destination-out;
-      mask-image: linear-gradient(white, white), var(--mask);
-      mask-composite: exclude;
-      
-      -webkit-mask-size: cover; mask-size: cover;
-      -webkit-mask-position: center center; mask-position: center center;
+      -webkit-mask-image: linear-gradient(white, white), var(--mask) !important;
+      -webkit-mask-composite: destination-out !important;
+      mask-image: linear-gradient(white, white), var(--mask) !important;
+      mask-composite: exclude !important;
+      -webkit-mask-size: cover !important; mask-size: cover !important;
+      -webkit-mask-position: center center !important; mask-position: center center !important;
     }
 
     /* =======================================================
-       🎨 100% 滿血還原：對接你的 cosmos, trainer, v-full-art (完全不動！)
+       🎨 100% 滿血還原：對接你的 cosmos, trainer, v-full-art
        ======================================================= */
 
     .card[data-rarity="R"] .card__shine {
       --space: 4%;
       background-image: var(--cosmos-bottom), repeating-linear-gradient(82deg, hsl(53, 65%, 60%) calc(var(--space)*1), hsl(93, 56%, 50%) calc(var(--space)*2), hsl(176, 54%, 49%) calc(var(--space)*3), hsl(228, 59%, 55%) calc(var(--space)*4), hsl(283, 60%, 55%) calc(var(--space)*5), hsl(326, 59%, 51%) calc(var(--space)*6), hsl(326, 59%, 51%) calc(var(--space)*7), hsl(283, 60%, 55%) calc(var(--space)*8), hsl(228, 59%, 55%) calc(var(--space)*9), hsl(176, 54%, 49%) calc(var(--space)*10), hsl(93, 56%, 50%) calc(var(--space)*11), hsl(53, 65%, 60%) calc(var(--space)*12) ), radial-gradient(farthest-corner circle at var(--pointer-x) var(--pointer-y), hsla(180, 100%, 89%, 0.5) 5%, hsla(180, 14%, 57%, 0.3) 40%, hsl(0, 0%, 0%) 130% );
-      background-blend-mode: color-burn, multiply;
-      background-position: center, calc(10% + (var(--pointer-from-left)*80%)) calc(10% + (var(--pointer-from-top)*80%)), center;
+      background-blend-mode: color-burn, multiply; background-position: center, calc(10% + (var(--pointer-from-left)*80%)) calc(10% + (var(--pointer-from-top)*80%)), center;
       background-size: cover, 400% 900%, cover; filter: brightness(1) contrast(1) saturate(.8); mix-blend-mode: color-dodge;
     }
     .card[data-rarity="R"] .card__shine:before {
@@ -178,8 +161,7 @@
 
     .card[data-rarity="SR"] .card__shine {
       filter: brightness(calc((var(--pointer-from-center)*0.05) + .8)) contrast(1.75) saturate(1.2);
-      --mask: none; --imgsize: 20%;
-      background-blend-mode: color-burn, hue, hard-light;
+      --mask: none; --imgsize: 20%; background-blend-mode: color-burn, hue, hard-light;
     }
     .card:not(.masked)[data-rarity="SR"] .card__shine, .card:not(.masked)[data-rarity="SR"] .card__shine:after {
       background-image: var(--trainer-foil); background-size: var(--imgsize);
@@ -196,8 +178,7 @@
 
     .card:not(.masked)[data-rarity="SSR"] .card__shine, .card:not(.masked)[data-rarity="SSR"] .card__shine:after {
       -webkit-mask-image: var(--mask); mask-image: var(--mask); -webkit-mask-size: var(--imgsize); mask-size: var(--imgsize);
-      background-blend-mode: exclusion, hue, hard-light;
-      filter: brightness(calc((var(--pointer-from-center)*.3) + .35)) contrast(2) saturate(1.5);
+      background-blend-mode: exclusion, hue, hard-light; filter: brightness(calc((var(--pointer-from-center)*.3) + .35)) contrast(2) saturate(1.5);
     }
     .card:not(.masked)[data-rarity="SSR"] .card__shine:before { content: none; display: none; }
     .card:not(.masked)[data-rarity="SSR"] .card__shine:after { filter: brightness(calc((var(--pointer-from-center)*.5) + .8)) contrast(1.6) saturate(1.4); }
@@ -218,12 +199,11 @@
     }
     .card[data-rarity="SSR"] .card__bg { border-color: var(--gold); box-shadow: inset 0 0 15px rgba(241,196,15,0.5); }
 
-
     /* =======================================================
-       🚀 修改2：加入靜態卡片特效 (給畫廊和商店用)
+       🚀 新增：畫廊與商店的靜態卡片特效
        ======================================================= */
     .static-card {
-      /* 鎖定 3D 旋轉，給定固定的環境光澤 */
+      /* 固定光點在左上方，透出高級光澤，不啟用旋轉追蹤 */
       --pointer-x: 35% !important; --pointer-y: 35% !important; 
       --pointer-from-center: 0.5 !important; 
       --rotate-x: 0deg !important; --rotate-y: 0deg !important;
@@ -232,8 +212,16 @@
     /* 滑鼠/手指摸上去時，光澤微幅呼吸 */
     .static-card:hover { --pointer-x: 65% !important; --pointer-y: 65% !important; --pointer-from-center: 0.7 !important; }
 
+    /* 🔘 底部按鈕區 */
+    .action-zone { position: absolute; bottom: max(30px, env(safe-area-inset-bottom)); left: 0; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 15px; z-index: 50; }
+    .btn-equip { background: linear-gradient(135deg, #27ae60, #1e8449); color: white; border: none; padding: 16px 60px; font-size: 20px; font-weight: 900; border-radius: 30px; letter-spacing: 4px; box-shadow: 0 10px 20px rgba(39, 174, 96, 0.4); cursor: pointer; transition: 0.3s; }
+    .btn-equip:active { transform: scale(0.95); }
+    .btn-equip.is-equipped { background: #576574; box-shadow: none; cursor: default; }
+    .btn-shop { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 10px 25px; border-radius: 20px; font-size: 14px; font-weight: bold; cursor: pointer; backdrop-filter: blur(5px); }
+    #toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--gold); color: #000; padding: 12px 30px; border-radius: 20px; font-weight: 900; font-size: 16px; opacity: 0; pointer-events: none; transition: 0.4s; z-index: 10000; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+
     /* =======================================================
-       🚀 修改3：加入商店彈窗與分區 CSS
+       🛒 Phase 3: 商店分區與毛玻璃彈窗
        ======================================================= */
     #shop-modal {
       position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh;
@@ -249,7 +237,7 @@
     
     .shop-grid-container { width: 100%; height: calc(100% - 80px); overflow-y: auto; padding: 10px 20px 100px; box-sizing: border-box; }
     
-    .shop-rarity-title { font-size: 20px; font-weight: 900; margin: 30px 0 15px; padding-left: 15px; border-left: 6px solid; letter-spacing: 2px; color: #2c3e50; }
+    .shop-rarity-title { font-size: 20px; font-weight: 900; margin: 30px 0 15px; padding-left: 15px; border-left: 6px solid; letter-spacing: 2px; }
     .title-SSR { color: #d35400; border-color: var(--gold); }
     .title-SR { color: #8e44ad; border-color: #9b59b6; }
     .title-R { color: #2980b9; border-color: #3498db; }
@@ -267,17 +255,9 @@
     .btn-buy:active { transform: translateY(4px); box-shadow: none; }
     .shop-card-wrapper.owned .btn-buy { background: #bdc3c7; color: white; cursor: default; box-shadow: none; pointer-events: none; }
 
-    /* ⏳ 限定標籤 */
     .shop-limited-badge { position: absolute; top: -5px; right: -5px; background: #e74c3c; color: white; padding: 4px 8px; font-size: 10px; font-weight: 900; border-radius: 8px; box-shadow: 0 4px 10px rgba(231,76,60,0.4); z-index: 10; letter-spacing: 1px; animation: pulse 1.5s infinite; border: 1px solid white; }
     @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
 
-    /* 🔘 底部按鈕區 */
-    .action-zone { position: absolute; bottom: max(30px, env(safe-area-inset-bottom)); left: 0; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 15px; z-index: 50; }
-    .btn-equip { background: linear-gradient(135deg, #27ae60, #1e8449); color: white; border: none; padding: 16px 60px; font-size: 20px; font-weight: 900; border-radius: 30px; letter-spacing: 4px; box-shadow: 0 10px 20px rgba(39, 174, 96, 0.4); cursor: pointer; transition: 0.3s; }
-    .btn-equip:active { transform: scale(0.95); }
-    .btn-equip.is-equipped { background: #576574; box-shadow: none; cursor: default; }
-    .btn-shop { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 10px 25px; border-radius: 20px; font-size: 14px; font-weight: bold; cursor: pointer; backdrop-filter: blur(5px); }
-    #toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--gold); color: #000; padding: 12px 30px; border-radius: 20px; font-weight: 900; font-size: 16px; opacity: 0; pointer-events: none; transition: 0.4s; z-index: 10000; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
   </style>
 </head>
 <body>
@@ -338,8 +318,11 @@
   </div>
 
   <script>
+    // ⚠️ 請替換為你真實的 GAS 網址
     const GAS_URL = "https://script.google.com/macros/s/AKfycbyWm-WnRO5h3dliEPR36Cq1hCf5DgM4GIgJqXVUREclhtYOHjxq9DptApmQPkU5p5Ys/exec";
-    const params = newSearchParams(window.location.search);
+    
+    // 🚀 這是修復的關鍵拼字錯誤 (new URLSearchParams)
+    const params = new URLSearchParams(window.location.search);
     const STUDENT_ID = params.get('id') || "S001";
 
     let characterAssets = {}; 
@@ -358,7 +341,7 @@
         userUnlocked = (data.profile.unlocked || "A001").split(',').map(s => s.trim()).filter(s => s !== "");
         userEquipped = data.profile.equipped || "A001"; 
 
-        // 🚀 修改4：自動排序玩家畫廊 (依照 SSR > SR > R > N 權重降冪排列)
+        // 🚀 自動排序玩家畫廊：依照 SSR > SR > R > N 權重降冪排列
         const rarityWeight = { 'SSR': 4, 'SR': 3, 'R': 2, 'N': 1 };
         userUnlocked.sort((a, b) => {
           const wA = characterAssets[a] ? (rarityWeight[characterAssets[a].rarity] || 0) : 0;
@@ -370,7 +353,6 @@
       } catch (e) {
         console.error("載入失敗：", e);
         document.getElementById('hero-name').innerText = "⚠️ 離線預設模式";
-        // 🧪 本機測試資料庫
         characterAssets = {
           'A001': { name: '新手劍士', img: 'https://raw.githubusercontent.com/damienkuo123/marian-app/refs/heads/main/assets/Hero_01.webp', rarity: 'N', category: '一般' }, 
           'A002': { name: '艾多 Aldo', img: 'https://raw.githubusercontent.com/damienkuo123/marian-app/refs/heads/main/assets/Aldo.webp', rarity: 'R', category: '一般' },
@@ -383,9 +365,14 @@
       }
     }
 
-    // 🚀 修改5：產生靜態卡片，並100%保留你寫的遮罩邏輯
+    // 🚀 產生靜態特效卡片DOM (支援遮罩網址動態解析)
     function createStaticCardHTML(char) {
-      let maskStyle = char.mask ? `style="--mask: ${char.mask};"` : "";
+      let maskString = "";
+      if (char.mask) {
+        // 自動判斷是否已經有 url() 包裝
+        maskString = char.mask.includes('url(') ? char.mask : `url('${char.mask}')`;
+      }
+      let maskStyle = char.mask ? `style="--mask: ${maskString};"` : "";
       let maskedClass = char.mask ? "masked" : "";
       return `
         <div class="card static-card ${maskedClass}" data-rarity="${char.rarity}" ${maskStyle}>
@@ -477,7 +464,7 @@
     }
 
     // =======================================================
-    // 🛒 修改6: 商店分區與限定邏輯
+    // 🛒 商店分區與限定邏輯
     // =======================================================
     function openShop() {
       renderShop();
@@ -568,7 +555,8 @@
       
       if (char.mask) {
         modalCard.classList.add('masked');
-        modalCard.style.setProperty('--mask', char.mask);
+        let maskString = char.mask.includes('url(') ? char.mask : `url('${char.mask}')`;
+        modalCard.style.setProperty('--mask', maskString);
       } else {
         modalCard.classList.remove('masked');
       }
