@@ -301,36 +301,40 @@
   </style>
 </head>
 <body>
-
   <div id="toast">裝備成功！</div>
-  <header>
-    <div class="user-info">
-      <h2 id="header-name">連線中...</h2>
-      <div class="user-points" id="header-points">0 PTS</div>
-    </div>
-    <button class="btn-shop" onclick="openShop()">🛒 兌換角色</button>
-  </header>
 
-  <div class="hero-info-zone">
-    <div class="badges">
-      <div id="badge-rarity" class="badge rarity-N">讀取中</div>
-      <div id="badge-category" class="badge category">讀取中</div>
-    </div>
-    <h1 id="hero-name" class="hero-name">讀取中...</h1>
-  </div>
+  <div id="armory-view">
+    
+    <header>
+      <div class="user-info">
+        <h2 id="header-name">連線中...</h2>
+        <div class="user-points" id="header-points">0 PTS</div>
+      </div>
+      <button class="btn-shop" onclick="openShop()">🛒 兌換角色</button>
+    </header>
 
-  <div class="gallery-container">
-    <div id="target-box" class="center-target-box"></div>
-    <div class="carousel-track" id="carousel"></div>
-  </div>
-
-  <div class="action-zone">
-    <button id="equip-btn" class="btn-equip" onclick="equipCurrentCharacter()">裝備此角色</button>
-    <div class="nav-buttons">
-      <button class="btn-nav btn-back" onclick="goBackToGAS()">🔙 返回基地</button>
-      <button class="btn-nav btn-battle" onclick="goToBattleRoom()">⚔️ 選擇戰場</button>
+    <div class="hero-info-zone">
+      <div class="badges">
+        <div id="badge-rarity" class="badge rarity-N">讀取中</div>
+        <div id="badge-category" class="badge category">讀取中</div>
+      </div>
+      <h1 id="hero-name" class="hero-name">讀取中...</h1>
     </div>
-  </div>
+
+    <div class="gallery-container">
+      <div id="target-box" class="center-target-box"></div>
+      <div class="carousel-track" id="carousel"></div>
+    </div>
+
+    <div class="action-zone">
+      <button id="equip-btn" class="btn-equip" onclick="equipCurrentCharacter()">裝備此角色</button>
+      <div class="nav-buttons">
+        <button class="btn-nav btn-back" onclick="goBackToGAS()">🔙 返回基地</button>
+        <button class="btn-nav btn-battle" onclick="goToBattleRoom()">⚔️ 選擇戰場</button>
+      </div>
+    </div>
+
+  </div> <div id="battle-view"> ... </div>
 
   <div id="battle-view">
     <div class="battle-header">
