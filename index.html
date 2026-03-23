@@ -61,33 +61,61 @@
       margin-top: 20px; 
     }
 
-    /* 🛡️ 卡片本體：解除封印！恢復霸氣寬度 */
-    .portal-card {
-      position: relative; 
-      width: 45vw; height: 65vh; /* 🚀 寬度提升到 45vw (兩張剛好逼近單張大卡的滿版氣勢) */
-      max-width: 360px; max-height: 450px; /* 🚀 解除原本 260px 的憋屈限制！大幅放大 */
-      background: rgba(255, 255, 255, 0.1); 
-      border-radius: 20px; 
-      box-shadow: 
-        10px 20px 40px rgba(0,0,0,0.8), 
-        inset 2px 2px 4px rgba(255,255,255,0.4), 
-        inset -2px -2px 4px rgba(0,0,0,0.5), 
-        0 0 0 1px rgba(255,255,255,0.3); 
-      background-size: cover; background-repeat: no-repeat; background-position: center top;
-      display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding-bottom: 25px;
-      opacity: 0;
+    /* ========================================= */
+    /* 🚀 頂級全息卡牌架構 (從 Lobby 完美移植) */
+    /* ========================================= */
+    .portal-card-wrapper {
+      position: relative; width: 45vw; height: 65vh; max-width: 360px; max-height: 450px;
+      perspective: 600px; flex-shrink: 0; opacity: 0;
+    }
+    
+    .card {
+      width: 100%; height: 100%; position: relative;
+      transform: translate3d(0px, 0px, 0.01px);
       transform-style: preserve-3d;
-      flex-shrink: 0; 
+      --pointer-x: 50%; --pointer-y: 50%;
+      --pointer-from-center: 0.5; /* 預設給一點靜態反光 */
+      --pointer-from-top: 0.5; --pointer-from-left: 0.5;
+      --rotate-x: 0deg; --rotate-y: 0deg;
+      --card-opacity: 1; --card-scale: 1; --translate-x: 0px; --translate-y: 0px;
+      --card-radius: 4.55% / 3.5%;
+      border-radius: var(--card-radius);
     }
 
-    /* 姓名條 */
-    .portal-name-tag {
-      font-size: 16px; color: #fff; font-weight: 900; letter-spacing: 4px; text-transform: uppercase;
-      background: rgba(0, 0, 0, 0.7); padding: 12px 25px; border-radius: 12px;
-      border: 1px solid rgba(255, 255, 255, 0.15); box-shadow: 0 10px 20px rgba(0,0,0,0.6);
-      backdrop-filter: blur(8px);
-      text-shadow: 0 0 10px rgba(255,255,255,0.5);
+    .card__translater, .card__rotator { width: 100%; height: 100%; display: grid; perspective: 600px; transform-origin: center; transform-style: preserve-3d; }
+    .card__translater { transform: translate3d(var(--translate-x), var(--translate-y), 0.1px) scale(var(--card-scale)); }
+    .card__rotator { transform: rotateY(var(--rotate-x)) rotateX(var(--rotate-y)); box-shadow: 0px 10px 30px rgba(0,0,0,0.8); border-radius: var(--card-radius); }
+    .card__rotator * { width: 100%; height: 100%; display: grid; grid-area: 1/1; border-radius: var(--card-radius); transform-style: preserve-3d; pointer-events: none; overflow: hidden; }
+
+    .card__front { transform: translate3d(0px, 0px, 0.01px); }
+    .card__bg { background-size: cover; background-position: center; border: 2px solid transparent; transform: translateZ(0px); z-index: 1; }
+
+    /* 原版基礎眩光 */
+    .card__glare {
+      transform: translateZ(1.41px); overflow: hidden; z-index: 3;
+      background-image: radial-gradient(farthest-corner circle at var(--pointer-x) var(--pointer-y), hsla(0, 0%, 100%, 0.8) 10%, hsla(0, 0%, 100%, 0.65) 20%, hsla(0, 0%, 0%, 0.5) 90%);
+      opacity: calc(var(--pointer-from-center) * 0.8); mix-blend-mode: overlay;
     }
+
+    /* 姓名條：移到卡片圖層最上方 */
+    .portal-name-tag {
+      position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%) translateZ(2px);
+      font-size: 16px; color: #fff; font-weight: 900; letter-spacing: 4px; text-transform: uppercase;
+      background: rgba(0, 0, 0, 0.7); padding: 8px 20px; border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.15); box-shadow: 0 10px 20px rgba(0,0,0,0.6);
+      backdrop-filter: blur(8px); text-shadow: 0 0 10px rgba(255,255,255,0.5); z-index: 10; white-space: nowrap;
+    }
+
+    /* SSR 閃卡特效 (從 Lobby 移植) */
+    .card[data-rarity="SSR"] .card__shine {
+      display: grid; transform: translateZ(1px); overflow: hidden; z-index: 4; background: transparent; background-size: cover; background-position: center; mix-blend-mode: color-dodge;
+      background-image: var(--foil), repeating-linear-gradient( 0deg, var(--sunpillar-clr-1) calc(var(--space)*1), var(--sunpillar-clr-2) calc(var(--space)*2), var(--sunpillar-clr-3) calc(var(--space)*3), var(--sunpillar-clr-4) calc(var(--space)*4), var(--sunpillar-clr-5) calc(var(--space)*5), var(--sunpillar-clr-6) calc(var(--space)*6), var(--sunpillar-clr-1) calc(var(--space)*7) ), repeating-linear-gradient( var(--angle), #0e152e 0%, hsl(180, 10%, 60%) 3.8%, hsl(180, 29%, 66%) 4.5%, hsl(180, 10%, 60%) 5.2%, #0e152e 10% , #0e152e 12% ), radial-gradient( farthest-corner circle at var(--pointer-x) var(--pointer-y), hsla(0, 0%, 0%, 0.1) 12%, hsla(0, 0%, 0%, 0.15) 20%, hsla(0, 0%, 0%, 0.25) 120% );
+      background-position: center center, 0% var(--pointer-y), calc( var(--pointer-x) + (var(--pointer-y)*0.2) ) var(--pointer-y), var(--pointer-x) var(--pointer-y);
+      background-blend-mode: soft-light, hue, hard-light; background-size: 33%, 200% 700%, 300% 100%, 200% 100%; filter: brightness(calc((var(--pointer-from-center)*.3) + .35)) contrast(2) saturate(1.5);
+    }
+    .card[data-rarity="SSR"] .card__bg { border-color: var(--gold); box-shadow: inset 0 0 15px rgba(241,196,15,0.5); }
+
+    
 
     /* 🚀 動態進場：因為使用了 Flexbox，位移量可以大幅縮小，動畫會更乾淨 */
     .clash-in-my { animation: slide-in-my 1s cubic-bezier(0.1, 0.9, 0.2, 1) forwards; }
