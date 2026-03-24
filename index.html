@@ -207,10 +207,9 @@
        🎨 100% 滿血還原：對接 cosmos(R), trainer(SR), v-full-art(SSR)
        ======================================================= */
     
-    /* 🚀 確保遮罩 (Masking) 絕對生效 */
-    #battle-portal-overlay .card.masked .card__shine, 
-    #battle-portal-overlay .card.masked .card__shine:before, 
-    #battle-portal-overlay .card.masked .card__shine:after {
+    /* 🚀 讓 Portal 和 Arena 都能吃到 Mask 遮罩設定 */
+    #battle-portal-overlay .card.masked .card__shine, #battle-portal-overlay .card.masked .card__shine:before, #battle-portal-overlay .card.masked .card__shine:after,
+    #battle-arena .card.masked .card__shine, #battle-arena .card.masked .card__shine:before, #battle-arena .card.masked .card__shine:after {
       -webkit-mask-image: linear-gradient(white, white), var(--mask) !important;
       -webkit-mask-composite: destination-out !important;
       mask-image: linear-gradient(white, white), var(--mask) !important;
@@ -219,77 +218,71 @@
       -webkit-mask-position: center center !important; mask-position: center center !important;
     }
 
-    /* 🔵【R卡：Cosmos 星空】 */
-    #battle-portal-overlay .card[data-rarity="R"] .card__shine {
+    /* 🔵【R卡：Cosmos 星空】 - 讓 Portal 和 Arena 共用 */
+    #battle-portal-overlay .card[data-rarity="R"] .card__shine, #battle-arena .card[data-rarity="R"] .card__shine {
       --space: 4%;
       background-image: var(--cosmos-bottom), repeating-linear-gradient(82deg, hsl(53, 65%, 60%) calc(var(--space)*1), hsl(93, 56%, 50%) calc(var(--space)*2), hsl(176, 54%, 49%) calc(var(--space)*3), hsl(228, 59%, 55%) calc(var(--space)*4), hsl(283, 60%, 55%) calc(var(--space)*5), hsl(326, 59%, 51%) calc(var(--space)*6), hsl(326, 59%, 51%) calc(var(--space)*7), hsl(283, 60%, 55%) calc(var(--space)*8), hsl(228, 59%, 55%) calc(var(--space)*9), hsl(176, 54%, 49%) calc(var(--space)*10), hsl(93, 56%, 50%) calc(var(--space)*11), hsl(53, 65%, 60%) calc(var(--space)*12) ), radial-gradient(farthest-corner circle at var(--pointer-x) var(--pointer-y), hsla(180, 100%, 89%, 0.5) 5%, hsla(180, 14%, 57%, 0.3) 40%, hsl(0, 0%, 0%) 130% ) !important;
       background-blend-mode: color-burn, multiply !important; background-position: center, calc(10% + (var(--pointer-from-left)*80%)) calc(10% + (var(--pointer-from-top)*80%)), center !important;
-      background-size: cover, 400% 900%, cover !important; filter: brightness(1) contrast(1) saturate(.8) !important; mix-blend-mode: color-dodge !important;
-      opacity: 1 !important;
+      background-size: cover, 400% 900%, cover !important; filter: brightness(1) contrast(1) saturate(.8) !important; mix-blend-mode: color-dodge !important; opacity: 1 !important;
     }
-    #battle-portal-overlay .card[data-rarity="R"] .card__shine:before {
+    #battle-portal-overlay .card[data-rarity="R"] .card__shine:before, #battle-arena .card[data-rarity="R"] .card__shine:before {
       content: "" !important; display: block !important;
       background-image: var(--cosmos-mid), repeating-linear-gradient(82deg, hsl(53, 65%, 60%) calc(var(--space)*1), hsl(93, 56%, 50%) calc(var(--space)*2), hsl(176, 54%, 49%) calc(var(--space)*3), hsl(228, 59%, 55%) calc(var(--space)*4), hsl(283, 60%, 55%) calc(var(--space)*5), hsl(326, 59%, 51%) calc(var(--space)*6), hsl(326, 59%, 51%) calc(var(--space)*7), hsl(283, 60%, 55%) calc(var(--space)*8), hsl(228, 59%, 55%) calc(var(--space)*9), hsl(176, 54%, 49%) calc(var(--space)*10), hsl(93, 56%, 50%) calc(var(--space)*11), hsl(53, 65%, 60%) calc(var(--space)*12) ) !important;
       background-blend-mode: lighten, multiply !important; background-position: center, calc(15% + (var(--pointer-from-left)*70%)) calc(15% + (var(--pointer-from-top)*70%)), center !important;
       background-size: cover, 400% 900%, cover !important; filter: brightness(1.25) contrast(1.75) saturate(.8) !important; mix-blend-mode: overlay !important;
     }
-    #battle-portal-overlay .card[data-rarity="R"] .card__shine:after {
+    #battle-portal-overlay .card[data-rarity="R"] .card__shine:after, #battle-arena .card[data-rarity="R"] .card__shine:after {
       content: "" !important; display: block !important;
       background-image: var(--cosmos-top), repeating-linear-gradient(82deg, hsl(53, 65%, 60%) calc(var(--space)*1), hsl(93, 56%, 50%) calc(var(--space)*2), hsl(176, 54%, 49%) calc(var(--space)*3), hsl(228, 59%, 55%) calc(var(--space)*4), hsl(283, 60%, 55%) calc(var(--space)*5), hsl(326, 59%, 51%) calc(var(--space)*6), hsl(326, 59%, 51%) calc(var(--space)*7), hsl(283, 60%, 55%) calc(var(--space)*8), hsl(228, 59%, 55%) calc(var(--space)*9), hsl(176, 54%, 49%) calc(var(--space)*10), hsl(93, 56%, 50%) calc(var(--space)*11), hsl(53, 65%, 60%) calc(var(--space)*12) ) !important;
       background-blend-mode: multiply, multiply !important; background-position: center, calc(20% + (var(--pointer-from-left)*60%)) calc(20% + (var(--pointer-from-top)*60%)), center !important;
       background-size: cover, 400% 900%, cover !important; filter: brightness(1.25) contrast(1.75) saturate(.8) !important; mix-blend-mode: multiply !important;
     }
-    #battle-portal-overlay .card[data-rarity="R"] .card__bg { border-color: #3498db !important; box-shadow: inset 0 0 10px rgba(52, 152, 219, 0.5) !important; }
+    #battle-portal-overlay .card[data-rarity="R"] .card__bg, #battle-arena .card[data-rarity="R"] .card__bg { border-color: #3498db !important; box-shadow: inset 0 0 10px rgba(52, 152, 219, 0.5) !important; }
 
-    /* 🟣【SR卡：Trainer Full Art】 */
-    #battle-portal-overlay .card[data-rarity="SR"] .card__shine {
-      --imgsize: 33%;
-      mix-blend-mode: color-dodge !important; 
-      opacity: 1 !important;
+    /* 🟣【SR卡：Trainer Full Art】 - 讓 Portal 和 Arena 共用 */
+    #battle-portal-overlay .card[data-rarity="SR"] .card__shine, #battle-arena .card[data-rarity="SR"] .card__shine {
+      --imgsize: 33%; mix-blend-mode: color-dodge !important; opacity: 1 !important;
     }
-    #battle-portal-overlay .card[data-rarity="SR"] .card__shine, 
-    #battle-portal-overlay .card[data-rarity="SR"] .card__shine:after {
-      background-image: var(--trainer-foil) !important;
-      background-size: var(--imgsize) !important;
+    #battle-portal-overlay .card[data-rarity="SR"] .card__shine, #battle-portal-overlay .card[data-rarity="SR"] .card__shine:after,
+    #battle-arena .card[data-rarity="SR"] .card__shine, #battle-arena .card[data-rarity="SR"] .card__shine:after {
+      background-image: var(--trainer-foil) !important; background-size: var(--imgsize) !important;
       filter: brightness(calc((var(--pointer-from-center)*0.05) + .6)) contrast(1.5) saturate(1.2) !important;
     }
-    #battle-portal-overlay .card[data-rarity="SR"] .card__shine:before {
+    #battle-portal-overlay .card[data-rarity="SR"] .card__shine:before, #battle-arena .card[data-rarity="SR"] .card__shine:before {
       content: "" !important; display: block !important;
       background-image: radial-gradient(farthest-corner circle at var(--pointer-x) var(--pointer-y), hsl(0, 0%, 100%) 0%, hsla(0, 0%, 0%, 0) 80%) !important;
       mix-blend-mode: screen !important; opacity: 0.5 !important;
     }
-    #battle-portal-overlay .card[data-rarity="SR"] .card__glare {
+    #battle-portal-overlay .card[data-rarity="SR"] .card__glare, #battle-arena .card[data-rarity="SR"] .card__glare {
       opacity: calc(var(--card-opacity) * .75) !important; mix-blend-mode: multiply !important; filter: brightness(1.5) contrast(1.4) saturate(1) !important; background-size: 170% 170% !important;
     }
-    #battle-portal-overlay .card[data-rarity="SR"] .card__bg { border-color: #bdc3c7 !important; box-shadow: inset 0 0 10px rgba(189, 195, 199, 0.5) !important; }
+    #battle-portal-overlay .card[data-rarity="SR"] .card__bg, #battle-arena .card[data-rarity="SR"] .card__bg { border-color: #bdc3c7 !important; box-shadow: inset 0 0 10px rgba(189, 195, 199, 0.5) !important; }
 
-    /* 🟡【SSR卡：V-Full Art】 */
-    #battle-portal-overlay .card[data-rarity="SSR"] .card__shine, 
-    #battle-portal-overlay .card[data-rarity="SSR"] .card__shine:after {
+    /* 🟡【SSR卡：V-Full Art】 - 讓 Portal 和 Arena 共用 */
+    #battle-portal-overlay .card[data-rarity="SSR"] .card__shine, #battle-portal-overlay .card[data-rarity="SSR"] .card__shine:after,
+    #battle-arena .card[data-rarity="SSR"] .card__shine, #battle-arena .card[data-rarity="SSR"] .card__shine:after {
       background-blend-mode: exclusion, hue, hard-light !important;
       filter: brightness(calc((var(--pointer-from-center)*.3) + .35)) contrast(2) saturate(1.5) !important;
     }
-    #battle-portal-overlay .card[data-rarity="SSR"] .card__shine:before { display: none !important; }
-    #battle-portal-overlay .card[data-rarity="SSR"] .card__shine:after { content: "" !important; display: block !important; filter: brightness(calc((var(--pointer-from-center)*.5) + .8)) contrast(1.6) saturate(1.4) !important; }
+    #battle-portal-overlay .card[data-rarity="SSR"] .card__shine:before, #battle-arena .card[data-rarity="SSR"] .card__shine:before { display: none !important; }
+    #battle-portal-overlay .card[data-rarity="SSR"] .card__shine:after, #battle-arena .card[data-rarity="SSR"] .card__shine:after { content: "" !important; display: block !important; filter: brightness(calc((var(--pointer-from-center)*.5) + .8)) contrast(1.6) saturate(1.4) !important; }
     
-    #battle-portal-overlay .card[data-rarity="SSR"] .card__shine {
+    #battle-portal-overlay .card[data-rarity="SSR"] .card__shine, #battle-arena .card[data-rarity="SSR"] .card__shine {
       opacity: 1 !important;
       background-image: var(--foil), repeating-linear-gradient( 0deg, var(--sunpillar-clr-1) calc(var(--space)*1), var(--sunpillar-clr-2) calc(var(--space)*2), var(--sunpillar-clr-3) calc(var(--space)*3), var(--sunpillar-clr-4) calc(var(--space)*4), var(--sunpillar-clr-5) calc(var(--space)*5), var(--sunpillar-clr-6) calc(var(--space)*6), var(--sunpillar-clr-1) calc(var(--space)*7) ), repeating-linear-gradient( var(--angle), #0e152e 0%, hsl(180, 10%, 60%) 3.8%, hsl(180, 29%, 66%) 4.5%, hsl(180, 10%, 60%) 5.2%, #0e152e 10% , #0e152e 12% ), radial-gradient( farthest-corner circle at var(--pointer-x) var(--pointer-y), hsla(0, 0%, 0%, 0.1) 12%, hsla(0, 0%, 0%, 0.15) 20%, hsla(0, 0%, 0%, 0.25) 120% ) !important;
       background-position: center center, 0% var(--pointer-y), calc( var(--pointer-x) + (var(--pointer-y)*0.2) ) var(--pointer-y), var(--pointer-x) var(--pointer-y) !important;
       background-blend-mode: soft-light, hue, hard-light !important; background-size: var(--imgsize), 200% 700%, 300% 100%, 200% 100% !important;
     }
-    #battle-portal-overlay .card[data-rarity="SSR"] .card__shine:after {
+    #battle-portal-overlay .card[data-rarity="SSR"] .card__shine:after, #battle-arena .card[data-rarity="SSR"] .card__shine:after {
       background-position: center center, 0% var(--pointer-y), calc( (var(--pointer-x) + (var(--pointer-y)*0.2)) * -1) calc( var(--pointer-y) * -1), var(--pointer-x) var(--pointer-y) !important;
       background-size: var(--imgsize), 200% 400%, 195% 100%, 200% 100% !important;
       filter: brightness(calc((var(--pointer-from-center)*.4) + .8)) contrast(1.5) saturate(1.25) !important; mix-blend-mode: exclusion !important;
     }
-    #battle-portal-overlay .card[data-rarity="SSR"] .card__glare {
+    #battle-portal-overlay .card[data-rarity="SSR"] .card__glare, #battle-arena .card[data-rarity="SSR"] .card__glare {
       background-image: radial-gradient(farthest-corner circle at var(--pointer-x) var(--pointer-y), hsl(0, 0%, 75%) 5%, hsl(200, 5%, 35%) 60%, hsl(320, 40%, 10%) 150%) !important;
       background-size: 120% 150% !important; background-position: center center !important; mix-blend-mode: hard-light !important; filter: brightness(1) contrast(1.2) saturate(1) !important; opacity: calc(var(--card-opacity) * .75 ) !important;
     }
-    #battle-portal-overlay .card[data-rarity="SSR"] .card__bg { border-color: var(--gold) !important; box-shadow: inset 0 0 15px rgba(241,196,15,0.5) !important; }
-    
-
+    #battle-portal-overlay .card[data-rarity="SSR"] .card__bg, #battle-arena .card[data-rarity="SSR"] .card__bg { border-color: var(--gold) !important; box-shadow: inset 0 0 15px rgba(241,196,15,0.5) !important; }
     
     .spark-active { animation: portal-vs-pop 0.6s 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
     @keyframes portal-vs-pop {
@@ -302,18 +295,13 @@
     .portal-btn-show { opacity: 1; pointer-events: auto; transform: translateX(-50%) translateY(0); transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
     
     .btn-cyber {
-      position: absolute; /* 🚀 絕對定位 */
-      bottom: max(40px, env(safe-area-inset-bottom)); /* 🚀 距離底部永遠保持安全距離 */
-      left: 50%;
-      background: rgba(255,255,255,0.1); color: white;
-      font-size: 18px; font-weight: bold; letter-spacing: 6px; padding: 18px 45px;
-      border: 1px solid rgba(255,255,255,0.3); border-radius: 30px; cursor: pointer;
-      backdrop-filter: blur(10px); box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-      text-transform: uppercase; transition: 0.3s;
-      white-space: nowrap; /* 防止按鈕文字折行 */
+      position: absolute; bottom: max(40px, env(safe-area-inset-bottom)); left: 50%;
+      background: rgba(255,255,255,0.1); color: white; font-size: 18px; font-weight: bold; letter-spacing: 6px; padding: 18px 45px;
+      border: 1px solid rgba(255,255,255,0.3); border-radius: 30px; cursor: pointer; backdrop-filter: blur(10px); box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      text-transform: uppercase; transition: 0.3s; white-space: nowrap; 
     }
     .btn-cyber:hover { background: rgba(255,255,255,0.2); box-shadow: 0 0 20px rgba(0, 210, 211, 0.6); border-color: #00d2d3; }
-    .btn-cyber:active { transform: translateX(-50%) scale(0.95); } /* 🚀 修正 active 時的位移 */
+    .btn-cyber:active { transform: translateX(-50%) scale(0.95); }
 
     /* ========================================= */
     /* 對戰頁面 (Z 軸全息景深排版) */
@@ -325,29 +313,28 @@
       z-index: 2000; display: none; overflow: hidden; perspective: 1000px;
     }
 
-    /* 🚀 放大計分燈柱，並往中間靠一點點確保好按 */
+    /* 🚀 放大的左側垂直計分燈柱 */
     .vertical-score-track {
-      position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+      position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
       display: flex; flex-direction: column; align-items: center; gap: 15px; z-index: 50;
-      background: rgba(0,0,0,0.5); padding: 18px 10px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(8px);
+      background: rgba(0,0,0,0.6); padding: 20px 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.15); backdrop-filter: blur(10px);
     }
-    .score-section { display: flex; gap: 10px; } /* 拉開燈號間距 */
+    .score-section { display: flex; gap: 10px; } 
     .op-score { flex-direction: column; } 
     .my-score { flex-direction: column-reverse; } 
-    .score-divider { width: 4px; height: 35px; background: rgba(255,255,255,0.2); border-radius: 2px; }
-    /* 圓點放大 */
-    .round-dot { width: 16px; height: 16px; border-radius: 50%; background: #2f3542; box-shadow: inset 0 2px 4px rgba(0,0,0,0.8); border: 1px solid #57606f; transition: 0.3s; }
+    .score-divider { width: 5px; height: 40px; background: rgba(255,255,255,0.3); border-radius: 3px; }
+    .round-dot { width: 18px; height: 18px; border-radius: 50%; background: #2f3542; box-shadow: inset 0 2px 5px rgba(0,0,0,0.8); border: 2px solid #57606f; transition: 0.3s; }
     .dot-me { background: #0fb9b1; box-shadow: 0 0 15px #0fb9b1, inset 0 0 5px #fff; border-color: #fff; } 
     .dot-op { background: #eb3b5a; box-shadow: 0 0 15px #eb3b5a, inset 0 0 5px #fff; border-color: #fff; } 
 
     /* 🚀 玩家與對手區塊定位：讓卡片回歸巨無霸尺寸！ */
     .arena-player-container { position: absolute; left: 50%; display: flex; flex-direction: column; align-items: center; width: 100%; transition: opacity 0.3s; }
-    /* 對手卡放大 */
-    .op-container { top: max(10px, env(safe-area-inset-top)); transform: translateX(-50%) scale(0.9) translateZ(-150px); z-index: 2; }
-    /* 我方卡放大 */
-    .my-container { bottom: max(120px, env(safe-area-inset-bottom)); transform: translateX(-50%) scale(1.1) translateZ(50px); z-index: 5; }
+    /* 對手卡放在上方遠景 */
+    .op-container { top: max(5vh, env(safe-area-inset-top)); transform: translateX(-50%) scale(0.9) translateZ(-100px); z-index: 2; }
+    /* 我方卡壓在最底端，並且置中疊加在控制台後方 */
+    .my-container { bottom: max(10vh, env(safe-area-inset-bottom)); transform: translateX(-50%) scale(1.1) translateZ(50px); z-index: 5; }
 
-    /* 開火後座力調整，適配新尺寸 */
+    /* 開火後座力動畫：微調角度與景深 */
     .recoil-my { animation: recoilMyAnim 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
     @keyframes recoilMyAnim {
       0%, 100% { transform: translateX(-50%) scale(1.1) translateZ(50px); }
@@ -355,17 +342,17 @@
     }
     .recoil-op { animation: recoilOpAnim 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
     @keyframes recoilOpAnim {
-      0%, 100% { transform: translateX(-50%) scale(0.9) translateZ(-150px); }
-      20% { transform: translateX(-50%) scale(0.85) translateZ(-200px) rotateX(-15deg) translateY(-20px); }
+      0%, 100% { transform: translateX(-50%) scale(0.9) translateZ(-100px); }
+      20% { transform: translateX(-50%) scale(0.85) translateZ(-150px) rotateX(-15deg) translateY(-20px); }
     }
 
-    /* 恢復 Portal 般的霸氣寬度 */
-    .arena-card-wrapper { width: 50vw; max-width: 270px; aspect-ratio: var(--card-aspect); perspective: 1000px; position: relative; }
+    /* 恢復霸氣的寬度 */
+    .arena-card-wrapper { width: 55vw; max-width: 280px; aspect-ratio: var(--card-aspect); perspective: 1000px; position: relative; }
 
-    /* 🚀 新增：全畫面黑色半透明遮罩 (用來壓暗卡片凸顯題目) */
+    /* 🚀 全畫面黑色半透明遮罩 (用來壓暗卡片凸顯題目) */
     .arena-stage-center { 
       position: absolute; top: 0; left: 0; 
-      width: 100vw; height: 100vh; text-align: center; z-index: 15; 
+      width: 100vw; height: 100dvh; text-align: center; z-index: 15; 
       /* 極度壓暗的背景 */
       background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
       display: flex; flex-direction: column; justify-content: center; align-items: center;
@@ -374,25 +361,25 @@
     /* 當觸發 .hide-stage 時，拿掉遮罩，露出背後的華麗卡片 */
     .arena-stage-center.hide-stage { opacity: 0; }
 
-    #target-word { font-size: 14vw; text-transform: uppercase; letter-spacing: 4px; color: #fff; text-shadow: 0 0 25px #000, 0px 4px 0px #576574; margin: 0 0 20px 0; }
+    #target-word { font-size: 12vw; text-transform: uppercase; letter-spacing: 4px; color: #fff; text-shadow: 0 0 25px #000, 0px 4px 0px #576574; margin: 0 0 20px 0; }
     #battle-timer { font-size: 50px; font-weight: 900; color: #f1c40f; text-shadow: 0 0 20px rgba(241,196,15,0.8); margin: 0; }
-    #round-num { font-size: 16px !important; margin-bottom: 10px; }
+    #round-num { font-size: 16px !important; margin-bottom: 10px; color: #f1c40f; font-weight: bold; letter-spacing: 2px;}
 
     .glass-panel { background: rgba(30, 39, 46, 0.8); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 15px; padding: 6px 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
 
-    /* 控制台與按鈕美化 */
-    #battle-controls { position: absolute; bottom: max(15px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; z-index: 50; gap: 10px; }
+    /* 🚀 控制台與按鈕美化 (直接浮在我方卡片正上方) */
+    #battle-controls { position: absolute; bottom: max(3vh, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; z-index: 50; gap: 10px; }
 
     #skill-btn {
       background: linear-gradient(135deg, #f39c12, #e74c3c); color: white; border: 2px solid #f1c40f; border-radius: 20px;
-      padding: 8px 25px; font-size: 16px; font-weight: 900; box-shadow: 0 5px 15px rgba(231, 76, 60, 0.5); cursor: pointer; transition: all 0.3s; white-space: nowrap;
+      padding: 10px 30px; font-size: 18px; font-weight: 900; box-shadow: 0 5px 15px rgba(231, 76, 60, 0.5); cursor: pointer; transition: all 0.3s; white-space: nowrap;
       animation: float-btn 2s infinite ease-in-out; /* 恢復漂浮動畫 */
     }
     #skill-btn:active { transform: scale(0.9); }
     @keyframes float-btn { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(231, 76, 60, 0.8); } }
 
     #battle-record-btn {
-      width: 75px; height: 75px; border-radius: 50%; font-size: 30px; cursor: pointer;
+      width: 85px; height: 85px; border-radius: 50%; font-size: 35px; cursor: pointer;
       background: linear-gradient(145deg, #2d3436, #1e272b); border: 3px solid #0fb9b1; color: white; outline: none;
       box-shadow: 0 10px 20px rgba(0,0,0,0.5), inset 0 2px 5px rgba(255,255,255,0.1); transition: all 0.2s; display: flex; justify-content: center; align-items: center; flex-shrink: 0;
     }
@@ -406,6 +393,7 @@
     /* 🌟 3D 卡牌專屬特效 & 物理 Z軸光球 */
     /* ========================================= */
 
+    /* 🚀 發光充能：確保不干擾 */
     .card.charging-mana .card__rotator { animation: cardChargePulse 0.5s infinite alternate; z-index: 25; }
     .card.charging-mana .card__bg { border-color: #0fb9b1 !important; box-shadow: inset 0 0 20px #0fb9b1 !important; }
     @keyframes cardChargePulse { 0% { box-shadow: 0 0 20px rgba(15, 185, 177, 0.5); } 100% { box-shadow: 0 0 60px rgba(38, 222, 129, 0.8); } }
@@ -414,31 +402,32 @@
     .card.ultimate-charging .card__bg { border-color: #f1c40f !important; box-shadow: inset 0 0 30px #f1c40f !important; }
     @keyframes ultCardCharge { 0% { box-shadow: 0 0 30px rgba(241, 196, 15, 0.6); } 100% { box-shadow: 0 0 80px rgba(243, 156, 18, 1), 0 0 40px #fff; } }
 
-    /* 🚀 修復：絕對獨立的 Z 軸光球，直接掛在 Arena 上，不受卡片層級干擾 */
+    /* 🚀 絕對獨立的 Z 軸光球，直接掛在 Arena 上 */
     .blast-particle {
       position: absolute; left: 50%; width: 80px; height: 80px;
       border-radius: 50%; z-index: 9999; pointer-events: none; opacity: 0; transform: translateX(-50%);
     }
-    /* 我方發射 (由下往上，越來越小) */
+    
+    /* 🚀 我方發射 (由下往上，越來越小) */
     .blast-my { background: radial-gradient(circle, #fff 0%, #0fb9b1 40%, transparent 80%); animation: blastMyAnim 0.6s cubic-bezier(0.5, 0, 1, 0.5) forwards; }
     @keyframes blastMyAnim { 
-      0% { top: 70%; transform: translateX(-50%) scale(1.5); opacity: 1; filter: drop-shadow(0 0 20px #0fb9b1); } 
-      100% { top: 10%; transform: translateX(-50%) scale(0.3); opacity: 0; filter: drop-shadow(0 0 10px #0fb9b1); } 
+      0% { top: 65%; transform: translateX(-50%) scale(1.5); opacity: 1; filter: drop-shadow(0 0 20px #0fb9b1); } 
+      100% { top: 15%; transform: translateX(-50%) scale(0.3); opacity: 0; filter: drop-shadow(0 0 10px #0fb9b1); } 
     }
-    /* 對手發射 (由上往下，越來越大) */
+    
+    /* 🚀 對手發射 (由上往下，越來越大) */
     .blast-op { background: radial-gradient(circle, #fff 0%, #eb3b5a 40%, transparent 80%); animation: blastOpAnim 0.6s cubic-bezier(0.5, 0, 1, 0.5) forwards; }
     @keyframes blastOpAnim { 
-      0% { top: 10%; transform: translateX(-50%) scale(0.3); opacity: 1; filter: drop-shadow(0 0 10px #eb3b5a); } 
-      100% { top: 70%; transform: translateX(-50%) scale(2); opacity: 0; filter: drop-shadow(0 0 40px #eb3b5a); } 
+      0% { top: 15%; transform: translateX(-50%) scale(0.3); opacity: 1; filter: drop-shadow(0 0 10px #eb3b5a); } 
+      100% { top: 65%; transform: translateX(-50%) scale(2); opacity: 0; filter: drop-shadow(0 0 40px #eb3b5a); } 
     }
     
     /* 大招版光球 */
     .blast-ult-my { background: radial-gradient(circle, #fff 0%, #f1c40f 40%, transparent 80%); animation: blastMyUltAnim 0.5s cubic-bezier(0.5, 0, 1, 0.5) forwards; }
-    @keyframes blastMyUltAnim { 0% { top: 70%; transform: translateX(-50%) scale(2); opacity: 1; filter: drop-shadow(0 0 30px #f1c40f); } 100% { top: 10%; transform: translateX(-50%) scale(0.5); opacity: 0; filter: drop-shadow(0 0 20px #f1c40f); } }
+    @keyframes blastMyUltAnim { 0% { top: 65%; transform: translateX(-50%) scale(2.5); opacity: 1; filter: drop-shadow(0 0 30px #f1c40f); } 100% { top: 15%; transform: translateX(-50%) scale(0.6); opacity: 0; filter: drop-shadow(0 0 20px #f1c40f); } }
     
     .blast-ult-op { background: radial-gradient(circle, #fff 0%, #f1c40f 40%, transparent 80%); animation: blastOpUltAnim 0.5s cubic-bezier(0.5, 0, 1, 0.5) forwards; }
-    @keyframes blastOpUltAnim { 0% { top: 10%; transform: translateX(-50%) scale(0.5); opacity: 1; filter: drop-shadow(0 0 30px #f1c40f); } 100% { top: 70%; transform: translateX(-50%) scale(3); opacity: 0; filter: drop-shadow(0 0 60px #f1c40f); } }
-
+    @keyframes blastOpUltAnim { 0% { top: 15%; transform: translateX(-50%) scale(0.6); opacity: 1; filter: drop-shadow(0 0 30px #f1c40f); } 100% { top: 65%; transform: translateX(-50%) scale(3.5); opacity: 0; filter: drop-shadow(0 0 60px #f1c40f); } }
 
     /* 🩸 戰損碎裂系統 (覆蓋在 3D 的 front 層上) */
     .card.dmg-1 .card__bg { border-color: #f1c40f !important; }
@@ -456,15 +445,11 @@
     .card.dmg-4 .card__rotator { box-shadow: inset 0 0 60px rgba(192, 57, 43, 0.8) !important; }
     .card.dmg-4 .card__front::after { content: ''; position: absolute; inset:0; opacity: 1; background: linear-gradient(35deg, transparent 49%, #fff 49.5%, transparent 50%), linear-gradient(-55deg, transparent 49%, #fff 49.5%, transparent 50%), linear-gradient(15deg, transparent 49%, #fff 49.5%, transparent 50%), linear-gradient(-80deg, transparent 49%, #fff 49.5%, transparent 50%); z-index: 15; pointer-events: none; border-radius: var(--card-radius); }
 
-    /* 戰損震動 & 勝利光芒 */
-    .card.take-damage { animation: shakeDamage 0.5s 0.5s ease-in-out; }
+    .card.take-damage { animation: shakeDamage 0.5s 0.6s ease-in-out; }
     .card.winner-glory .card__rotator { animation: glory-shine 1.5s ease-in-out infinite alternate !important; border: 4px solid #f1c40f !important; z-index: 30 !important; }
-    @keyframes glory-shine {
-      0% { box-shadow: 0 0 20px #f1c40f, inset 0 0 20px #f1c40f; transform: translateY(0); filter: brightness(1.2); }
-      100% { box-shadow: 0 0 60px #f1c40f, 0 0 100px #f1c40f, inset 0 0 40px #f1c40f; transform: translateY(-10px); filter: brightness(1.5); }
-    }
+    @keyframes glory-shine { 0% { box-shadow: 0 0 20px #f1c40f, inset 0 0 20px #f1c40f; transform: translateY(0); filter: brightness(1.2); } 100% { box-shadow: 0 0 60px #f1c40f, 0 0 100px #f1c40f, inset 0 0 40px #f1c40f; transform: translateY(-10px); filter: brightness(1.5); } }
 
-    /* 螢幕閃爍 (綁定在 arena 上) */
+    /* 螢幕閃爍 */
     .screen-flash-cyan { animation: flashCyan 0.5s 0.3s 2; }
     @keyframes flashCyan { 0%, 100% { box-shadow: inset 0 0 0 transparent; } 50% { box-shadow: inset 0 0 150px rgba(15, 185, 177, 0.9); } }
     .screen-flash-red { animation: flashRed 0.5s 0.3s 2; }
