@@ -1494,14 +1494,13 @@
       
       battleBtn.classList.remove('active', 'ult-active');
       const myCard = document.getElementById('my-card');
-      if (myCard) {
-          myCard.classList.remove('charging-mana', 'ultimate-charging');
-      }
+      if (myCard) myCard.classList.remove('charging-mana', 'ultimate-charging');
 
-      // 🚀 關鍵 UX：放開按鈕瞬間，隱藏控制台，中央顯示動態「評分中...」
-      document.getElementById('battle-controls').style.visibility = 'hidden';
+      // 🚀 完美 UX 體驗：放開按鈕瞬間，按鈕消失，顯示評分中
+      document.getElementById('battle-controls').style.display = 'none';
       document.getElementById('battle-timer').innerText = "評分中...";
-      document.getElementById('battle-info').innerText = "AI 正在分析發音精準度";
+      document.getElementById('battle-timer').classList.add('scoring-anim');
+      document.getElementById('battle-info').innerText = "AI 正在分析您的發音...";
 
       let dots = 0;
       const gradingAnim = setInterval(() => { 
@@ -1656,17 +1655,18 @@
     }, 1000);
   }
 
-  // 🚀 特效調度器：光球生成與遮罩淡出
+  // 🚀 特效調度器：掛載絕對光球，避免殘留
   function triggerBattleAnimations(myNum, opNum, isFinal, myTotalWins, opTotalWins, isMyUlt, isOpUlt, myImgUrl, opImgUrl) {
     const myCard = document.getElementById('my-card'); 
     const opCard = document.getElementById('op-card');
     const arenaBg = document.getElementById('battle-arena');
-    const stageCenter = document.querySelector('.arena-stage-center');
 
-    // 🚀 第一步：攻擊結算！拿掉遮罩，露出華麗卡片，並隱藏按鈕區
-    if(stageCenter) stageCenter.classList.add('hide-stage');
-    document.getElementById('battle-controls').style.visibility = 'hidden';
-    document.getElementById('battle-timer-container').style.display = 'flex'; // 恢復中間區域供下一局用
+    // 清除舊動畫狀態
+    const animations = ['charging-mana', 'ultimate-charging', 'winner-glory', 'loser-shatter', 'take-damage'];
+    if(myCard) myCard.classList.remove(...animations); 
+    if(opCard) opCard.classList.remove(...animations);
+    if(arenaBg) arenaBg.classList.remove('screen-flash-red', 'screen-flash-cyan', 'screen-flash-gold');
+    void myCard.offsetWidth; void opCard.offsetWidth;
 
     let delayBeforeAttack = 0;
     if (myNum > opNum && isMyUlt) {
@@ -1681,7 +1681,7 @@
         const myContainer = myCard.closest('.my-container');
         const opContainer = opCard.closest('.op-container');
 
-        // 🚀 動態生成獨立光球，不綁定在卡片上，避免被縮放影響
+        // 🚀 動態生成掛在 arena 上的物理光球
         function createBlast(type, delay = 0) {
            setTimeout(() => {
              const blast = document.createElement('div');
@@ -1698,7 +1698,6 @@
                 myCard.classList.add('ultimate-charging'); 
                 createBlast('blast-ult-my', 100); createBlast('blast-ult-my', 300);
                 if(arenaBg) arenaBg.classList.add('screen-flash-gold');
-                showSkillPopup("👊 技能重擊 +2 燈！", "#f1c40f");
             } else {
                 myCard.classList.add('charging-mana'); 
                 createBlast('blast-my', 100);
@@ -1709,14 +1708,12 @@
           if(opCard) opCard.classList.add(isFinal ? 'loser-shatter' : 'take-damage'); 
         }
         else if (myNum < opNum) { 
-          if (isMyUlt) showSkillPopup("❌ 技能被打斷...", "#e74c3c");
           if(opCard) {
             if(opContainer) opContainer.classList.add('recoil-op'); 
             if (isOpUlt) {
                 opCard.classList.add('ultimate-charging'); 
                 createBlast('blast-ult-op', 100); createBlast('blast-ult-op', 300);
                 if(arenaBg) arenaBg.classList.add('screen-flash-gold');
-                showSkillPopup("⚠️ 對手發動技能重擊！", "#e74c3c");
             } else {
                 opCard.classList.add('charging-mana'); 
                 createBlast('blast-op', 100);
@@ -1726,14 +1723,14 @@
           }
           if(myCard) myCard.classList.add(isFinal ? 'loser-shatter' : 'take-damage');
         }
-        else {
-          if (isMyUlt) showSkillPopup("⚠️ 技能被抵銷 (平手)", "#f39c12");
-        }
 
         updateCardDamage(myCard, opTotalWins);
         updateCardDamage(opCard, myTotalWins);
 
         setTimeout(() => {
+          // 清除光球與後座力殘留
+          if(myCard) myCard.classList.remove('charging-mana', 'ultimate-charging');
+          if(opCard) opCard.classList.remove('charging-mana', 'ultimate-charging');
           if(myContainer) myContainer.classList.remove('recoil-my');
           if(opContainer) opContainer.classList.remove('recoil-op');
           
