@@ -1428,7 +1428,7 @@
     return html;
   }
 
-  // 🚀 倒數與準備階段：確保清除上一局的所有特效！
+  // 🚀 倒數與準備階段
   function startRoundCountdown(roomId) {
     if(readyTimer) clearInterval(readyTimer);
     if(currentLimitTimer) clearInterval(currentLimitTimer);
@@ -1444,15 +1444,11 @@
     const myCard = document.getElementById('my-card');
     const opCard = document.getElementById('op-card');
     const arenaBg = document.getElementById('battle-arena');
-    const stageCenter = document.querySelector('.arena-stage-center');
 
-    // 🚀 清除卡片上的充能與發光殘影 (問題 4)
+    // 🚀 清除上一回合的殘影
     if(myCard) myCard.classList.remove('charging-mana', 'ultimate-charging', 'winner-glory', 'loser-shatter', 'take-damage');
     if(opCard) opCard.classList.remove('charging-mana', 'ultimate-charging', 'winner-glory', 'loser-shatter', 'take-damage');
     if(arenaBg) arenaBg.classList.remove('screen-flash-red', 'screen-flash-cyan', 'screen-flash-gold');
-    
-    // 重新蓋上全黑半透明遮罩，凸顯題目
-    if(stageCenter) stageCenter.classList.remove('hide-stage');
 
     isUltimateMode = false;
     arenaBg.classList.remove('ultimate-mode-bg');
@@ -1466,8 +1462,15 @@
 
     document.getElementById('round-num').innerText = `第 ${currentBattleRound + 1} 局 / 先得 5 分獲勝`;
     document.getElementById('target-word').innerText = "READY?";
+    
+    // 恢復計時器容器顯示
+    document.getElementById('battle-timer-container').style.display = 'flex';
     document.getElementById('battle-timer').innerText = "";
+    document.getElementById('battle-timer').classList.remove('neon-score'); // 清除上一局得分樣式
+    
+    // 隱藏控制台
     document.getElementById('battle-controls').style.visibility = 'hidden';
+    document.getElementById('battle-info').innerText = "等待雙方就緒...";
     
     readyTimer = setInterval(() => {
       document.getElementById('battle-timer').innerText = count;
@@ -1475,12 +1478,11 @@
       if (count < 0) {
         clearInterval(readyTimer);
         document.getElementById('target-word').innerText = battleQuizArr[currentBattleRound].en;
-        document.getElementById('battle-timer').innerText = "";
+        document.getElementById('battle-timer').innerText = "10";
+        document.getElementById('battle-info').innerText = "限時發動攻擊！";
         
-        // 隱藏倒數計時，顯示錄音按鈕
-        document.getElementById('battle-timer-container').style.display = 'none';
+        // 顯示錄音按鈕疊加在卡片上！
         document.getElementById('battle-controls').style.visibility = 'visible';
-        document.getElementById('battle-info').innerText = "限時 10 秒發動攻擊！";
         
         startRecordingBattle(roomId);
       }
@@ -1489,14 +1491,21 @@
 
   function startRecordingBattle(roomId) {
     let limit = 10;
-    document.getElementById('battle-timer').innerText = limit;
     if(currentLimitTimer) clearInterval(currentLimitTimer);
     currentLimitTimer = setInterval(() => {
       limit--;
-      if (limit > 0) document.getElementById('battle-timer').innerText = limit;
+      if (limit > 0) {
+          document.getElementById('battle-timer').innerText = limit;
+      }
       else {
         clearInterval(currentLimitTimer);
-        if (!roundSubmitted) { roundSubmitted = true; if (mediaRecorder && mediaRecorder.state === "recording") mediaRecorder.stop(); submitBattleScore(roomId, 0); }
+        if (!roundSubmitted) { 
+            roundSubmitted = true; 
+            if (mediaRecorder && mediaRecorder.state === "recording") mediaRecorder.stop(); 
+            // 如果超時沒錄音，直接隱藏控制台
+            document.getElementById('battle-controls').style.visibility = 'hidden';
+            submitBattleScore(roomId, 0); 
+        }
       }
     }, 1000);
   }
@@ -1519,6 +1528,8 @@
           if(myCard) myCard.classList.add('charging-mana');
       }
 
+      document.getElementById('battle-info').innerText = "錄音中... 放開按鈕發送";
+
       const check = () => { if (mediaRecorder && mediaRecorder.state === "recording") { analyser.getByteFrequencyData(dataArray); let v = 0; for(let i=0; i<dataArray.length; i++) v += dataArray[i]; if((v/dataArray.length) > maxVolume) maxVolume = v/dataArray.length; requestAnimationFrame(check); } }; check();
     };
 
@@ -1533,11 +1544,28 @@
           myCard.classList.remove('charging-mana', 'ultimate-charging');
       }
 
+      // 🚀 關鍵 UX：放開按鈕瞬間，隱藏控制台，中央顯示動態「評分中...」
+      document.getElementById('battle-controls').style.visibility = 'hidden';
+      document.getElementById('battle-timer').innerText = "評分中...";
+      document.getElementById('battle-info').innerText = "AI 正在分析發音精準度";
+
+      let dots = 0;
+      const gradingAnim = setInterval(() => { 
+        dots = (dots + 1) % 4; 
+        document.getElementById('battle-timer').innerText = "評分中" + ".".repeat(dots); 
+      }, 400);
+
       mediaRecorder.onstop = () => {
         const r = new FileReader(); r.readAsDataURL(new Blob(chunks, { type: 'audio/webm' }));
         r.onloadend = () => {
           fetch(`${GAS_URL}?action=evaluate_speech_battle&word=${encodeURIComponent(battleQuizArr[currentBattleRound].en)}`, { method: 'POST', body: r.result.split(',')[1] })
-            .then(res => res.json()).then(data => submitBattleScore(ROOM_ID, data.score)).catch(() => submitBattleScore(ROOM_ID, 0));
+            .then(res => res.json()).then(data => {
+                clearInterval(gradingAnim);
+                submitBattleScore(ROOM_ID, data.score);
+            }).catch(() => {
+                clearInterval(gradingAnim);
+                submitBattleScore(ROOM_ID, 0);
+            });
         };
       };
     };
