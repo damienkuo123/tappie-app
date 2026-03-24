@@ -1082,24 +1082,19 @@
     } catch (e) { alert("請開啟麥克風權限"); }
   };
 
-  // 🚀 補回遺失的「開始挑戰」按鈕點擊事件！
+  // 🚀 補回遺失的「開始挑戰」按鈕點擊事件！(原汁原味恢復)
   document.getElementById('start-btn').onclick = () => {
-      document.getElementById('setup-zone').style.display = 'none';
-      document.getElementById('studio').style.display = 'block';
-      document.getElementById('word-display').innerText = "下載題目中...";
-      
-      // 向後端請求題目
-      fetch(`${GAS_URL}?action=get_quiz&unit=${TARGET_UNIT}`)
-        .then(res => res.json())
-        .then(data => {
-            quizData = data;
-            document.getElementById('total-display').innerText = quizData.length;
-            renderWord();
-        })
-        .catch(err => {
-            alert("題目下載失敗，請重新整理！");
-            console.error(err);
-        });
+    document.getElementById('info-text').innerText = "正在載入題目...";
+    fetch(`${GAS_URL}?id=${STUDENT_ID}&action=get_data&unit=${encodeURIComponent(TARGET_UNIT)}`)
+      .then(res => res.json()).then(data => {
+        if (!data.words || data.words.length === 0) { alert("題目為空"); return; }
+        quizData = data.words; scores = new Array(quizData.length).fill(null);
+        document.getElementById('total-display').innerText = quizData.length;
+        document.getElementById('setup-zone').style.display = 'none';
+        document.getElementById('progress-container').style.display = 'block';
+        document.getElementById('studio').style.display = 'block';
+        renderWord();
+      }).catch(err => { alert("連線失敗！"); });
   };
 
   window.onload = async () => {
