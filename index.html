@@ -1071,6 +1071,26 @@
     } catch (e) { alert("請開啟麥克風權限"); }
   };
 
+  // 🚀 補回遺失的「開始挑戰」按鈕點擊事件！
+  document.getElementById('start-btn').onclick = () => {
+      document.getElementById('setup-zone').style.display = 'none';
+      document.getElementById('studio').style.display = 'block';
+      document.getElementById('word-display').innerText = "下載題目中...";
+      
+      // 向後端請求題目
+      fetch(`${GAS_URL}?action=get_quiz&unit=${TARGET_UNIT}`)
+        .then(res => res.json())
+        .then(data => {
+            quizData = data;
+            document.getElementById('total-display').innerText = quizData.length;
+            renderWord();
+        })
+        .catch(err => {
+            alert("題目下載失敗，請重新整理！");
+            console.error(err);
+        });
+  };
+
   window.onload = async () => {
     // 🚀 開發者測試外掛：直接進入高階 AI 抽獎畫面
     if (MODE === 'test_gacha') {
@@ -1172,10 +1192,40 @@
         const isMeHost = (normalizeStr(STUDENT_ID) === normalizeStr(data.hostId));
 
         // 判定雙方圖片與名稱
-        const myImgUrl = isMeHost ? data.hostImg : data.guestImg;
-        const opImgUrl = isMeHost ? data.guestImg : data.hostImg;
-        const myName = isMeHost ? data.hostName : (data.guestName || STUDENT_ID);
-        const opName = isMeHost ? (data.guestName || "挑戰者") : data.hostName;
+        // 🚀 從後端拿資料
+        const myRarity = isMeHost ? data.hostRarity : data.guestRarity;
+        const opRarity = isMeHost ? data.guestRarity : data.hostRarity;
+        const myMask = isMeHost ? data.hostMask : data.guestMask;
+        const opMask = isMeHost ? data.guestMask : data.hostMask;
+
+        // 🕵️‍♂️ 診斷工具：在瀏覽器控制台印出後端到底給了什麼！
+        console.log("【偵錯】後端傳來的我方稀有度:", myRarity);
+        console.log("【偵錯】後端傳來的對手稀有度:", opRarity);
+
+        // 🚀 暴力測試：如果後端傳來的是空的 (undefined)，我們就「強制」把它當成 SSR！
+        // 只要等一下畫面出現了金屬光，就代表 CSS 完美無瑕，純粹是 GAS 沒更新！
+        const finalMyRarity = myRarity || 'SSR';
+        const finalOpRarity = opRarity || 'SSR';
+
+        // 🚀 套用我方特效
+        const myCardEl = document.getElementById('portal-my-card');
+        myCardEl.setAttribute('data-rarity', finalMyRarity);
+        if (myMask) {
+            myCardEl.classList.add('masked');
+            myCardEl.style.setProperty('--mask', myMask.includes('url(') ? myMask : `url('${myMask}')`);
+        } else {
+            myCardEl.classList.remove('masked');
+        }
+
+        // 🚀 套用對手特效
+        const opCardEl = document.getElementById('portal-op-card');
+        opCardEl.setAttribute('data-rarity', finalOpRarity);
+        if (opMask) {
+            opCardEl.classList.add('masked');
+            opCardEl.style.setProperty('--mask', opMask.includes('url(') ? opMask : `url('${opMask}')`);
+        } else {
+            opCardEl.classList.remove('masked');
+        }
 
         // 🚀 終極自給自足引擎：自己去圖鑑庫裡面挖出 Rarity 和 Mask！
         let myRarity = 'N', opRarity = 'N', myMask = '', opMask = '';
