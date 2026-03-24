@@ -454,7 +454,13 @@
     #impact-overlay.active { display: flex; background: rgba(5, 10, 15, 0.85); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); }
     #impact-overlay.fade-out { opacity: 0; backdrop-filter: blur(0px); -webkit-backdrop-filter: blur(0px); }
 
-    #impact-stand-stage { position: relative; width: 100vw; height: 85vh; max-width: 500px; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; transform-style: preserve-3d; transform: translate(150%, 100%) scale(0.5); opacity: 0; }
+    /* 🚀 修復結算底座：加上深色半透明背景，防止背後的文字和動畫穿透上來 */
+    #impact-stand-stage {
+      position: relative; width: 100vw; height: 85vh; max-width: 500px;
+      background: rgba(5, 9, 20, 0.8); /* 加上深色背景 */
+      z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      transform-style: preserve-3d; transform: translate(150%, 100%) scale(0.5); opacity: 0;
+    }
     
     /* 🚀 結算卡片霸氣最大化 */
     .impact-card-wrapper { width: 85vw; max-width: 400px; aspect-ratio: var(--card-aspect); perspective: 1000px; margin: 15px 0; z-index: 10; }
