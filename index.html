@@ -375,7 +375,7 @@
     }
     
     /* 我方近景：z-index 設為 20 (甚至更高)，保證永遠壓在對手上面！ */
-    .my-container { bottom: 5vh; transform: translateX(-50%) scale(1) translateZ(50px); z-index: 20; pointer-events: auto; }
+    .my-container { bottom: 5vh; transform: translateX(-50%) scale(0.9) translateZ(50px); z-index: 20; pointer-events: auto; }
 
     /* 開火後座力動畫：適配全新位置 */
     .recoil-my { animation: recoilMyAnim 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
@@ -401,7 +401,7 @@
     }
     
     /* 稍微縮小一點單字，加上多層陰影保證清晰度 */
-    #target-word { font-size: 12vw; text-transform: uppercase; letter-spacing: 4px; color: #fff; text-shadow: 0 0 25px #000, 0px 4px 0px #576574; margin: 0 0 20px 0; padding: 0 45px; word-break: break-word; line-height: 1.2; text-align: center; }
+    #target-word { font-size: 10vw; text-transform: uppercase; letter-spacing: 4px; color: #fff; text-shadow: 0 0 25px #000, 0px 4px 0px #576574; margin: 0 0 20px 0; padding: 0 45px; word-break: break-word; line-height: 1.2; text-align: center; }
     #battle-timer { font-size: 35px; font-weight: 900; color: #f1c40f; text-shadow: 0 0 20px rgba(0,0,0,0.9), 0 0 15px rgba(246, 229, 141, 0.6); margin: 0; }
     
     /* 避免全黑背景破圖：在 arena 加上基礎底色 */
