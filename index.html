@@ -332,10 +332,10 @@
     .arena-player-container { position: absolute; left: 50%; display: flex; flex-direction: column; align-items: center; width: 100%; transition: opacity 0.3s; }
     
     /* 遠景對手：再往上推！把 top 的負值加大（從 -20vh 改成 -28vh） */
-    .op-container { top: -28vh; transform: translateX(-50%) scale(0.6) translateZ(-200px); z-index: 2; }
+    .op-container { top: -20vh; transform: translateX(-50%) scale(0.6) translateZ(-200px); z-index: 2; }
     
     /* 🚀 我方近景：不要太沉底！把 bottom 負值縮小（從 -15vh 改成 -5vh）讓卡片浮上來 */
-    .my-container { bottom: -5vh; transform: translateX(-50%) scale(1.05) translateZ(50px); z-index: 5; pointer-events: auto; }
+    .my-container { bottom: 0vh; transform: translateX(-50%) scale(1.05) translateZ(50px); z-index: 5; pointer-events: auto; }
 
     /* 開火後座力動畫：適配全新位置 */
     .recoil-my { animation: recoilMyAnim 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
@@ -355,7 +355,7 @@
 
     /* 🚀 中央文字區：往上移動到 25% 的位置，徹底離開我方卡片的臉！ */
     .arena-stage-center { 
-      position: absolute; top: 20%; left: 0; width: 100vw; 
+      position: absolute; top: 15%; left: 0; width: 100vw; 
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       z-index: 15; pointer-events: none;
     }
