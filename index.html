@@ -563,7 +563,7 @@
     #cutin-lines { position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: repeating-radial-gradient(circle at center, transparent 0, transparent 4px, rgba(255,255,255,0.1) 5px, rgba(255,255,255,0.1) 6px); opacity: 0; }
     .active #cutin-lines { animation: speedlines 0.2s linear infinite, cutinFade 1.5s forwards; }
     @keyframes speedlines { 0% { transform: scale(1); } 100% { transform: scale(1.5); } }
-    #cutin-char { position: absolute; top: 50%; left: 100%; width: 150vw; height: 40vh; transform: translateY(-50%); background-size: contain; background-repeat: no-repeat; background-position: center; }
+    #cutin-char { position: absolute; top: 50%; left: 100%; transform: translate(0, -50%); display: flex; justify-content: center; align-items: center; }
     .active #cutin-char { animation: charSlide 1.5s cubic-bezier(0.1, 0.8, 0.1, 1) forwards; }
     @keyframes charSlide { 0% { left: 100%; transform: translate(0, -50%) skewX(-15deg); opacity: 0; } 15% { left: 50%; transform: translate(-50%, -50%) skewX(0deg); opacity: 1; } 85% { left: 45%; transform: translate(-50%, -50%) skewX(0deg); opacity: 1; } 100% { left: -100%; transform: translate(-50%, -50%) skewX(15deg); opacity: 0; } }
     #cutin-text { position: absolute; top: 70%; left: 50%; transform: translate(-50%, -50%) scale(0); font-size: 45px; font-weight: 900; font-style: italic; white-space: nowrap; }
