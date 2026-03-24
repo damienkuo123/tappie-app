@@ -324,6 +324,15 @@
     .my-score { flex-direction: column-reverse; } 
     .score-divider { width: 5px; height: 40px; background: rgba(255,255,255,0.3); border-radius: 3px; }
 
+    /* 🚀 右側垂直回合指示器 */
+    .vertical-round-track {
+      position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.6); padding: 20px 8px; border-radius: 20px; 
+      border: 1px solid rgba(255,255,255,0.15); backdrop-filter: blur(10px);
+      z-index: 50;
+    }
+
     /* 圓點再放大，發光更強 */
     .round-dot { width: 18px; height: 18px; border-radius: 50%; background: #2f3542; box-shadow: inset 0 2px 4px rgba(0,0,0,0.8); border: 2px solid #57606f; transition: 0.3s; }
     .dot-me { background: #0fb9b1; box-shadow: 0 0 20px #0fb9b1, inset 0 0 8px #fff; border-color: #fff; } 
@@ -364,8 +373,12 @@
     /* 稍微縮小一點單字，確保長單字不會爆板 */
     #target-word { font-size: 8vw; text-transform: uppercase; letter-spacing: 4px; color: #fff; text-shadow: 0 0 30px #000, 0px 4px 0px #576574; margin: 0 0 10px 0; }
     #battle-timer { font-size: 35px; font-weight: 900; color: #f1c40f; text-shadow: 0 0 20px rgba(0,0,0,0.9), 0 0 15px rgba(246, 229, 141, 0.6); margin: 0; }
-    #round-num { font-size: 16px !important; margin-bottom: 5px; color: #f1c40f; font-weight: bold; letter-spacing: 2px;}
-
+    #round-num {
+      writing-mode: vertical-rl; /* 讓文字變成直排 */
+      text-orientation: upright; /* 讓中文字保持正向不倒轉 */
+      color: #f1c40f; font-size: 15px !important; font-weight: bold; letter-spacing: 4px;
+      margin: 0; text-shadow: 0 2px 5px rgba(0,0,0,0.8); white-space: nowrap;
+    }
     .glass-panel { background: rgba(30, 39, 46, 0.8); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 15px; padding: 6px 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
 
     /* 🚀 控制台：疊加在我方卡片正上方！ */
@@ -748,6 +761,10 @@
     <div id="my-rounds" class="score-section my-score"></div>
   </div>
 
+  <div class="vertical-round-track">
+    <div id="round-num">第 1 局 / 先得 5 分獲勝</div>
+  </div>
+
   <div class="arena-player-container op-container">
     <div class="glass-panel mini-panel" style="margin-bottom: 8px;">
       <span style="font-size:10px; color:#a4b0be; font-weight:bold; letter-spacing:1px;">OPPONENT</span>
@@ -765,7 +782,6 @@
   </div>
 
   <div class="arena-stage-center">
-    <div id="round-num" style="color:#f1c40f; font-size: 12px; font-weight:bold; letter-spacing:2px;">第 1 局 / 先得 5 分獲勝</div>
     <h1 id="target-word" style="margin: 5px 0;">準備中...</h1>
     <div id="battle-timer-container">
       <div id="battle-timer">60</div>
