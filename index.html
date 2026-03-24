@@ -1423,6 +1423,7 @@
     return html;
   }
 
+  // 🚀 倒數與準備階段：確保清除上一局的所有特效！
   function startRoundCountdown(roomId) {
     if(readyTimer) clearInterval(readyTimer);
     if(currentLimitTimer) clearInterval(currentLimitTimer);
@@ -1438,10 +1439,15 @@
     const myCard = document.getElementById('my-card');
     const opCard = document.getElementById('op-card');
     const arenaBg = document.getElementById('battle-arena');
-    const allAnims = ['cast-me', 'cast-op', 'blast-up', 'blast-down', 'blast-ultimate', 'loser-shatter', 'take-damage', 'screen-flash-red', 'screen-flash-cyan', 'screen-flash-gold', 'winner-glory'];
-    if(myCard) myCard.classList.remove(...allAnims);
-    if(opCard) opCard.classList.remove(...allAnims);
+    const stageCenter = document.querySelector('.arena-stage-center');
+
+    // 🚀 清除卡片上的充能與發光殘影 (問題 4)
+    if(myCard) myCard.classList.remove('charging-mana', 'ultimate-charging', 'winner-glory', 'loser-shatter', 'take-damage');
+    if(opCard) opCard.classList.remove('charging-mana', 'ultimate-charging', 'winner-glory', 'loser-shatter', 'take-damage');
     if(arenaBg) arenaBg.classList.remove('screen-flash-red', 'screen-flash-cyan', 'screen-flash-gold');
+    
+    // 重新蓋上全黑半透明遮罩，凸顯題目
+    if(stageCenter) stageCenter.classList.remove('hide-stage');
 
     isUltimateMode = false;
     arenaBg.classList.remove('ultimate-mode-bg');
@@ -1465,8 +1471,12 @@
         clearInterval(readyTimer);
         document.getElementById('target-word').innerText = battleQuizArr[currentBattleRound].en;
         document.getElementById('battle-timer').innerText = "";
+        
+        // 隱藏倒數計時，顯示錄音按鈕
+        document.getElementById('battle-timer-container').style.display = 'none';
         document.getElementById('battle-controls').style.visibility = 'visible';
         document.getElementById('battle-info').innerText = "限時 10 秒發動攻擊！";
+        
         startRecordingBattle(roomId);
       }
     }, 1000);
@@ -1600,22 +1610,76 @@
       popup.classList.add('popup-anim');
   }
 
-  // 🛡️ 終極修復：控制遮罩淡出、生成絕對光球、確保清除殘影
+  // 🚀 倒數與準備階段：確保清除上一局的所有特效！
+  function startRoundCountdown(roomId) {
+    if(readyTimer) clearInterval(readyTimer);
+    if(currentLimitTimer) clearInterval(currentLimitTimer);
+    if(waitOpTimer) clearInterval(waitOpTimer);
+    
+    if (currentBattleRound >= 10) { 
+       setTimeout(() => { showImpactOverlay(myTotalWins, opTotalWins, true); setTimeout(() => window.location.href = `${GAS_URL}?id=${STUDENT_ID}`, 5000); }, 1000);
+       return; 
+    }
+    
+    let count = 3; roundSubmitted = false;
+    
+    const myCard = document.getElementById('my-card');
+    const opCard = document.getElementById('op-card');
+    const arenaBg = document.getElementById('battle-arena');
+    const stageCenter = document.querySelector('.arena-stage-center');
+
+    // 🚀 清除卡片上的充能與發光殘影 (問題 4)
+    if(myCard) myCard.classList.remove('charging-mana', 'ultimate-charging', 'winner-glory', 'loser-shatter', 'take-damage');
+    if(opCard) opCard.classList.remove('charging-mana', 'ultimate-charging', 'winner-glory', 'loser-shatter', 'take-damage');
+    if(arenaBg) arenaBg.classList.remove('screen-flash-red', 'screen-flash-cyan', 'screen-flash-gold');
+    
+    // 重新蓋上全黑半透明遮罩，凸顯題目
+    if(stageCenter) stageCenter.classList.remove('hide-stage');
+
+    isUltimateMode = false;
+    arenaBg.classList.remove('ultimate-mode-bg');
+    document.getElementById('target-word').classList.remove('ultimate-word');
+    const rb = document.getElementById('battle-record-btn');
+    rb.classList.remove('ultimate-record-btn');
+    rb.innerHTML = "🎤";
+
+    const skillBtn = document.getElementById('skill-btn');
+    if (skillBtn) skillBtn.style.display = hasUsedSkill ? 'none' : 'block';
+
+    document.getElementById('round-num').innerText = `第 ${currentBattleRound + 1} 局 / 先得 5 分獲勝`;
+    document.getElementById('target-word').innerText = "READY?";
+    document.getElementById('battle-timer').innerText = "";
+    document.getElementById('battle-controls').style.visibility = 'hidden';
+    
+    readyTimer = setInterval(() => {
+      document.getElementById('battle-timer').innerText = count;
+      count--;
+      if (count < 0) {
+        clearInterval(readyTimer);
+        document.getElementById('target-word').innerText = battleQuizArr[currentBattleRound].en;
+        document.getElementById('battle-timer').innerText = "";
+        
+        // 隱藏倒數計時，顯示錄音按鈕
+        document.getElementById('battle-timer-container').style.display = 'none';
+        document.getElementById('battle-controls').style.visibility = 'visible';
+        document.getElementById('battle-info').innerText = "限時 10 秒發動攻擊！";
+        
+        startRecordingBattle(roomId);
+      }
+    }, 1000);
+  }
+
+  // 🚀 特效調度器：光球生成與遮罩淡出
   function triggerBattleAnimations(myNum, opNum, isFinal, myTotalWins, opTotalWins, isMyUlt, isOpUlt, myImgUrl, opImgUrl) {
     const myCard = document.getElementById('my-card'); 
     const opCard = document.getElementById('op-card');
     const arenaBg = document.getElementById('battle-arena');
-    const stageCenter = document.querySelector('.arena-stage-center'); // 抓取全黑遮罩
+    const stageCenter = document.querySelector('.arena-stage-center');
 
-    // 清除舊動畫狀態
-    const animations = ['cast-me', 'cast-me-ult', 'cast-op', 'cast-op-ult', 'loser-shatter', 'take-damage', 'screen-flash-red', 'screen-flash-cyan', 'screen-flash-gold', 'winner-glory', 'charging-mana', 'ultimate-charging'];
-    if(myCard) myCard.classList.remove(...animations); 
-    if(opCard) opCard.classList.remove(...animations);
-    if(arenaBg) arenaBg.classList.remove('screen-flash-red', 'screen-flash-cyan', 'screen-flash-gold');
-    void myCard.offsetWidth; void opCard.offsetWidth;
-
-    // 🚀 第一步：淡出中央全黑遮罩，露出霸氣卡片！
+    // 🚀 第一步：攻擊結算！拿掉遮罩，露出華麗卡片，並隱藏按鈕區
     if(stageCenter) stageCenter.classList.add('hide-stage');
+    document.getElementById('battle-controls').style.visibility = 'hidden';
+    document.getElementById('battle-timer-container').style.display = 'flex'; // 恢復中間區域供下一局用
 
     let delayBeforeAttack = 0;
     if (myNum > opNum && isMyUlt) {
@@ -1630,28 +1694,27 @@
         const myContainer = myCard.closest('.my-container');
         const opContainer = opCard.closest('.op-container');
 
-        // 🚀 動態生成絕對 Z 軸光球，直接掛在 arena 上，保證不破圖！
+        // 🚀 動態生成獨立光球，不綁定在卡片上，避免被縮放影響
         function createBlast(type, delay = 0) {
            setTimeout(() => {
              const blast = document.createElement('div');
              blast.className = `blast-particle ${type}`;
              arenaBg.appendChild(blast);
-             setTimeout(() => blast.remove(), 1000); // 動畫播完自毀
+             setTimeout(() => blast.remove(), 1000); // 播完自毀
            }, delay);
         }
 
         if (myNum > opNum) { 
           if(myCard) {
-            if(myContainer) myContainer.classList.add('recoil-my'); // 我方後座力
-            
+            if(myContainer) myContainer.classList.add('recoil-my'); 
             if (isMyUlt) {
                 myCard.classList.add('ultimate-charging'); 
-                createBlast('blast-ult-my', 100); createBlast('blast-ult-my', 300); // 雙發金色光球
+                createBlast('blast-ult-my', 100); createBlast('blast-ult-my', 300);
                 if(arenaBg) arenaBg.classList.add('screen-flash-gold');
                 showSkillPopup("👊 技能重擊 +2 燈！", "#f1c40f");
             } else {
                 myCard.classList.add('charging-mana'); 
-                createBlast('blast-my', 100); // 單發青色光球
+                createBlast('blast-my', 100);
                 if(arenaBg) arenaBg.classList.add('screen-flash-cyan'); 
             }
             if(isFinal) setTimeout(() => myCard.classList.add('winner-glory'), 800);
@@ -1661,8 +1724,7 @@
         else if (myNum < opNum) { 
           if (isMyUlt) showSkillPopup("❌ 技能被打斷...", "#e74c3c");
           if(opCard) {
-            if(opContainer) opContainer.classList.add('recoil-op'); // 對手後座力
-            
+            if(opContainer) opContainer.classList.add('recoil-op'); 
             if (isOpUlt) {
                 opCard.classList.add('ultimate-charging'); 
                 createBlast('blast-ult-op', 100); createBlast('blast-ult-op', 300);
@@ -1685,18 +1747,10 @@
         updateCardDamage(opCard, myTotalWins);
 
         setTimeout(() => {
-          // 清除所有狀態，為下一局準備，避免殘影
-          if(myCard) myCard.classList.remove('charging-mana', 'ultimate-charging');
-          if(opCard) opCard.classList.remove('charging-mana', 'ultimate-charging');
           if(myContainer) myContainer.classList.remove('recoil-my');
           if(opContainer) opContainer.classList.remove('recoil-op');
           
           showImpactOverlay(myNum, opNum, isFinal, myImgUrl, opImgUrl);
-
-          // 動畫播完後，如果沒有結束，恢復全黑遮罩準備下一題
-          if (!isFinal && stageCenter) {
-              setTimeout(() => { stageCenter.classList.remove('hide-stage'); }, 500);
-          }
         }, 1600); 
 
     }, delayBeforeAttack); 
