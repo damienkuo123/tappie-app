@@ -313,7 +313,7 @@
       z-index: 2000; display: none; overflow: hidden; perspective: 1000px;
     }
 
-    /* 🚀 放大的左側垂直計分燈柱 */
+    /* 🚀 垂直計分燈柱 (維持在左側) */
     .vertical-score-track {
       position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
       display: flex; flex-direction: column; align-items: center; gap: 15px; z-index: 50;
@@ -327,66 +327,71 @@
     .dot-me { background: #0fb9b1; box-shadow: 0 0 15px #0fb9b1, inset 0 0 5px #fff; border-color: #fff; } 
     .dot-op { background: #eb3b5a; box-shadow: 0 0 15px #eb3b5a, inset 0 0 5px #fff; border-color: #fff; } 
 
-    /* 🚀 玩家與對手區塊定位：讓卡片回歸巨無霸尺寸！ */
+    /* 🚀 玩家與對手區塊定位：回歸巨無霸尺寸！ */
     .arena-player-container { position: absolute; left: 50%; display: flex; flex-direction: column; align-items: center; width: 100%; transition: opacity 0.3s; }
-    /* 對手卡放在上方遠景 */
+    
+    /* 對手卡：在最上方遠景 */
     .op-container { top: max(5vh, env(safe-area-inset-top)); transform: translateX(-50%) scale(0.9) translateZ(-100px); z-index: 2; }
-    /* 我方卡壓在最底端，並且置中疊加在控制台後方 */
-    .my-container { bottom: max(10vh, env(safe-area-inset-bottom)); transform: translateX(-50%) scale(1.1) translateZ(50px); z-index: 5; }
+    
+    /* 🚀 我方卡：壓在最底下，因為沒有遮罩了，讓它霸氣呈現！ */
+    .my-container { bottom: max(2vh, env(safe-area-inset-bottom)); transform: translateX(-50%) scale(1.1) translateZ(50px); z-index: 5; }
 
-    /* 開火後座力動畫：微調角度與景深 */
-    .recoil-my { animation: recoilMyAnim 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    /* 開火後座力動畫：加重仰角與位移 */
+    .recoil-my { animation: recoilMyAnim 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
     @keyframes recoilMyAnim {
       0%, 100% { transform: translateX(-50%) scale(1.1) translateZ(50px); }
-      20% { transform: translateX(-50%) scale(1.05) translateZ(0px) rotateX(15deg) translateY(20px); }
+      20% { transform: translateX(-50%) scale(1.05) translateZ(0px) rotateX(20deg) translateY(30px); }
     }
-    .recoil-op { animation: recoilOpAnim 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    .recoil-op { animation: recoilOpAnim 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
     @keyframes recoilOpAnim {
       0%, 100% { transform: translateX(-50%) scale(0.9) translateZ(-100px); }
-      20% { transform: translateX(-50%) scale(0.85) translateZ(-150px) rotateX(-15deg) translateY(-20px); }
+      20% { transform: translateX(-50%) scale(0.85) translateZ(-150px) rotateX(-20deg) translateY(-30px); }
     }
 
-    /* 恢復霸氣的寬度 */
+    /* 霸氣的卡片寬度 */
     .arena-card-wrapper { width: 55vw; max-width: 280px; aspect-ratio: var(--card-aspect); perspective: 1000px; position: relative; }
 
-    /* 🚀 全畫面黑色半透明遮罩 (用來壓暗卡片凸顯題目) */
+    /* 🚀 徹底移除死黑遮罩，只保留字體背後的柔和光暈 */
     .arena-stage-center { 
-      position: absolute; top: 0; left: 0; 
-      width: 100vw; height: 100dvh; text-align: center; z-index: 15; 
-      /* 極度壓暗的背景 */
-      background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-      display: flex; flex-direction: column; justify-content: center; align-items: center;
-      transition: opacity 0.4s ease; pointer-events: none;
+      position: absolute; top: 48%; left: 50%; transform: translate(-50%, -50%); 
+      width: 100vw; text-align: center; z-index: 15; 
+      background: radial-gradient(ellipse at center, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.4) 40%, transparent 80%);
+      padding: 40px 0; border: none; box-shadow: none; pointer-events: none;
     }
-    /* 當觸發 .hide-stage 時，拿掉遮罩，露出背後的華麗卡片 */
-    .arena-stage-center.hide-stage { opacity: 0; }
-
+    
     #target-word { font-size: 12vw; text-transform: uppercase; letter-spacing: 4px; color: #fff; text-shadow: 0 0 25px #000, 0px 4px 0px #576574; margin: 0 0 20px 0; }
     #battle-timer { font-size: 50px; font-weight: 900; color: #f1c40f; text-shadow: 0 0 20px rgba(241,196,15,0.8); margin: 0; }
     #round-num { font-size: 16px !important; margin-bottom: 10px; color: #f1c40f; font-weight: bold; letter-spacing: 2px;}
 
     .glass-panel { background: rgba(30, 39, 46, 0.8); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 15px; padding: 6px 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
 
-    /* 🚀 控制台與按鈕美化 (直接浮在我方卡片正上方) */
-    #battle-controls { position: absolute; bottom: max(3vh, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; z-index: 50; gap: 10px; }
+    /* 🚀 控制台：絕對定位，直接疊加在我方卡片的下半部！ */
+    #battle-controls { 
+      position: absolute; 
+      bottom: max(5vh, env(safe-area-inset-bottom)); /* 懸浮在底部 */
+      left: 50%; transform: translateX(-50%); 
+      display: flex; flex-direction: column; align-items: center; 
+      z-index: 50; gap: 15px; width: 100%;
+    }
 
     #skill-btn {
       background: linear-gradient(135deg, #f39c12, #e74c3c); color: white; border: 2px solid #f1c40f; border-radius: 20px;
       padding: 10px 30px; font-size: 18px; font-weight: 900; box-shadow: 0 5px 15px rgba(231, 76, 60, 0.5); cursor: pointer; transition: all 0.3s; white-space: nowrap;
-      animation: float-btn 2s infinite ease-in-out; /* 恢復漂浮動畫 */
+      animation: float-btn 2s infinite ease-in-out; 
     }
     #skill-btn:active { transform: scale(0.9); }
     @keyframes float-btn { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(231, 76, 60, 0.8); } }
 
+    /* 麥克風按鈕加上毛玻璃底座，讓它疊在卡片上也不突兀 */
     #battle-record-btn {
-      width: 85px; height: 85px; border-radius: 50%; font-size: 35px; cursor: pointer;
-      background: linear-gradient(145deg, #2d3436, #1e272b); border: 3px solid #0fb9b1; color: white; outline: none;
-      box-shadow: 0 10px 20px rgba(0,0,0,0.5), inset 0 2px 5px rgba(255,255,255,0.1); transition: all 0.2s; display: flex; justify-content: center; align-items: center; flex-shrink: 0;
+      width: 90px; height: 90px; border-radius: 50%; font-size: 40px; cursor: pointer;
+      background: rgba(30, 39, 46, 0.85); backdrop-filter: blur(10px); border: 4px solid #0fb9b1; color: white; outline: none;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.6), inset 0 2px 5px rgba(255,255,255,0.2); transition: all 0.2s; display: flex; justify-content: center; align-items: center; flex-shrink: 0;
     }
-    #battle-record-btn.active { transform: scale(0.9); animation: btnManaCharge 0.5s infinite alternate; border-color: #26de81; }
+    #battle-record-btn.active { transform: scale(0.9); animation: btnManaCharge 0.5s infinite alternate; border-color: #26de81; background: #1e272b; }
     @keyframes btnManaCharge { 0% { box-shadow: 0 0 10px #0fb9b1, 0 0 20px #0fb9b1; } 100% { box-shadow: 0 0 30px #26de81, 0 0 60px #26de81; } }
     
-    #battle-record-btn.ult-active { transform: scale(0.9); animation: btnUltCharge 0.5s infinite alternate; border-color: #fff; }
+    #battle-record-btn.ult-active { transform: scale(0.9); animation: btnUltCharge 0.5s infinite alternate; border-color: #fff; background: #1e272b;}
     @keyframes btnUltCharge { 0% { box-shadow: 0 0 20px #f1c40f, 0 0 30px #f1c40f; } 100% { box-shadow: 0 0 50px #f39c12, 0 0 80px #fff; } }
 
     /* ========================================= */
