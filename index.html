@@ -172,6 +172,17 @@
       opacity: calc(var(--pointer-from-center) * 0.8); mix-blend-mode: overlay;
     }
 
+    /* 🚀 遺失的關鍵靈魂：光澤圖層本體宣告 (沒有這個，SR 和 R 的星空與雷射永遠長不出來！) */
+    .card__shine {
+      display: grid; transform: translateZ(1px); overflow: hidden; z-index: 4;
+      background: transparent; background-size: cover; background-position: center;
+      filter: brightness(.85) contrast(2.75) saturate(.65); mix-blend-mode: color-dodge;
+    }
+    .card__shine:before, .card__shine:after { grid-area: 1/1; border-radius: var(--card-radius); content: ""; display: block; }
+    .card__shine:before { transform: translateZ(1px); }
+    .card__shine:after { transform: translateZ(1.2px); }
+
+
     /* 🚀 移植：你的進化版 Masking (絕對強制挖空，修復遮罩失效問題) */
     .card.masked .card__shine, .card.masked .card__shine:before, .card.masked .card__shine:after {
       -webkit-mask-image: linear-gradient(white, white), var(--mask) !important;
@@ -1192,43 +1203,13 @@
         const isMeHost = (normalizeStr(STUDENT_ID) === normalizeStr(data.hostId));
 
         // 判定雙方圖片與名稱
-        // 🚀 從後端拿資料
-        const myRarity = isMeHost ? data.hostRarity : data.guestRarity;
-        const opRarity = isMeHost ? data.guestRarity : data.hostRarity;
-        const myMask = isMeHost ? data.hostMask : data.guestMask;
-        const opMask = isMeHost ? data.guestMask : data.hostMask;
+        const myImgUrl = isMeHost ? data.hostImg : data.guestImg;
+        const opImgUrl = isMeHost ? data.guestImg : data.hostImg;
+        const myName = isMeHost ? data.hostName : (data.guestName || STUDENT_ID);
+        const opName = isMeHost ? (data.guestName || "挑戰者") : data.hostName;
 
-        // 🕵️‍♂️ 診斷工具：在瀏覽器控制台印出後端到底給了什麼！
-        console.log("【偵錯】後端傳來的我方稀有度:", myRarity);
-        console.log("【偵錯】後端傳來的對手稀有度:", opRarity);
-
-        // 🚀 暴力測試：如果後端傳來的是空的 (undefined)，我們就「強制」把它當成 SSR！
-        // 只要等一下畫面出現了金屬光，就代表 CSS 完美無瑕，純粹是 GAS 沒更新！
-        const finalMyRarity = myRarity || 'SSR';
-        const finalOpRarity = opRarity || 'SSR';
-
-        // 🚀 套用我方特效
-        const myCardEl = document.getElementById('portal-my-card');
-        myCardEl.setAttribute('data-rarity', finalMyRarity);
-        if (myMask) {
-            myCardEl.classList.add('masked');
-            myCardEl.style.setProperty('--mask', myMask.includes('url(') ? myMask : `url('${myMask}')`);
-        } else {
-            myCardEl.classList.remove('masked');
-        }
-
-        // 🚀 套用對手特效
-        const opCardEl = document.getElementById('portal-op-card');
-        opCardEl.setAttribute('data-rarity', finalOpRarity);
-        if (opMask) {
-            opCardEl.classList.add('masked');
-            opCardEl.style.setProperty('--mask', opMask.includes('url(') ? opMask : `url('${opMask}')`);
-        } else {
-            opCardEl.classList.remove('masked');
-        }
-
-        // 🚀 終極自給自足引擎：自己去圖鑑庫裡面挖出 Rarity 和 Mask！
-        let myRarity = 'N', opRarity = 'N', myMask = '', opMask = '';
+        // 🚀 終極自給自足引擎：自己去圖鑑庫裡面挖出 Rarity 和 Mask！(變數改名，保證不衝突)
+        let finalMyRarity = 'N', finalOpRarity = 'N', finalMyMask = '', finalOpMask = '';
         
         if (window.characterAssets) {
             // 安全解碼並去除雜訊
@@ -1239,32 +1220,32 @@
             Object.values(window.characterAssets).forEach(char => {
                const charSafeUrl = cleanUrl(char.img);
                if(charSafeUrl && charSafeUrl === mySafeUrl) { 
-                   myRarity = (char.rarity || 'N').trim(); 
-                   myMask = (char.mask || '').trim(); 
+                   finalMyRarity = (char.rarity || 'N').trim(); 
+                   finalMyMask = (char.mask || '').trim(); 
                }
                if(charSafeUrl && charSafeUrl === opSafeUrl) { 
-                   opRarity = (char.rarity || 'N').trim(); 
-                   opMask = (char.mask || '').trim(); 
+                   finalOpRarity = (char.rarity || 'N').trim(); 
+                   finalOpMask = (char.mask || '').trim(); 
                }
             });
         }
 
         // 🚀 強制寫入我方特效
         const myCardEl = document.getElementById('portal-my-card');
-        myCardEl.dataset.rarity = myRarity; // 使用 dataset 寫法更安全
-        if (myMask) {
+        myCardEl.setAttribute('data-rarity', finalMyRarity);
+        if (finalMyMask) {
             myCardEl.classList.add('masked');
-            myCardEl.style.setProperty('--mask', myMask.includes('url(') ? myMask : `url('${myMask}')`);
+            myCardEl.style.setProperty('--mask', finalMyMask.includes('url(') ? finalMyMask : `url('${finalMyMask}')`);
         } else {
             myCardEl.classList.remove('masked');
         }
 
         // 🚀 強制寫入對手特效
         const opCardEl = document.getElementById('portal-op-card');
-        opCardEl.dataset.rarity = opRarity;
-        if (opMask) {
+        opCardEl.setAttribute('data-rarity', finalOpRarity);
+        if (finalOpMask) {
             opCardEl.classList.add('masked');
-            opCardEl.style.setProperty('--mask', opMask.includes('url(') ? opMask : `url('${opMask}')`);
+            opCardEl.style.setProperty('--mask', finalOpMask.includes('url(') ? finalOpMask : `url('${finalOpMask}')`);
         } else {
             opCardEl.classList.remove('masked');
         }
