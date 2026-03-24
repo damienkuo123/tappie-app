@@ -316,165 +316,63 @@
     .btn-cyber:active { transform: translateX(-50%) scale(0.95); } /* 🚀 修正 active 時的位移 */
 
     /* ========================================= */
-    /* 對戰頁面 */
+    /* 對戰頁面 (Z 軸全息景深排版) */
     /* ========================================= */
 
-    /* 🌌 戰場背景：鎖死高度，完美適應 Safari */
     #battle-arena { 
       position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh; 
-      background: radial-gradient(circle at 50% 50%, #1c2331 0%, #0b0f19 100%) !important; 
-      z-index: 2000; display: none; flex-direction: column; 
-      justify-content: space-between; align-items: center; 
-      padding: max(2vh, env(safe-area-inset-top)) 15px max(2vh, env(safe-area-inset-bottom));
-      box-sizing: border-box; overflow: hidden; 
+      background: radial-gradient(circle at 50% 50%, #1a2235 0%, #050914 100%) !important; 
+      z-index: 2000; display: none; overflow: hidden; perspective: 1000px;
     }
 
-    #battle-info-container { height: 90px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-
-    /* 🚀 控制面板佈局 */
-    .player-zone { position: relative; padding-bottom: 120px; width: 100%; display: flex; flex-direction: column; align-items: center; }
+    /* 🚀 玩家與對手區塊定位 */
+    .arena-player-container { position: absolute; left: 50%; display: flex; flex-direction: column; align-items: center; width: 100%; }
     
-    #battle-controls { 
-      position: absolute; bottom: 10px; left: 0; right: 0; width: 100%;
-      display: flex; flex-direction: column; align-items: center; justify-content: flex-end; 
-      z-index: 50; visibility: hidden; gap: 15px; 
-    }
-
-    /* 👊 技能重擊按鈕 */
-    #skill-btn {
-      background: linear-gradient(135deg, #f39c12, #e74c3c); color: white; 
-      border: 2px solid #f1c40f; border-radius: 20px;
-      padding: 8px 25px; font-size: 16px; font-weight: 900; 
-      box-shadow: 0 5px 15px rgba(231, 76, 60, 0.5); cursor: pointer;
-      transition: all 0.3s; animation: float-btn 2s infinite ease-in-out; white-space: nowrap;
-    }
-    #skill-btn:active { transform: scale(0.9); }
-    @keyframes float-btn { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(231, 76, 60, 0.8); } }
-
-    /* 🎤 錄音按鈕本體 */
-    #battle-record-btn {
-      width: 75px; height: 75px; border-radius: 50%; font-size: 30px; cursor: pointer;
-      background: linear-gradient(145deg, #2d3436, #1e272b); border: 3px solid #0fb9b1; color: white; outline: none;
-      box-shadow: 0 10px 20px rgba(0,0,0,0.5), inset 0 2px 5px rgba(255,255,255,0.1); transition: all 0.2s;
-      display: flex; justify-content: center; align-items: center; flex-shrink: 0;
-    }
+    /* 遠景：對手稍微縮小並往上推 */
+    .op-container { top: max(10px, env(safe-area-inset-top)); transform: translateX(-50%) scale(0.85) translateZ(-150px); z-index: 2; }
     
-    #battle-record-btn.active { transform: scale(0.9); animation: manaCharge 0.5s infinite alternate; border-color: #26de81; }
-    @keyframes manaCharge { 0% { box-shadow: 0 0 10px #0fb9b1, 0 0 20px #0fb9b1; } 100% { box-shadow: 0 0 30px #26de81, 0 0 60px #26de81; } }
-    
-    #battle-record-btn.ult-active { transform: scale(0.9); animation: ultManaCharge 0.5s infinite alternate; border-color: #fff; }
-    @keyframes ultManaCharge { 0% { box-shadow: 0 0 20px #f1c40f, 0 0 30px #f1c40f; } 100% { box-shadow: 0 0 50px #f39c12, 0 0 80px #fff; } }
+    /* 近景：玩家稍微放大並往下推 */
+    .my-container { bottom: max(110px, env(safe-area-inset-bottom)); transform: translateX(-50%) scale(1.05) translateZ(50px); z-index: 5; }
 
-    /* 🎴 實體卡片設計 */
-    .arena-section { z-index: 10; width: 100%; display: flex; flex-direction: column; align-items: center; }
-    .card-entity {
-      height: 20vh; min-height: 120px; max-height: 180px; 
-      aspect-ratio: 2816 / 1271; width: auto; max-width: 95vw; 
-      background-size: cover; background-position: center center; background-repeat: no-repeat;
-      border-radius: 12px; border: 3px solid #576574; 
-      box-shadow: 0 10px 30px rgba(0,0,0,0.8), inset 0 0 15px rgba(255,255,255,0.2);
-      position: relative; z-index: 5; transition: all 0.4s ease;
-      /* 🚀 已經移除 overflow: hidden; 讓光球可以順利飛出卡片結界！ */
+    /* 卡片共用尺寸 */
+    .arena-card-wrapper { width: 40vw; max-width: 240px; aspect-ratio: var(--card-aspect); perspective: 1000px; }
+
+    /* 🚀 中央擂台腰帶 */
+    .arena-stage-center { 
+      position: absolute; top: 48%; left: 50%; transform: translate(-50%, -50%); 
+      width: 100vw; text-align: center; z-index: 10; 
+      background: linear-gradient(90deg, transparent, rgba(0,0,0,0.85) 20%, rgba(0,0,0,0.85) 80%, transparent); 
+      padding: 15px 0; border-top: 1px solid rgba(241,196,15,0.3); border-bottom: 1px solid rgba(241,196,15,0.3); 
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); box-shadow: 0 0 30px rgba(0,0,0,0.8);
     }
+    #target-word { font-size: 9vw; text-transform: uppercase; letter-spacing: 4px; color: #fff; text-shadow: 0 0 15px rgba(255,255,255,0.6), 0px 4px 0px #576574; margin: 0; }
+    #battle-timer { font-size: 32px; font-weight: 900; color: #f6e58d; text-shadow: 0 0 15px rgba(246, 229, 141, 0.5); margin: 0; }
 
-    /* 🌟 一般錄音：卡片本體爆發 (青藍色) */
-    .card-entity.charging-mana { border-color: #0fb9b1 !important; animation: cardChargePulse 0.5s infinite alternate; z-index: 25; }
+    /* 錄音與控制台 */
+    #battle-controls { position: absolute; bottom: max(15px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; z-index: 50; gap: 10px; }
+
+    /* ========================================= */
+    /* 🌟 3D 卡牌專屬特效 (適配 .card 結構) */
+    /* ========================================= */
+
+    /* 發光充能：綁定在 rotator 和 bg 上 */
+    .card.charging-mana .card__rotator { animation: cardChargePulse 0.5s infinite alternate; z-index: 25; }
+    .card.charging-mana .card__bg { border-color: #0fb9b1 !important; }
     @keyframes cardChargePulse {
       0% { box-shadow: 0 0 15px #0fb9b1, inset 0 0 15px #0fb9b1; transform: translateY(0px); }
       100% { box-shadow: 0 0 50px #26de81, inset 0 0 25px #26de81; transform: translateY(-5px); }
     }
 
-    /* 🌟 大招錄音：黃金卡片爆發 (金色) */
-    .card-entity.ultimate-charging { border-color: #f1c40f !important; animation: ultCardCharge 0.5s infinite alternate; z-index: 25; }
+    /* 大招充能 */
+    .card.ultimate-charging .card__rotator { animation: ultCardCharge 0.5s infinite alternate; z-index: 25; }
+    .card.ultimate-charging .card__bg { border-color: #f1c40f !important; }
     @keyframes ultCardCharge {
       0% { box-shadow: 0 0 20px #f1c40f, inset 0 0 20px #f1c40f; transform: translateY(0px); }
       100% { box-shadow: 0 0 60px #f39c12, 0 0 80px #fff, inset 0 0 40px #f39c12; transform: translateY(-5px); }
     }
 
-    /* 🚀 全新窄版「橫向排列」資訊面板，不遮擋卡片 */
-    .glass-panel {
-      background: rgba(30, 39, 46, 0.8); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 15px;
-      padding: 6px 15px; margin: 8px 0; 
-      position: relative; z-index: 20; 
-      display: flex; flex-direction: row; justify-content: space-between; align-items: center;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.5); width: 90%; max-width: 450px; 
-    }
-
-    /* 點點與文字區 */
-    .rounds-container { display: flex; gap: 8px; margin: 0; }
-    .round-dot { width: 14px; height: 14px; border-radius: 50%; background: #2f3542; box-shadow: inset 0 2px 4px rgba(0,0,0,0.8); border: 1px solid #57606f; transition: 0.3s; }
-    .dot-me { background: #0fb9b1; box-shadow: 0 0 15px #0fb9b1, inset 0 0 5px #fff; border-color: #fff; } 
-    .dot-op { background: #eb3b5a; box-shadow: 0 0 15px #eb3b5a, inset 0 0 5px #fff; border-color: #fff; } 
-
-    /* ⚔️ 中間交戰區 */
-    .stage-zone { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; margin: 1vh 0; max-height: 35vh; }
-    #target-word { font-size: 8vw; text-transform: uppercase; letter-spacing: 2px; color: #f1f2f6; text-shadow: 0 0 15px rgba(255,255,255,0.5), 0px 4px 0px #576574; margin: 0 0 5px 0; text-align: center; transition: 0.3s; }
-    #battle-timer-container { height: 55px; display: flex; justify-content: center; align-items: center; }
-    #battle-timer { font-size: 38px; font-weight: 900; color: #f6e58d; text-shadow: 0 0 15px rgba(246, 229, 141, 0.5); margin: 0; min-height: 45px; }
-
-    /* 🌈 大招狀態的視覺統整 */
-    .ultimate-mode-bg { background: radial-gradient(circle at 50% 50%, #4a3600 0%, #0b0f19 100%) !important; }
-    .ultimate-word { color: #f1c40f !important; text-shadow: 0 0 20px #f1c40f, 0 0 40px #f1c40f !important; animation: word-pulse 0.5s infinite alternate; }
-    .ultimate-record-btn { background: linear-gradient(145deg, #e67e22, #f39c12) !important; border: 4px solid #fff !important; box-shadow: 0 0 30px #f1c40f, inset 0 0 15px #f1c40f !important; }
-    
-    /* 💬 大招文字浮出框 */
-    #skill-popup {
-      position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
-      font-size: 28px; font-weight: 900; z-index: 3000; white-space: nowrap;
-      pointer-events: none; opacity: 0; text-shadow: 0 4px 10px rgba(0,0,0,0.8);
-    }
-    .popup-anim { animation: skillPop 2s forwards; }
-    @keyframes skillPop {
-      0% { opacity: 0; transform: translate(-50%, 0px) scale(0.5); }
-      15% { opacity: 1; transform: translate(-50%, -30px) scale(1.2); }
-      80% { opacity: 1; transform: translate(-50%, -30px) scale(1); }
-      100% { opacity: 0; transform: translate(-50%, -60px) scale(0.8); }
-    }
-
-    /* 💥 雙重金色光球 (大招成功專用：一前一後發射) */
-    .blast-ultimate::before, .blast-ultimate::after {
-      content: ''; position: absolute; top: 50%; left: 50%; width: 90px; height: 90px;
-      background: radial-gradient(circle, #fff 0%, #f1c40f 40%, transparent 80%);
-      border-radius: 50%; transform: translate(-50%, -50%) scale(0); opacity: 1; z-index: 100; pointer-events: none;
-    }
-    .blast-ultimate::before { animation: blast-upward 0.4s 0.2s ease-in forwards; }
-    .blast-ultimate::after { animation: blast-upward 0.4s 0.4s ease-in forwards; } 
-    
-    /* 💥 對手的大招光球 (向下) */
-    .blast-ultimate-down::before, .blast-ultimate-down::after {
-      content: ''; position: absolute; top: 50%; left: 50%; width: 90px; height: 90px;
-      background: radial-gradient(circle, #fff 0%, #f1c40f 40%, transparent 80%);
-      border-radius: 50%; transform: translate(-50%, -50%) scale(0); opacity: 1; z-index: 100; pointer-events: none;
-    }
-    .blast-ultimate-down::before { animation: blast-downward 0.4s 0.2s ease-in forwards; }
-    .blast-ultimate-down::after { animation: blast-downward 0.4s 0.4s ease-in forwards; } 
-
-    .screen-flash-gold { animation: flashGold 0.6s 0.8s 2; }
-    @keyframes flashGold { 0%, 100% { box-shadow: inset 0 0 0 transparent; } 50% { box-shadow: inset 0 0 150px rgba(241, 196, 15, 0.9); } }
-
-    .neon-score {
-      font-size: 38px; font-weight: 900; color: #0fb9b1;
-      text-shadow: 0 0 10px rgba(15, 185, 177, 0.8), 0 0 20px rgba(15, 185, 177, 0.5), 0 0 30px #fff;
-      animation: pop-up 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; display: inline-block; margin: 0;
-    }
-    @keyframes pop-up { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-
-    /* 🌟 攻擊蓄力與射擊特效 */
-    .cast-me { animation: magic-cast-me 0.8s ease-out forwards; }
-    @keyframes magic-cast-me { 0%, 100% { transform: scale(1); filter: brightness(1) drop-shadow(0 0 0 transparent); z-index: 1; } 40% { transform: scale(1.05); filter: brightness(1.8) drop-shadow(0 0 40px #0fb9b1); z-index: 10; } }
-
-    /* 🌟 大招專屬：發射前金色蓄力 */
-    .cast-me-ult { animation: magic-cast-ult 0.8s ease-out forwards; }
-    @keyframes magic-cast-ult { 0%, 100% { transform: scale(1); filter: brightness(1) drop-shadow(0 0 0 transparent); z-index: 1; } 40% { transform: scale(1.05); filter: brightness(2) drop-shadow(0 0 40px #f1c40f); z-index: 10; } }
-
-    .cast-op { animation: magic-cast-op 0.8s ease-out forwards; }
-    @keyframes magic-cast-op { 0%, 100% { transform: scale(1); filter: brightness(1) drop-shadow(0 0 0 transparent); z-index: 1; } 40% { transform: scale(1.05); filter: brightness(1.8) drop-shadow(0 0 40px #eb3b5a); z-index: 10; } }
-
-    .cast-op-ult { animation: magic-cast-op-ult 0.8s ease-out forwards; }
-    @keyframes magic-cast-op-ult { 0%, 100% { transform: scale(1); filter: brightness(1) drop-shadow(0 0 0 transparent); z-index: 1; } 40% { transform: scale(1.05); filter: brightness(2) drop-shadow(0 0 40px #f1c40f); z-index: 10; } }
-
-    .blast-up::after {
+    /* 🚀 光球發射 (修改為垂直上下射擊) */
+    .card.blast-up .card__front::after {
       content: ''; position: absolute; top: 50%; left: 50%; width: 90px; height: 90px;
       background: radial-gradient(circle, #fff 0%, #0fb9b1 40%, transparent 80%);
       border-radius: 50%; transform: translate(-50%, -50%) scale(0); opacity: 1; z-index: 100; pointer-events: none;
@@ -482,7 +380,7 @@
     }
     @keyframes blast-upward { 0% { transform: translate(-50%, -50%) scale(1); opacity: 1; } 100% { transform: translate(-50%, -65vh) scale(3); opacity: 0; } }
 
-    .blast-down::after {
+    .card.blast-down .card__front::after {
       content: ''; position: absolute; top: 50%; left: 50%; width: 90px; height: 90px;
       background: radial-gradient(circle, #fff 0%, #eb3b5a 40%, transparent 80%);
       border-radius: 50%; transform: translate(-50%, -50%) scale(0); opacity: 1; z-index: 100; pointer-events: none;
@@ -490,42 +388,38 @@
     }
     @keyframes blast-downward { 0% { transform: translate(-50%, -50%) scale(1); opacity: 1; } 100% { transform: translate(-50%, 65vh) scale(3); opacity: 0; } }
 
-    /* 🩸 戰損碎裂系統 */
-    .card-entity::before { 
-      content: ''; position: absolute; top:0; left:0; right:0; bottom:0; 
-      border-radius: inherit; 
-      pointer-events: none; opacity: 0; transition: opacity 0.5s; z-index: 15; 
+    /* 大招雙重光球 */
+    .card.blast-ultimate .card__front::before, .card.blast-ultimate .card__front::after {
+      content: ''; position: absolute; top: 50%; left: 50%; width: 90px; height: 90px; background: radial-gradient(circle, #fff 0%, #f1c40f 40%, transparent 80%); border-radius: 50%; transform: translate(-50%, -50%) scale(0); z-index: 100; pointer-events: none;
     }
-    .dmg-1 { border-color: #f1c40f !important; }
-    .dmg-1::before { opacity: 0.6; background: linear-gradient(35deg, transparent 49%, rgba(255,255,255,0.8) 49.5%, transparent 50%); }
-    .dmg-2 { border-color: #e67e22 !important; box-shadow: inset 0 0 20px rgba(230, 126, 34, 0.5) !important; filter: saturate(0.8); }
-    .dmg-2::before { opacity: 0.8; background: linear-gradient(35deg, transparent 49%, rgba(255,255,255,0.8) 49.5%, transparent 50%), linear-gradient(-55deg, transparent 49%, rgba(255,255,255,0.8) 49.5%, transparent 50%); }
-    .dmg-3 { border-color: #e74c3c !important; box-shadow: inset 0 0 40px rgba(231, 76, 60, 0.6) !important; filter: saturate(0.6) contrast(1.2); }
-    .dmg-3::before { opacity: 1; background: linear-gradient(35deg, transparent 49%, rgba(255,255,255,0.9) 49.5%, transparent 50%), linear-gradient(-55deg, transparent 49%, rgba(255,255,255,0.9) 49.5%, transparent 50%), linear-gradient(15deg, transparent 49%, rgba(255,255,255,0.9) 49.5%, transparent 50%); }
-    .dmg-4 { border: 3px dashed #c0392b !important; box-shadow: inset 0 0 60px rgba(192, 57, 43, 0.8) !important; filter: grayscale(0.5) sepia(0.5) hue-rotate(-30deg); }
-    .dmg-4::before { opacity: 1; background: linear-gradient(35deg, transparent 49%, #fff 49.5%, transparent 50%), linear-gradient(-55deg, transparent 49%, #fff 49.5%, transparent 50%), linear-gradient(15deg, transparent 49%, #fff 49.5%, transparent 50%), linear-gradient(-80deg, transparent 49%, #fff 49.5%, transparent 50%); }
-
-    /* 🩸 受擊動畫 */
-    .take-damage { animation: shakeDamage 0.5s 0.8s ease-in-out; }
-    @keyframes shakeDamage { 0%, 100% { transform: translate(0, 0) rotate(0deg); } 20% { transform: translate(-15px, 15px) rotate(-4deg); } 40% { transform: translate(15px, -15px) rotate(4deg); } 60% { transform: translate(-10px, -5px) rotate(-2deg); } 80% { transform: translate(10px, 5px) rotate(2deg); } }
-
-    .screen-flash-cyan { animation: flashCyan 0.5s 0.8s 2; }
-    @keyframes flashCyan { 0%, 100% { box-shadow: inset 0 0 0 transparent; } 50% { box-shadow: inset 0 0 150px rgba(15, 185, 177, 0.9); } }
-    .screen-flash-red { animation: flashRed 0.5s 0.8s 2; }
-    @keyframes flashRed { 0%, 100% { box-shadow: inset 0 0 0 transparent; } 50% { box-shadow: inset 0 0 150px rgba(235, 59, 90, 0.9); } }
-
-    /* 🔥 終極爆炸消失 */
-    .loser-shatter { animation: shatter-destroy 1.2s 0.8s ease-out forwards; }
-    @keyframes shatter-destroy {
-      0% { transform: scale(1); filter: brightness(1); opacity: 1; }
-      10% { transform: scale(1.2); filter: brightness(3) drop-shadow(0 0 50px #fff); } 
-      25% { transform: scale(1.1) skewX(15deg); filter: brightness(2) drop-shadow(0 0 80px #ff4757); opacity: 1; } 
-      40% { transform: scale(0.8) rotate(-10deg) translateY(20px); filter: grayscale(0.5) blur(2px); opacity: 0.8; } 
-      100% { transform: scale(0.2) rotate(45deg) translateY(300px); filter: blur(20px); opacity: 0; } 
+    .card.blast-ultimate .card__front::before { animation: blast-upward 0.4s 0.2s ease-in forwards; }
+    .card.blast-ultimate .card__front::after { animation: blast-upward 0.4s 0.4s ease-in forwards; } 
+    
+    .card.blast-ultimate-down .card__front::before, .card.blast-ultimate-down .card__front::after {
+      content: ''; position: absolute; top: 50%; left: 50%; width: 90px; height: 90px; background: radial-gradient(circle, #fff 0%, #f1c40f 40%, transparent 80%); border-radius: 50%; transform: translate(-50%, -50%) scale(0); z-index: 100; pointer-events: none;
     }
+    .card.blast-ultimate-down .card__front::before { animation: blast-downward 0.4s 0.2s ease-in forwards; }
+    .card.blast-ultimate-down .card__front::after { animation: blast-downward 0.4s 0.4s ease-in forwards; } 
 
-    /* 🏆 最終勝利的耀眼光芒 */
-    .winner-glory { animation: glory-shine 1.5s ease-in-out infinite alternate !important; border: 4px solid #f1c40f !important; z-index: 30 !important; }
+    /* 🩸 戰損碎裂系統 (覆蓋在 3D 的 front 層上) */
+    .card.dmg-1 .card__bg { border-color: #f1c40f !important; }
+    .card.dmg-1 .card__front::after { content: ''; position: absolute; inset:0; opacity: 0.6; background: linear-gradient(35deg, transparent 49%, rgba(255,255,255,0.8) 49.5%, transparent 50%); z-index: 15; pointer-events: none; border-radius: var(--card-radius); }
+    
+    .card.dmg-2 .card__bg { border-color: #e67e22 !important; filter: saturate(0.8); }
+    .card.dmg-2 .card__rotator { box-shadow: inset 0 0 20px rgba(230, 126, 34, 0.5) !important; }
+    .card.dmg-2 .card__front::after { content: ''; position: absolute; inset:0; opacity: 0.8; background: linear-gradient(35deg, transparent 49%, rgba(255,255,255,0.8) 49.5%, transparent 50%), linear-gradient(-55deg, transparent 49%, rgba(255,255,255,0.8) 49.5%, transparent 50%); z-index: 15; pointer-events: none; border-radius: var(--card-radius); }
+    
+    .card.dmg-3 .card__bg { border-color: #e74c3c !important; filter: saturate(0.6) contrast(1.2); }
+    .card.dmg-3 .card__rotator { box-shadow: inset 0 0 40px rgba(231, 76, 60, 0.6) !important; }
+    .card.dmg-3 .card__front::after { content: ''; position: absolute; inset:0; opacity: 1; background: linear-gradient(35deg, transparent 49%, rgba(255,255,255,0.9) 49.5%, transparent 50%), linear-gradient(-55deg, transparent 49%, rgba(255,255,255,0.9) 49.5%, transparent 50%), linear-gradient(15deg, transparent 49%, rgba(255,255,255,0.9) 49.5%, transparent 50%); z-index: 15; pointer-events: none; border-radius: var(--card-radius); }
+    
+    .card.dmg-4 .card__bg { border: 3px dashed #c0392b !important; filter: grayscale(0.5) sepia(0.5) hue-rotate(-30deg); }
+    .card.dmg-4 .card__rotator { box-shadow: inset 0 0 60px rgba(192, 57, 43, 0.8) !important; }
+    .card.dmg-4 .card__front::after { content: ''; position: absolute; inset:0; opacity: 1; background: linear-gradient(35deg, transparent 49%, #fff 49.5%, transparent 50%), linear-gradient(-55deg, transparent 49%, #fff 49.5%, transparent 50%), linear-gradient(15deg, transparent 49%, #fff 49.5%, transparent 50%), linear-gradient(-80deg, transparent 49%, #fff 49.5%, transparent 50%); z-index: 15; pointer-events: none; border-radius: var(--card-radius); }
+
+    /* 戰損震動 & 勝利光芒 */
+    .card.take-damage { animation: shakeDamage 0.5s 0.8s ease-in-out; }
+    .card.winner-glory .card__rotator { animation: glory-shine 1.5s ease-in-out infinite alternate !important; border: 4px solid #f1c40f !important; z-index: 30 !important; }
     @keyframes glory-shine {
       0% { box-shadow: 0 0 20px #f1c40f, inset 0 0 20px #f1c40f; transform: translateY(0); filter: brightness(1.2); }
       100% { box-shadow: 0 0 60px #f1c40f, 0 0 100px #f1c40f, inset 0 0 40px #f1c40f; transform: translateY(-10px); filter: brightness(1.5); }
@@ -948,69 +842,88 @@
 <div id="battle-arena">
   <div id="skill-popup"></div>
   
-  <div class="arena-section opponent-zone">
-    <div class="glass-panel" style="margin-bottom: 5px;">
+  <div class="arena-player-container op-container">
+    <div class="glass-panel mini-panel" style="margin-bottom: 8px;">
       <div style="display:flex; align-items:center; gap:8px;">
-        <span style="font-size:11px; color:#a4b0be; font-weight:bold; letter-spacing:1px;">OPPONENT</span>
-        <span id="op-name" style="color:#eb3b5a; font-weight:900; font-size:15px;">連線中...</span>
+        <span style="font-size:10px; color:#a4b0be; font-weight:bold; letter-spacing:1px;">OPPONENT</span>
+        <span id="op-name" style="color:#eb3b5a; font-weight:900; font-size:14px;">連線中...</span>
       </div>
       <div id="op-rounds" class="rounds-container" style="margin:0;"></div>
     </div>
-    <div id="op-card" class="card-entity"></div>
-  </div>
-
-  <div class="arena-section stage-zone">
-    <div style="text-align: center; width: 100%;">
-      <div id="round-num" style="color:#a4b0be; font-size: 14px; font-weight:bold; margin-bottom:5px;">第 1 局 / 先得 5 分獲勝</div>
-      <h1 id="target-word" style="margin-bottom: 5px;">準備中...</h1>
-      
-      <div id="battle-timer-container">
-        <div id="battle-timer">60</div>
+    
+    <div class="arena-card-wrapper">
+      <div id="op-card" class="card" data-rarity="N">
+        <div class="card__translater"><div class="card__rotator"><div class="card__front">
+          <div id="op-card-bg" class="card__bg"></div>
+          <div class="card__shine"></div><div class="card__glare"></div>
+        </div></div></div>
       </div>
-      
-      <div id="battle-info" style="color:#a4b0be; font-size:14px; margin-top:5px;">正在等待雙方就緒...</div>
     </div>
   </div>
 
-  <div class="arena-section player-zone">
-    <div class="glass-panel" style="margin-bottom: 5px;">
+  <div class="arena-stage-center">
+    <div id="round-num" style="color:#f1c40f; font-size: 12px; font-weight:bold; letter-spacing:2px;">第 1 局 / 先得 5 分獲勝</div>
+    <h1 id="target-word" style="margin: 5px 0;">準備中...</h1>
+    <div id="battle-timer-container">
+      <div id="battle-timer">60</div>
+    </div>
+    <div id="battle-info" style="color:#a4b0be; font-size:13px; margin-top:5px;">正在等待雙方就緒...</div>
+  </div>
+
+  <div class="arena-player-container my-container">
+    <div class="arena-card-wrapper">
+      <div id="my-card" class="card" data-rarity="N">
+        <div class="card__translater"><div class="card__rotator"><div class="card__front">
+          <div id="my-card-bg" class="card__bg"></div>
+          <div class="card__shine"></div><div class="card__glare"></div>
+        </div></div></div>
+      </div>
+    </div>
+    
+    <div class="glass-panel mini-panel" style="margin-top: 8px;">
       <div id="my-rounds" class="rounds-container" style="margin:0;"></div>
       <div style="display:flex; align-items:center; gap:8px;">
-        <span id="my-name" style="color:#0fb9b1; font-weight:900; font-size:15px;"></span>
-        <span style="font-size:11px; color:#a4b0be; font-weight:bold; letter-spacing:1px;">YOU</span>
+        <span id="my-name" style="color:#0fb9b1; font-weight:900; font-size:14px;"></span>
+        <span style="font-size:10px; color:#a4b0be; font-weight:bold; letter-spacing:1px;">YOU</span>
       </div>
     </div>
-    <div id="my-card" class="card-entity"></div>
-    
-    <div id="battle-controls" style="visibility: hidden;">
-      <button id="skill-btn" onclick="activateSkill()">👊 技能重擊 (1/1)</button>
-      <button id="battle-record-btn" oncontextmenu="return false;">🎤</button>
-    </div>
+  </div>
+  
+  <div id="battle-controls" style="visibility: hidden;">
+    <button id="skill-btn" onclick="activateSkill()">👊 技能重擊 (1/1)</button>
+    <button id="battle-record-btn" oncontextmenu="return false;">🎤</button>
   </div>
 </div>
 
 <div id="impact-overlay">
   <div id="impact-stand-stage">
-    <div id="impact-content">
-      
-      <div style="margin-top: 20px; text-align: center;">
-        <p id="impact-subtitle">ROUND RESULT</p>
-        <h1 id="impact-result">WIN</h1>
-      </div>
-      
-      <div class="impact-score-board" style="margin-bottom: 20px;">
-        <div class="score-col">
-          <span id="impact-my-score" class="score-number">0</span>
-          <span class="score-label">YOU</span>
-        </div>
-        <div class="score-vs">VS</div>
-        <div class="score-col">
-          <span id="impact-op-score" class="score-number">0</span>
-          <span class="score-label">OPPONENT</span>
-        </div>
-      </div>
-      
+    
+    <div style="margin-top: 20px; text-align: center; z-index: 20;">
+      <p id="impact-subtitle">ROUND RESULT</p>
+      <h1 id="impact-result">WIN</h1>
     </div>
+
+    <div class="impact-card-wrapper" style="width: 50vw; max-width: 260px; aspect-ratio: var(--card-aspect); perspective: 1000px; margin: 10px 0; z-index: 10;">
+      <div id="impact-card" class="card" data-rarity="N">
+        <div class="card__translater"><div class="card__rotator"><div class="card__front">
+          <div id="impact-card-bg" class="card__bg"></div>
+          <div class="card__shine"></div><div class="card__glare"></div>
+        </div></div></div>
+      </div>
+    </div>
+    
+    <div class="impact-score-board" style="margin-bottom: 20px; z-index: 20;">
+      <div class="score-col">
+        <span id="impact-my-score" class="score-number">0</span>
+        <span class="score-label">YOU</span>
+      </div>
+      <div class="score-vs">VS</div>
+      <div class="score-col">
+        <span id="impact-op-score" class="score-number">0</span>
+        <span class="score-label">OPPONENT</span>
+      </div>
+    </div>
+    
   </div>
 </div>
   
