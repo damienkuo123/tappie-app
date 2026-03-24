@@ -1877,8 +1877,9 @@
         
           let delayBeforeAttack = ( (myS > opS && myUltThisRound) || (opS > myS && opUltThisRound) ) ? 1500 : 0;
           
-          // 🚀 縮短展示時間：攻擊前置 + 光球動畫(1600) + 展示(2800ms) = 完美銜接
-          let totalWaitTime = delayBeforeAttack + 1600 + 2800; 
+          // 🚀 同步修正：如果這一局有人拿到 5 分，總等待時間要加上碎裂動畫的時間差
+          let baseAnimTime = isFinal ? 2400 : 1600;
+          let totalWaitTime = delayBeforeAttack + baseAnimTime + 2800;
 
           setTimeout(() => {
               const overlay = document.getElementById('impact-overlay');
