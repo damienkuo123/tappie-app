@@ -437,20 +437,39 @@
     .card.ultimate-charging .card__bg { border-color: #f1c40f !important; box-shadow: inset 0 0 30px #f1c40f !important; }
     @keyframes ultCardCharge { 0% { box-shadow: 0 0 30px rgba(241, 196, 15, 0.6); } 100% { box-shadow: 0 0 80px rgba(243, 156, 18, 1), 0 0 40px #fff; } }
 
-    /* 🚀 修復 5：光球發射起點 (從我方卡牌頂部射向對手) */
-    .blast-particle { position: absolute; left: 50%; border-radius: 50%; z-index: 9999; pointer-events: none; opacity: 0; transform: translateX(-50%); }
+    /* 🚀 物理級 Z軸光球軌跡：真實飛到對手臉上並引爆 */
+    .blast-particle { position: absolute; left: 50%; border-radius: 50%; z-index: 9999; pointer-events: none; opacity: 0; transform-style: preserve-3d; }
     
-    .blast-my { width: 80px; height: 80px; background: radial-gradient(circle, #fff 0%, #0fb9b1 40%, transparent 80%); animation: blastMyAnim 0.6s cubic-bezier(0.5, 0, 1, 0.5) forwards; }
-    @keyframes blastMyAnim { 0% { top: 60%; transform: translateX(-50%) scale(1.5); opacity: 1; filter: drop-shadow(0 0 20px #0fb9b1); } 100% { top: 5%; transform: translateX(-50%) scale(0.3); opacity: 0; filter: drop-shadow(0 0 10px #0fb9b1); } }
+    /* 我方發射：帶有 Z 軸推進與最後的爆炸閃光 */
+    .blast-my { width: 60px; height: 60px; background: radial-gradient(circle, #fff 0%, #0fb9b1 40%, transparent 80%); animation: blastMyAnim 0.5s ease-in forwards; }
+    @keyframes blastMyAnim { 
+      0% { top: 75vh; transform: translate3d(-50%, 0, 50px) scale(1.5); opacity: 1; filter: drop-shadow(0 0 20px #0fb9b1); } 
+      90% { top: 15vh; transform: translate3d(-50%, 0, -200px) scale(0.6); opacity: 1; filter: drop-shadow(0 0 10px #0fb9b1); } 
+      100% { top: 15vh; transform: translate3d(-50%, 0, -200px) scale(3); opacity: 0; filter: drop-shadow(0 0 40px #0fb9b1); } 
+    }
     
-    .blast-op { width: 80px; height: 80px; background: radial-gradient(circle, #fff 0%, #eb3b5a 40%, transparent 80%); animation: blastOpAnim 0.6s cubic-bezier(0.5, 0, 1, 0.5) forwards; }
-    @keyframes blastOpAnim { 0% { top: 5%; transform: translateX(-50%) scale(0.3); opacity: 1; filter: drop-shadow(0 0 10px #eb3b5a); } 100% { top: 60%; transform: translateX(-50%) scale(2); opacity: 0; filter: drop-shadow(0 0 40px #eb3b5a); } }
+    /* 對手發射：從遠景放大飛向螢幕 */
+    .blast-op { width: 60px; height: 60px; background: radial-gradient(circle, #fff 0%, #eb3b5a 40%, transparent 80%); animation: blastOpAnim 0.5s ease-in forwards; }
+    @keyframes blastOpAnim { 
+      0% { top: 15vh; transform: translate3d(-50%, 0, -200px) scale(0.6); opacity: 1; filter: drop-shadow(0 0 10px #eb3b5a); } 
+      90% { top: 75vh; transform: translate3d(-50%, 0, 50px) scale(1.5); opacity: 1; filter: drop-shadow(0 0 20px #eb3b5a); } 
+      100% { top: 75vh; transform: translate3d(-50%, 0, 50px) scale(4); opacity: 0; filter: drop-shadow(0 0 50px #eb3b5a); } 
+    }
     
-    .blast-ult-my { width: 120px; height: 120px; background: radial-gradient(circle, #fff 0%, #f1c40f 40%, transparent 80%); animation: blastMyUltAnim 0.5s cubic-bezier(0.5, 0, 1, 0.5) forwards; }
-    @keyframes blastMyUltAnim { 0% { top: 60%; transform: translateX(-50%) scale(2); opacity: 1; filter: drop-shadow(0 0 30px #f1c40f); } 100% { top: 5%; transform: translateX(-50%) scale(0.5); opacity: 0; filter: drop-shadow(0 0 20px #f1c40f); } }
+    /* 大招版光球 */
+    .blast-ult-my { width: 100px; height: 100px; background: radial-gradient(circle, #fff 0%, #f1c40f 40%, transparent 80%); animation: blastMyUltAnim 0.5s ease-in forwards; }
+    @keyframes blastMyUltAnim { 
+      0% { top: 75vh; transform: translate3d(-50%, 0, 50px) scale(2); opacity: 1; filter: drop-shadow(0 0 30px #f1c40f); } 
+      90% { top: 15vh; transform: translate3d(-50%, 0, -200px) scale(0.8); opacity: 1; filter: drop-shadow(0 0 20px #f1c40f); } 
+      100% { top: 15vh; transform: translate3d(-50%, 0, -200px) scale(4); opacity: 0; filter: drop-shadow(0 0 60px #f1c40f); } 
+    }
     
-    .blast-ult-op { width: 120px; height: 120px; background: radial-gradient(circle, #fff 0%, #f1c40f 40%, transparent 80%); animation: blastOpUltAnim 0.5s cubic-bezier(0.5, 0, 1, 0.5) forwards; }
-    @keyframes blastOpUltAnim { 0% { top: 5%; transform: translateX(-50%) scale(0.5); opacity: 1; filter: drop-shadow(0 0 30px #f1c40f); } 100% { top: 60%; transform: translateX(-50%) scale(3); opacity: 0; filter: drop-shadow(0 0 60px #f1c40f); } }
+    .blast-ult-op { width: 100px; height: 100px; background: radial-gradient(circle, #fff 0%, #f1c40f 40%, transparent 80%); animation: blastOpUltAnim 0.5s ease-in forwards; }
+    @keyframes blastOpUltAnim { 
+      0% { top: 15vh; transform: translate3d(-50%, 0, -200px) scale(0.8); opacity: 1; filter: drop-shadow(0 0 30px #f1c40f); } 
+      90% { top: 75vh; transform: translate3d(-50%, 0, 50px) scale(2); opacity: 1; filter: drop-shadow(0 0 30px #f1c40f); } 
+      100% { top: 75vh; transform: translate3d(-50%, 0, 50px) scale(5); opacity: 0; filter: drop-shadow(0 0 80px #f1c40f); } 
+    }
 
     /* 🩸 戰損碎裂系統 */
     .card.dmg-1 .card__bg { border-color: #f1c40f !important; }
@@ -465,7 +484,16 @@
     .card.dmg-4 .card__rotator { box-shadow: inset 0 0 60px rgba(192, 57, 43, 0.8) !important; }
     .card.dmg-4 .card__front::after { content: ''; position: absolute; inset:0; opacity: 1; background: linear-gradient(35deg, transparent 49%, #fff 49.5%, transparent 50%), linear-gradient(-55deg, transparent 49%, #fff 49.5%, transparent 50%), linear-gradient(15deg, transparent 49%, #fff 49.5%, transparent 50%), linear-gradient(-80deg, transparent 49%, #fff 49.5%, transparent 50%); z-index: 15; pointer-events: none; border-radius: var(--card-radius); }
 
-    .card.take-damage { animation: shakeDamage 0.5s 0.6s ease-in-out; }
+    /* 🚀 強化受擊特效：加上強烈紅光與震動 */
+    .card.take-damage { animation: shakeDamage 0.5s 0.5s ease-in-out; }
+    @keyframes shakeDamage { 
+      0%, 100% { transform: translate(0,0) rotate(0deg); filter: brightness(1) drop-shadow(0 0 0px red); } 
+      20% { transform: translate(-10px, 10px) rotate(-3deg); filter: brightness(2) drop-shadow(0 0 40px red); } 
+      40% { transform: translate(10px, -10px) rotate(3deg); filter: brightness(2) drop-shadow(0 0 40px red); } 
+      60% { transform: translate(-8px, -8px) rotate(-2deg); filter: brightness(1.5) drop-shadow(0 0 20px red); } 
+      80% { transform: translate(8px, 8px) rotate(2deg); filter: brightness(1.5) drop-shadow(0 0 20px red); } 
+    }
+
     .card.winner-glory .card__rotator { animation: glory-shine 1.5s ease-in-out infinite alternate !important; border: 4px solid #f1c40f !important; z-index: 30 !important; }
     @keyframes glory-shine { 0% { box-shadow: 0 0 20px #f1c40f, inset 0 0 20px #f1c40f; transform: translateY(0); filter: brightness(1.2); } 100% { box-shadow: 0 0 60px #f1c40f, 0 0 100px #f1c40f, inset 0 0 40px #f1c40f; transform: translateY(-10px); filter: brightness(1.5); } }
 
