@@ -696,7 +696,7 @@
     #gacha-overlay.focus-mode .gacha-card-wrapper.has-focus { perspective: none !important; z-index: 1000; pointer-events: auto; }
 
     /* 🃏 讓抽獎卡片完美銜接 3D 引擎 */
-    .gacha-card { position: absolute; top: 0; left: 0; width: 100%; height: 100%; cursor: pointer; transition: all 0.5s; z-index: 1; }
+    .gacha-card { position: absolute; top: 0; left: 0; width: 100%; height: 100%; cursor: pointer; z-index: 1; } /* 🚀 拔除 transition: all 解決亂飛的動畫 */
     
     .gacha-card .card { --flip-y: 0deg; width: 100%; height: 100%; }
     .gacha-card .card__rotator { 
@@ -707,16 +707,19 @@
     .gacha-card.missed .card { --flip-y: 180deg; }
     .gacha-card.missed .card__translater { transform: scale(0.95); filter: grayscale(0.9) brightness(0.4); transition: 0.8s; }
 
+    /* 🚀 畫廊展示模式：用 keyframes 完美彈出置中，取代原本亂飛的位移 */
     .gacha-card.focused { 
       position: fixed !important; top: 50% !important; left: 50% !important; 
-      transform: translate(-50%, -50%) !important; 
       width: 85vw !important; max-width: 360px !important; 
       height: auto !important; aspect-ratio: 5/7 !important; 
       z-index: 9999 !important; cursor: default; 
       box-shadow: 0 30px 80px rgba(0,0,0,0.9), 0 0 50px rgba(0,210,211,0.3) !important;
+      animation: gallery-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important;
     }
-    
-    .gacha-card-wrapper:not(.has-focus) .gacha-card:not(.flipped):hover .card__translater { transform: translateY(-10px) scale(1.05); transition: 0.3s; box-shadow: 0 25px 40px rgba(0,210,211,0.4); }
+    @keyframes gallery-pop {
+      0% { transform: translate(-50%, -50%) scale(0.3); opacity: 0; }
+      100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    }
 
     /* 正反面容器獨立，去除干擾的 flex */
     .gacha-front, .gacha-back { 
