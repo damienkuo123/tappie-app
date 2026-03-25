@@ -2351,13 +2351,21 @@
       
       cardEl.classList.add(prizeInfo.glow);
       
+      // 🚀 翻轉前先隱藏解鎖按鈕，讓畫面變乾淨
+      const unlockUi = cardEl.querySelector('.unlock-ui');
+      if (unlockUi) unlockUi.style.display = 'none';
+      
       setTimeout(() => {
           gachaCardsData[index].flipped = true;
           cardEl.classList.add('flipped');
-          cancelFocus(); 
+          
+          // 🚀 注意：我把 cancelFocus() 移除了！
+          // 翻面後，卡片會維持巨大化，讓玩家慢慢欣賞！玩家只要點擊旁邊的暗色背景就會自動收合。
 
-          // 🚀 驚喜時刻：把 3D 光芒特效瞬間切換成獎品的稀有度！
-          let prizeRarity = prizeInfo.class.replace('prize-', '');
+          let prizeRarity = 'N';
+          if (prizeInfo.class === 'prize-R') prizeRarity = 'R';
+          if (prizeInfo.class === 'prize-SR') prizeRarity = 'SR';
+          if (prizeInfo.class === 'prize-SSR') prizeRarity = 'SSR';
           if (cardRoot) cardRoot.setAttribute('data-rarity', prizeRarity);
           
           let prizeToAdd = { ...prizeInfo }; 
@@ -2388,13 +2396,18 @@
               isGachaResolving = true;
               document.getElementById('gacha-subtitle').innerHTML = "<span style='color:#e74c3c'>次數已用盡！</span>";
               
+              // 🚀 延遲顯示結算畫面，讓玩家有時間慢慢看最後一張爆出來的神卡
               setTimeout(() => {
                   const allCards = document.querySelectorAll('.gacha-card');
                   gachaCardsData.forEach((c, i) => {
                       if (!c.flipped) allCards[i].classList.add('flipped', 'missed');
                   });
-                  setTimeout(() => showGachaSummary(), 1500);
-              }, 1200);
+                  // 欣賞 2.5 秒後，自動收起卡片並叫出結算面板
+                  setTimeout(() => {
+                      cancelFocus();
+                      showGachaSummary();
+                  }, 2500);
+              }, 1000);
           }
       }, 1000); 
   }
