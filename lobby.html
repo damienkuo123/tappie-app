@@ -14,8 +14,8 @@
 
       --grain: url("https://cdn.jsdelivr.net/gh/damienkuo123/marian-app@main/assets/grain.webp");
       --glitter: url("https://cdn.jsdelivr.net/gh/damienkuo123/marian-app@main/assets/glitter.png");
-      --foil: url("https://raw.githubusercontent.com/damienkuo123/marian-app/refs/heads/main/assets/illusion.png");
-      --trainer-foil: url("https://raw.githubusercontent.com/damienkuo123/marian-app/refs/heads/main/assets/trainerbg.png");
+      --foil: url("https://cdn.jsdelivr.net/gh/damienkuo123/marian-app@main/assets/illusion.png");
+      --trainer-foil: url("https://cdn.jsdelivr.net/gh/damienkuo123/marian-app@main/assets/trainerbg.png");
       --cosmos-bottom: url("https://cdn.jsdelivr.net/gh/damienkuo123/marian-app@main/assets/cosmos-bottom.png");
       --cosmos-mid: url("https://cdn.jsdelivr.net/gh/damienkuo123/marian-app@main/assets/cosmos-middle-trans.png");
       --cosmos-top: url("https://cdn.jsdelivr.net/gh/damienkuo123/marian-app@main/assets/cosmos-top-trans.png");
@@ -586,12 +586,9 @@
         console.error("載入失敗：", e);
         document.getElementById('hero-name').innerText = "⚠️ 離線預設模式";
         characterAssets = {
-          'A001': { name: '新手劍士', img: 'https://raw.githubusercontent.com/damienkuo123/marian-app/refs/heads/main/assets/Hero_01.webp', rarity: 'N', category: '一般' }, 
-          'A002': { name: '艾多 Aldo', img: 'https://raw.githubusercontent.com/damienkuo123/marian-app/refs/heads/main/assets/Aldo.webp', rarity: 'R', category: '一般' },
-          'A003': { name: '菲利克斯 Felix', img: 'https://raw.githubusercontent.com/damienkuo123/marian-app/refs/heads/main/assets/Felix.webp', rarity: 'SR', category: '限定' },
-          'A004': { name: '咕嚕 Glou-Glou', img: 'https://raw.githubusercontent.com/damienkuo123/marian-app/refs/heads/main/assets/Glou-Glou.webp', rarity: 'SSR', category: '活動', mask: 'url(https://poke-holo.simey.me/img/pika-mask.png)' }
+          'A001': { name: '飛岩 Rockfall', img: 'https://cdn.jsdelivr.net/gh/damienkuo123/marian-app@main/assets/%E9%A3%9B%E5%B2%A9%20Rockfall.webp', rarity: 'N', category: '一般' }, 
         };
-        userUnlocked = ["A001", "A002", "A003", "A004"];
+        userUnlocked = ["A001"];
         userEquipped = "A001";
         renderCarousel();
       }
