@@ -2500,34 +2500,6 @@
               });
               ticking = false;
           }
-          let bounds;
-          let ticking = false;
-
-          function updateCard(x, y) {
-              const leftX = x / bounds.width;
-              const topY = y / bounds.height;
-              const center = { x: leftX - 0.5, y: topY - 0.5 };
-              const distance = Math.sqrt(center.x**2 + center.y**2);
-
-              const pointerX = `${leftX * 100}%`;
-              const pointerY = `${topY * 100}%`;
-              const pointerFromCenter = Math.min(Math.max(distance * 2, 0), 1);
-
-              card.style.setProperty('--rotate-x', `${center.y * -20}deg`); 
-              card.style.setProperty('--rotate-y', `${center.x * 20}deg`);
-              
-              const targetLayers = [card, shineLayer, glareLayer];
-              targetLayers.forEach(layer => {
-                  if(layer) {
-                      layer.style.setProperty('--pointer-x', pointerX);
-                      layer.style.setProperty('--pointer-y', pointerY);
-                      layer.style.setProperty('--pointer-from-center', pointerFromCenter);
-                      layer.style.setProperty('--pointer-from-top', topY);
-                      layer.style.setProperty('--pointer-from-left', leftX);
-                  }
-              });
-              ticking = false;
-          }
           
           function rotateToMouse(e) {
               if (!bounds) bounds = card.getBoundingClientRect();
@@ -2547,7 +2519,7 @@
               card.style.setProperty('--rotate-x', '0deg');
               card.style.setProperty('--rotate-y', '0deg');
               
-              const targetLayers = [card, shineLayer, glareLayer];
+              // 🚀 同步更新：這裡也要用 targetLayers 來重置所有圖層
               targetLayers.forEach(layer => {
                   if(layer) {
                       layer.style.setProperty('--pointer-from-center', '0.5'); 
