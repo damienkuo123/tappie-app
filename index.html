@@ -2135,8 +2135,8 @@
   // 1. 先抽盲盒稀有度
   function getBoxRarity() {
     let r = Math.random() * 100;
-    if (r < 75) return 'N';
-    if (r < 95) return 'R';
+    if (r < 90) return 'N';
+    if (r < 96) return 'R';
     if (r < 99) return 'SR';
     return 'SSR';
   }
