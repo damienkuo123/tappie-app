@@ -160,12 +160,18 @@
     .card__translater, .card__rotator { width: 100%; height: 100%; display: grid; perspective: 600px; transform-origin: center; transform-style: preserve-3d; }
     .card__translater { transform: translate3d(var(--translate-x), var(--translate-y), 0.1px) scale(var(--card-scale)); }
     .card__rotator { transform: rotateY(var(--rotate-x)) rotateX(var(--rotate-y)); box-shadow: 0px 10px 30px rgba(0,0,0,0.8); border-radius: var(--card-radius); }
-    /* 🚀 精準指定圖層，放過內部的按鈕與文字 UI！ */
-    .card__rotator > .card__front > *, 
-    .card__rotator > .gacha-front > .card__bg, .card__rotator > .gacha-front > .card__shine, .card__rotator > .gacha-front > .card__glare,
-    .card__rotator > .gacha-back > .card__bg, .card__rotator > .gacha-back > .card__shine, .card__rotator > .gacha-back > .card__glare { 
-      width: 100%; height: 100%; display: grid; grid-area: 1/1; border-radius: var(--card-radius); transform-style: preserve-3d; pointer-events: none; overflow: hidden; 
+    /* 🚀 讓卡片的正反面變成 Grid 容器，並強制所有圖層擠在同一個平面 (grid-area: 1/1) */
+    .card__front, .gacha-front, .gacha-back { 
+      display: grid !important; grid-template-columns: 1fr; grid-template-rows: 1fr; 
+      width: 100%; height: 100%; border-radius: var(--card-radius); transform-style: preserve-3d; 
     }
+    
+    .card__bg, .card__shine, .card__glare, .unlock-ui, .prize-content-ui { 
+      grid-area: 1/1; width: 100%; height: 100%; border-radius: var(--card-radius); transform-style: preserve-3d; 
+    }
+    
+    /* 視覺層不可阻擋滑鼠 */
+    .card__bg, .card__shine, .card__glare { pointer-events: none; overflow: hidden; }
 
     .card__front { transform: translate3d(0px, 0px, 0.01px); }
     .card__bg { background-size: cover; background-position: center; border: 2px solid transparent; transform: translateZ(0px); z-index: 1; }
