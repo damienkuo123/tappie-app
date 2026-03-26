@@ -1557,7 +1557,16 @@
             myCardEl.style.setProperty('--mask', finalMyMask.includes('url(') ? finalMyMask : `url('${finalMyMask}')`);
         } else { myCardEl.classList.remove('masked'); }
 
-        // 🚀 寫入對手戰場卡片
+        // 🚀 如果是活動模式，強制覆蓋對手的資料為「活動 Boss」！
+        if (isEventMode && EVENT_AVATAR && window.characterAssets && window.characterAssets[EVENT_AVATAR]) {
+            const boss = window.characterAssets[EVENT_AVATAR];
+            document.getElementById('op-name').innerText = `[活動] ${boss.name}`;
+            opImgUrl = boss.img; // 替換圖片
+            finalOpRarity = boss.rarity || 'SSR'; // 替換稀有度
+            finalOpMask = boss.mask || ''; // 替換遮罩
+        }
+        
+        // 🚀 寫入對手戰場卡片 (接下來原本的代碼就會自動把 Boss 畫出來了)
         const opCardEl = document.getElementById('op-card');
         const opCardBg = document.getElementById('op-card-bg');
         let finalOpBg = opImgUrl;
