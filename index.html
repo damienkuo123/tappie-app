@@ -1501,6 +1501,26 @@
             return; 
         }
         battleQuizArr = data.quiz; 
+        
+        // 🚀 關鍵修復 2：在源頭直接攔截！把「高階Ai」的資料全部掉包成「突發事件 Boss」！
+        if (isEventMode) {
+            // 從剛剛設定好的圖鑑中抓取 Boss 資料
+            const boss = (typeof characterAssets !== 'undefined' && characterAssets[EVENT_AVATAR]) 
+                         ? characterAssets[EVENT_AVATAR] 
+                         : { name: '活動 Boss', img: 'https://cdn.jsdelivr.net/gh/damienkuo123/marian-app@main/assets/BOX_COVER_SSR.webp' }; // 防呆底圖
+            
+            // 強制覆寫全域變數！這樣後續的 VS畫面、Cut-in、結算，全都會變成 Boss！
+            opName = `[突發事件] ${boss.name}`;
+            opImgUrl = boss.img;
+            
+            // 覆寫 3D 卡牌特效需要的變數
+            if (typeof finalOpRarity !== 'undefined') finalOpRarity = boss.rarity || 'SSR';
+            if (typeof finalOpMask !== 'undefined') finalOpMask = boss.mask || '';
+        } else {
+            // 一般對戰，正常使用 GAS 傳來的 Ai 資料
+            opName = data.opponentName || "未知對手";
+            opImgUrl = data.opponentImg || "";
+        }
         initArena(roomId);
       });
   }
