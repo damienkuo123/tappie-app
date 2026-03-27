@@ -6,8 +6,7 @@
     <title>瑪麗安中控台 (Admin)</title>
     <style>
         :root {
-            /* 🔴 管理員專屬色調：酒紅與奢華金 */
-            --primary-color: #ffd700;
+            var(--primary-color): #ffd700;
             --bg-dark: #1a0505;
             --card-bg: rgba(50, 15, 15, 0.75); 
         }
@@ -19,76 +18,56 @@
             color: white; overflow: hidden;
         }
 
-        /* 🔮 玻璃外殼卡片 (完美繼承 index.html) */
         .container {
             position: relative; background: var(--card-bg); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-            padding: 50px 30px; border-radius: 40px; border: 1px solid rgba(255, 215, 0, 0.2);
+            padding: 40px 25px; border-radius: 40px; border: 1px solid rgba(255, 215, 0, 0.2);
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(255, 215, 0, 0.05);
-            text-align: center; max-width: 400px; width: 90%; animation: fadeIn 0.8s ease-out;
-            transition: all 0.3s ease;
+            text-align: center; max-width: 420px; width: 92%; animation: fadeIn 0.8s ease-out;
+            transition: all 0.3s ease; box-sizing: border-box; max-height: 95vh; overflow-y: auto;
         }
-
-        /* 🍎 Logo 與 動態光環 */
-        .logo-wrapper {
-            position: relative; width: 120px; height: 120px; margin: 0 auto 30px;
-            display: flex; align-items: center; justify-content: center;
-        }
-        .pulse-ring {
-            position: absolute; width: 100%; height: 100%; border-radius: 50%;
-            border: 4px solid var(--primary-color); animation: pulse 2s infinite;
-        }
-
-        /* 標題與文字 */
-        h1 {
-            font-size: 2.2em; margin: 10px 0; letter-spacing: 2px;
-            background: linear-gradient(to bottom, #ffd700, #f39c12);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        }
-        .subtitle { font-size: 1.1em; color: #e0a800; margin-bottom: 30px; font-weight: bold; letter-spacing: 1px; }
-
-        /* 狀態提示框 (繼承 index.html) */
-        .status-badge {
-            display: inline-flex; align-items: center; background: rgba(0, 0, 0, 0.4);
-            padding: 12px 24px; border-radius: 100px; border: 1px solid rgba(255, 215, 0, 0.2);
-            transition: all 0.3s;
-        }
-        .status-dot {
-            width: 10px; height: 10px; background: #22c55e; border-radius: 50%;
-            margin-right: 12px; box-shadow: 0 0 10px #22c55e; animation: blink 1.5s infinite;
-        }
-        #msg { margin: 0; font-weight: bold; letter-spacing: 1px; color: white; }
-
-        /* =======================================================
-           👨‍🏫 管理員專屬：學生操作面板 (取代掃描 UI)
-           ======================================================= */
-        #action-ui { display: none; animation: fadeIn 0.4s ease-out; }
-        .stu-name { font-size: 28px; font-weight: 900; margin: 0 0 5px 0; color: white; letter-spacing: 1px;}
-        .stu-points { font-size: 45px; font-weight: 900; color: #2ecc71; margin: 0 0 25px 0; text-shadow: 0 0 15px rgba(46, 204, 113, 0.4); transition: 0.3s;}
-
-        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px; }
-        .btn-action { padding: 15px; border-radius: 15px; border: none; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.2s; color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-        .btn-action:active { transform: scale(0.95); box-shadow: none; }
-        .btn-add { background: linear-gradient(135deg, #27ae60, #2ecc71); }
-        .btn-minus { background: linear-gradient(135deg, #c0392b, #e74c3c); }
         
-        .custom-input-group { display: flex; gap: 10px; margin-bottom: 25px; }
-        .custom-input { flex: 1; padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.3); background: rgba(0,0,0,0.4); color: white; font-size: 16px; text-align: center; }
-        .custom-input::placeholder { color: #95a5a6; }
+        .container::-webkit-scrollbar { display: none; }
 
-        .btn-return { background: transparent; border: 1px solid #95a5a6; color: #bdc3c7; padding: 10px 20px; border-radius: 10px; cursor: pointer; transition: 0.2s; }
-        .btn-return:hover { background: rgba(255,255,255,0.1); color: white; }
+        .logo-wrapper { position: relative; width: 100px; height: 100px; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; }
+        .pulse-ring { position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 4px solid #ffd700; animation: pulse 2s infinite; }
 
-        /* =======================================================
-           ✨ 動畫效果 (完美繼承)
-           ======================================================= */
+        h1 { font-size: 2em; margin: 10px 0; letter-spacing: 2px; background: linear-gradient(to bottom, #ffd700, #f39c12); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .subtitle { font-size: 1em; color: #e0a800; margin-bottom: 20px; font-weight: bold; letter-spacing: 1px; }
+
+        .status-badge { display: inline-flex; align-items: center; background: rgba(0, 0, 0, 0.4); padding: 10px 20px; border-radius: 100px; border: 1px solid rgba(255, 215, 0, 0.2); transition: all 0.3s; }
+        .status-dot { width: 10px; height: 10px; background: #22c55e; border-radius: 50%; margin-right: 12px; box-shadow: 0 0 10px #22c55e; animation: blink 1.5s infinite; }
+        #msg { margin: 0; font-weight: bold; letter-spacing: 1px; color: white; font-size: 14px; }
+
+        /* 👨‍🏫 學生操作面板 (復刻經典排版) */
+        #action-ui { display: none; animation: fadeIn 0.4s ease-out; }
+        .stu-name { font-size: 26px; font-weight: 900; margin: 0 0 5px 0; color: white; letter-spacing: 1px;}
+        .stu-points { font-size: 42px; font-weight: 900; color: #2ecc71; margin: 0 0 20px 0; text-shadow: 0 0 15px rgba(46, 204, 113, 0.4); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);}
+
+        .control-panel { background: rgba(0,0,0,0.4); border-radius: 20px; padding: 20px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.05); }
+        .panel-title { font-weight: bold; margin: 0 0 12px 0; font-size: 15px; letter-spacing: 1px; text-align: left; }
+        
+        .btn-flex-row { display: flex; justify-content: center; gap: 8px; margin-bottom: 12px; }
+        .btn-action { flex: 1; padding: 12px 0; border-radius: 12px; border: none; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .btn-action:active { transform: scale(0.95); box-shadow: none; }
+        
+        .btn-green { background: linear-gradient(135deg, #27ae60, #2ecc71); }
+        .btn-gray { background: #57606f; }
+        .btn-red { background: linear-gradient(135deg, #c0392b, #e74c3c); }
+        
+        .custom-input-group { display: flex; gap: 8px; }
+        .custom-input { flex: 1; padding: 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.5); color: white; font-size: 15px; text-align: center; }
+        .custom-input::placeholder { color: #7f8c8d; }
+
+        .btn-return { background: transparent; border: 1px solid #95a5a6; color: #bdc3c7; padding: 12px; border-radius: 12px; cursor: pointer; transition: 0.2s; font-weight: bold; }
+        .btn-return:active { background: rgba(255,255,255,0.1); color: white; transform: scale(0.95); }
+
         @keyframes pulse { 0% { transform: scale(1); opacity: 0.8; } 70% { transform: scale(1.3); opacity: 0; } 100% { transform: scale(1); opacity: 0; } }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* 載入中與錯誤狀態的提示燈變色 */
         .loading .pulse-ring { border-top-color: white; animation: spin 1s linear infinite; }
-        .loading .status-dot { background: var(--primary-color); box-shadow: 0 0 10px var(--primary-color); animation: none; }
+        .loading .status-dot { background: #ffd700; box-shadow: 0 0 10px #ffd700; animation: none; }
         .error .status-dot { background: #e74c3c; box-shadow: 0 0 10px #e74c3c; animation: none; }
     </style>
 </head>
@@ -105,7 +84,7 @@
         <div id="scan-ui">
             <div class="logo-wrapper">
                 <div class="pulse-ring" id="ring"></div>
-                <img src="https://cdn.jsdelivr.net/gh/damienkuo123/marian-app@main/assets/logo.webp" style="width:90px; margin: 0 auto; display: block; filter: drop-shadow(0 0 10px rgba(255,215,0,0.3));">
+                <img src="https://cdn.jsdelivr.net/gh/damienkuo123/marian-app@main/assets/logo.webp" style="width:80px; margin: 0 auto; display: block; filter: drop-shadow(0 0 10px rgba(255,215,0,0.3));">
             </div>
             <h1>瑪麗安中控台</h1>
             <p class="subtitle">教師專屬管理權限</p>
@@ -120,26 +99,35 @@
             <h2 class="stu-name" id="stu-name">-</h2>
             <div class="stu-points" id="stu-points">0 PTS</div>
             
-            <div class="btn-grid">
-                <button class="btn-action btn-add" onclick="modifyPoints(50)">+ 50</button>
-                <button class="btn-action btn-add" onclick="modifyPoints(10)">+ 10</button>
-                <button class="btn-action btn-minus" onclick="modifyPoints(-50)">- 50</button>
-                <button class="btn-action btn-minus" onclick="modifyPoints(-10)">- 10</button>
+            <div class="control-panel">
+                <p class="panel-title" style="color:#2ecc71;">▲ 獎勵加分</p>
+                <div class="btn-flex-row">
+                    <button class="btn-action btn-green" onclick="send(10, this)">+ 10</button>
+                    <button class="btn-action btn-green" onclick="send(50, this)">+ 50</button>
+                    <button class="btn-action btn-green" onclick="send(100, this)">+ 100</button>
+                </div>
+                <div class="custom-input-group">
+                    <input type="number" id="customAdd" class="custom-input" placeholder="數值">
+                    <button class="btn-action btn-green" style="flex:0.6; padding:10px;" onclick="handleAdd(this)">執行</button>
+                </div>
+
+                <hr style="border: 0.5px dashed rgba(255,255,255,0.2); margin: 20px 0;">
+
+                <p class="panel-title" style="color:#e74c3c;">▼ 扣分懲罰</p>
+                <div class="btn-flex-row">
+                    <button class="btn-action btn-gray" onclick="send(-10, this)">- 10</button>
+                    <button class="btn-action btn-gray" onclick="send(-50, this)">- 50</button>
+                    <button class="btn-action btn-gray" onclick="send(-100, this)">- 100</button>
+                </div>
+                <div class="custom-input-group">
+                    <input type="number" id="customMinus" class="custom-input" placeholder="數值">
+                    <button class="btn-action btn-red" style="flex:0.6; padding:10px;" onclick="handleMinus(this)">執行</button>
+                </div>
             </div>
             
-            <div class="custom-input-group">
-                <input type="number" id="custom-val" class="custom-input" placeholder="輸入自訂數值">
-                <button class="btn-action btn-add" style="flex:0.8;" onclick="modifyCustomPoints()">執行</button>
-            </div>
-            
-            <div class="custom-input-group">
-                <input type="number" id="custom-val" class="custom-input" placeholder="輸入自訂數值">
-                <button class="btn-action btn-add" style="flex:0.8;" onclick="modifyCustomPoints()">執行</button>
-            </div>
-            
-            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+            <div style="display: flex; gap: 10px;">
                 <button class="btn-return" style="flex:1;" onclick="resetScanner()">🔙 繼續掃描</button>
-                <button class="btn-return" style="flex:1; border-color: #3498db; color: #3498db;" onclick="window.location.href='dashboard.html?id=' + currentStudentId + '&view=true'">👀 查看學生主頁</button>
+                <button class="btn-return" style="flex:1; border-color:#3498db; color:#3498db;" onclick="window.location.href='dashboard.html?id=' + currentStudentId + '&view=true'">👀 學生主頁</button>
             </div>
         </div>
 
@@ -152,10 +140,8 @@
         
         const params = new URLSearchParams(window.location.search);
         
-        // 🛡️ 1. 記憶老師身分 (老師掃自己的卡時觸發)
         if (params.get('secret')) {
             localStorage.setItem('marian_auth', params.get('secret'));
-            // 淨化網址，把密碼藏起來，學生偷看手機也看不到密碼！
             window.history.replaceState(null, null, 'admin.html');
         }
 
@@ -165,37 +151,28 @@
         }
 
         let currentStudentId = null;
+        let currentPointsValue = 0; // 🚀 用來記錄並瞬間修改點數的變數
+
         const scanner = document.getElementById('scanner');
         const card = document.getElementById('mainCard');
         const msg = document.getElementById('msg');
         const scanUI = document.getElementById('scan-ui');
         const actionUI = document.getElementById('action-ui');
 
-        // 🚀 2. 接收瞬間傳送 (手機 NFC 掃描學生卡時觸發)
         const TARGET_ID = params.get('id');
         if (TARGET_ID) {
             currentStudentId = TARGET_ID;
-            
-            // 為了網址乾淨，把 id 也抹掉，這樣重新整理才不會卡住
             window.history.replaceState(null, null, 'admin.html');
-            
-            // 切換為載入 UI
             card.className = 'container loading';
             msg.innerText = "⏳ 讀取學生資料中...";
             msg.style.color = "#ffd700";
-            
-            // 直接跳過查卡號步驟，呼叫載入點數函數！
             loadStudentData(currentStudentId);
         }
 
         let scanTimer;
-
-        // 焦點鎖定 (保留給外接 USB 掃描器使用)
         document.addEventListener('click', () => scanner.focus());
         setInterval(() => scanner.focus(), 1000);
-        
 
-        // 🚀 雙重觸發攔截器 (Enter 與 停頓)
         scanner.addEventListener('keydown', function(e) {
             if (e.key === 'Enter') {
                 clearTimeout(scanTimer);
@@ -216,11 +193,9 @@
             }, 200);
         });
 
-        // 🔍 第一步：查卡號並獲取資料
         function fetchStudent(cardId) {
-            if (actionUI.style.display === 'block') return; // 防呆：如果正在加分畫面，忽略新的掃描
+            if (actionUI.style.display === 'block') return;
             
-            // UI 切換為載入中 (繼承 index.html 特效)
             card.className = 'container loading';
             msg.innerText = "⏳ 讀取學生資料中...";
             msg.style.color = "#ffd700";
@@ -238,73 +213,90 @@
                 .catch(err => showError("⚠️ 網路連線異常"));
         }
 
-        // 📊 第二步：載入點數與姓名，切換操作面板
         function loadStudentData(uid) {
             fetch(`${GAS_URL}?action=get_dashboard_data&id=${uid}&secret=${ADMIN_SECRET}`)
                 .then(res => res.json())
                 .then(data => {
-                    // 切換至學生操作 UI
                     card.className = 'container';
                     scanUI.style.display = 'none';
                     actionUI.style.display = 'block';
                     
                     document.getElementById('stu-name').innerText = data.studentName;
-                    document.getElementById('stu-points').innerText = `${data.currentPoints} PTS`;
+                    
+                    // 🚀 記錄純數字，方便等一下瞬間運算
+                    currentPointsValue = Number(data.currentPoints);
+                    document.getElementById('stu-points').innerText = `${currentPointsValue} PTS`;
                 })
                 .catch(err => showError("⚠️ 無法讀取資料"));
         }
 
-        // 💰 第三步：執行加扣分
-        function modifyPoints(val) {
+        // =======================================================
+        // 💰 加扣分核心邏輯 (加入防呆鎖死與光速反應機制)
+        // =======================================================
+        function send(val, btnElement) {
             if (!currentStudentId) return;
             if (val >= 101 && !confirm(`確定要一次給予 ${val} 點嗎？`)) return;
             if (val <= -101 && !confirm(`確定要一次扣除 ${Math.abs(val)} 點嗎？`)) return;
 
-            const btns = document.querySelectorAll('.btn-action');
-            btns.forEach(b => b.style.pointerEvents = 'none');
+            // 1. 🛑 瞬間鎖死所有按鈕，防止老師連按或誤按
+            const allBtns = document.querySelectorAll('.btn-action');
+            allBtns.forEach(b => { b.style.pointerEvents = 'none'; b.style.opacity = '0.5'; });
+            
+            // 2. 將被按下的按鈕變成沙漏，給予視覺回饋
+            const originalText = btnElement.innerText;
+            btnElement.innerText = "⏳";
 
-            // 呼叫 GAS 加扣分 API，附上鑰匙
+            // 3. 呼叫後端 API
             fetch(`${GAS_URL}?action=admin_add_points&id=${currentStudentId}&val=${val}&secret=${ADMIN_SECRET}`)
                 .then(res => res.json())
                 .then(resData => {
-                    // 重新載入最新點數
-                    loadStudentData(currentStudentId);
-                    btns.forEach(b => b.style.pointerEvents = 'auto');
-                    
-                    // 數字彈跳特效
+                    // 4. 🚀 光速樂觀更新 (Optimistic UI)：不用等重新載入資料，直接把分數加上去！
+                    currentPointsValue += val;
                     const ptsEl = document.getElementById('stu-points');
-                    ptsEl.style.transform = "scale(1.2)";
+                    ptsEl.innerText = `${currentPointsValue} PTS`;
+                    
+                    // 放大縮小的Ｑ彈特效
+                    ptsEl.style.transform = "scale(1.3)";
                     setTimeout(() => ptsEl.style.transform = "scale(1)", 300);
+
+                    // 5. 🔓 解除按鈕鎖定，恢復原狀
+                    allBtns.forEach(b => { b.style.pointerEvents = 'auto'; b.style.opacity = '1'; });
+                    btnElement.innerText = originalText;
                 })
                 .catch(err => {
                     alert("加扣分失敗，請檢查網路！");
-                    btns.forEach(b => b.style.pointerEvents = 'auto');
+                    allBtns.forEach(b => { b.style.pointerEvents = 'auto'; b.style.opacity = '1'; });
+                    btnElement.innerText = originalText;
                 });
         }
 
-        function modifyCustomPoints() {
-            const inputVal = document.getElementById('custom-val').value;
+        function handleAdd(btnElement) {
+            const inputVal = document.getElementById('customAdd').value;
             const val = parseInt(inputVal);
-            if (!isNaN(val) && val !== 0) {
-                modifyPoints(val);
-                document.getElementById('custom-val').value = '';
+            if (!isNaN(val) && val > 0) {
+                send(val, btnElement);
+                document.getElementById('customAdd').value = '';
             }
         }
 
-        // 🔄 重新準備掃描下一個學生
+        function handleMinus(btnElement) {
+            const inputVal = document.getElementById('customMinus').value;
+            const val = parseInt(inputVal);
+            if (!isNaN(val) && val > 0) {
+                if (val >= 101 && !confirm(`確定要扣除 ${val} 點？`)) return;
+                send(-val, btnElement);
+                document.getElementById('customMinus').value = '';
+            }
+        }
+
         function resetScanner() {
             currentStudentId = null;
             actionUI.style.display = 'none';
             scanUI.style.display = 'block';
-            
-            // 恢復待命 UI
             card.className = 'container';
             msg.innerText = "🟢 系統就緒，請感應學生卡";
             msg.style.color = "white";
-            
-            // 🚀 確保網址是乾淨的，不會影響下次掃描
             window.history.replaceState(null, null, 'admin.html');
-            
             scanner.focus();
         }
 
