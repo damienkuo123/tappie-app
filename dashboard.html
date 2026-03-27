@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+  <title>瑪麗安積分系統</title>
+  <style>
+    :root { --primary-blue: #0066cc; --marian-yellow: #ff9900; --marian-green: #27ae60; --marian-red: #e74c3c; --gold: #ffd700; }
+    
+    html, body { height: 100%; margin: 0; padding: 0; width: 100%; }
+    body { 
+      font-family: -apple-system, sans-serif; 
+      background: #eaeff2; 
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 20px 0;
+      text-align: center;
+    }
+
+    /* 🚀 載入中骨架屏動畫 */
+    #loading-screen {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: #eaeff2; z-index: 9999; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; transition: opacity 0.5s;
+    }
+    .spinner {
+      width: 50px; height: 50px; border: 5px solid #ddd;
+      border-top: 5px solid var(--primary-blue); border-radius: 50%;
+      animation: spin 1s linear infinite; margin-bottom: 20px;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    #main-view { width: 100%; display: flex; flex-direction: column; align-items: center; box-sizing: border-box; opacity: 0; transition: opacity 0.5s; }
+    
+    .card { background: white; padding: 30px; border-radius: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 92%; max-width: 380px; box-sizing: border-box; border: 1px solid #ddd; margin-bottom: 20px; text-align: center; position: relative; margin-left: auto; margin-right: auto; }
+    .title-badge { background: linear-gradient(135deg, var(--gold), #ffcc00); color: #856404; padding: 6px 16px; border-radius: 20px; font-size: 14px; font-weight: bold; display: inline-block; margin: 0 auto 15px auto; border: 1px solid #e6b800; }
+    .points { font-size: 72px; color: var(--marian-red); font-weight: 800; margin: 10px 0 5px 0; text-shadow: 1px 1px 0px #fff; }
+    .history-btn { font-size: 12px; color: #95a5a6; text-decoration: underline; cursor: pointer; display: block; margin-bottom: 15px; }
+
+    .btn { width: 100%; box-sizing: border-box; padding: 16px; margin: 8px 0; font-size: 18px; font-weight: bold; border-radius: 15px; border: none; color: white; cursor: pointer; display: block; text-decoration: none; box-shadow: 0 4px 0 rgba(0,0,0,0.1); margin-left: auto; margin-right: auto; transition: 0.2s; }
+    .btn:active { transform: translateY(4px); box-shadow: none; }
+    
+    .btn-yellow { background: #f39c12; color: #fff; border-bottom: 4px solid #d35400; }
+    .btn-logout { background: #e74c3c; color: white; border-bottom: 4px solid #c0392b; margin-top: 20px;}
+    .btn-battle { 
+      background: linear-gradient(135deg, #8e44ad, #732d91); 
+      color: white; border-bottom: 4px solid #5e227a;
+      font-size: 20px !important; letter-spacing: 1px;
+    }
+
+    .mission-container { margin: 20px 0; padding: 15px; background: #fdfdfd; border-radius: 20px; border: 1px solid #eee; text-align: left; }
+    .mission-title { font-size: 14px; font-weight: bold; color: var(--primary-blue); margin-bottom: 10px; display: flex; justify-content: space-between; }
+    .mission-status-box { background: #f8f9fa; border-radius: 15px; padding: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+    .status-label { font-size: 13px; color: #666; }
+    .status-value { font-size: 18px; font-weight: bold; color: var(--marian-green); }
+
+    .mission-bar-bg { width: 100%; height: 14px; background: #eee; border-radius: 7px; position: relative; margin: 35px 0 20px 0; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); }
+    .mission-bar-fill { height: 100%; border-radius: 7px; background: linear-gradient(90deg, #f1c40f, #2ecc71); transition: width 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); width: 0%; }
+    .mission-node { position: absolute; top: 50%; transform: translate(-50%, -50%); width: 10px; height: 10px; background: #fff; border: 2px solid #ddd; border-radius: 50%; z-index: 5; }
+    .mission-node.active { border-color: var(--marian-green); background: var(--marian-green); }
+    .node-icon { position: absolute; top: -25px; left: 50%; transform: translateX(-50%); font-size: 18px; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.1)); }
+
+    .btn-glory { background: linear-gradient(135deg, #6c5ce7, #a29bfe); color: white; border-bottom: 4px solid #4834d4; margin-top: 15px; }
+    .lb-panel { max-height: 0; overflow: hidden; transition: max-height 0.5s ease-out, opacity 0.3s; opacity: 0; background: #fdfdfd; border-radius: 20px; margin-top: 10px; border: 0px solid #eee; }
+    .lb-panel.open { max-height: 600px; opacity: 1; padding: 15px 5px; border: 1px solid #eee; margin-bottom: 15px; }
+    .lb-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; border-bottom: 1px solid #eee; font-size: 14px; }
+    .lb-rank { font-weight: bold; width: 25px; text-align: center; }
+    .lb-name { flex: 1; text-align: left; padding-left: 10px; }
+    .lb-score { font-weight: bold; color: var(--marian-red); width: 60px; text-align: right; }
+
+    #logModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+    .modal-content { background: white; width: 85%; max-width: 320px; border-radius: 25px; padding: 20px; text-align: left; }
+    .log-plus { color: var(--marian-green) !important; font-weight: bold; }
+    .log-minus { color: var(--marian-red) !important; font-weight: bold; }
+
+    .admin-panel { background: #ffeaa7; padding: 15px; border-radius: 15px; border: 2px dashed #fdcb6e; margin-top: 20px; display: none; }
+  </style>
+</head>
+<body>
+
+  <div id="loading-screen">
+    <div class="spinner"></div>
+    <h3 style="color: var(--primary-blue); letter-spacing: 2px;">讀取學生資料中...</h3>
+  </div>
+
+  <div id="main-view">
+    <div class="card">
+      <div id="student-type" class="title-badge">載入中...</div>
+      <h2 id="student-name" style="margin: 0; color: #2c3e50; font-size: 28px;">-</h2>
+      <div id="current-points" class="points">0</div>
+      <div class="history-btn" onclick="document.getElementById('logModal').style.display='flex'">🔍 查看點數明細</div>
+
+      <button class="btn btn-battle" onclick="goToLobby()">✨ 進入瑪麗安傳說大廳</button>
+
+      <div class="mission-container">
+        <div class="mission-title">
+          <span>🎯 單元任務：<span id="current-unit">讀取中...</span></span>
+          <span style="color:#e74c3c;">截止: <span id="end-date">-</span></span>
+        </div>
+        <div class="mission-status-box">
+          <div class="status-label">本單元練習次數</div>
+          <div class="status-value"><span id="mission-count">0</span> / 5 次</div>
+        </div>
+        
+        <div class="mission-bar-bg">
+          <div id="mission-fill" class="mission-bar-fill"></div>
+          
+          <div class="mission-node" style="left: 25%;" id="node-1">
+            <div class="node-icon">⚠️</div>
+            <div style="position: absolute; top: 15px; left: -10px; font-size: 10px; color:#e74c3c; width: 40px;">-100pt</div>
+          </div>
+          
+          <div class="mission-node" style="left: 50%;" id="node-2">
+            <div class="node-icon">✅</div>
+            <div style="position: absolute; top: 15px; left: -10px; font-size: 10px; color:var(--marian-green); width: 40px;">達標</div>
+          </div>
+
+          <div class="mission-node" style="left: 100%;" id="node-3">
+            <div class="node-icon">🏆</div>
+            <div style="position: absolute; top: 15px; left: -10px; font-size: 10px; color:#f39c12; width: 40px;">+100pt</div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-glory" onclick="toggleLeaderboard()">🏆 查看本單元口說強者榜</button>
+      <div id="lb-panel" class="lb-panel">
+        <div id="lb-content"></div>
+      </div>
+
+      <div id="admin-panel" class="admin-panel">
+        <h4 style="margin: 0 0 10px 0; color: #d35400;">👨‍🏫 管理員快速加扣分</h4>
+        <button class="btn btn-yellow" style="padding: 10px; margin: 5px 0; font-size: 16px;" onclick="addPoints(50)">➕ 獎勵 50 點</button>
+        <button class="btn btn-yellow" style="padding: 10px; margin: 5px 0; font-size: 16px; background:#e74c3c; border-color:#c0392b;" onclick="addPoints(-20)">➖ 扣除 20 點</button>
+      </div>
+
+      <button class="btn btn-logout" onclick="logout()">登出 / 換人刷卡</button>
+    </div>
+  </div>
+
+  <div id="logModal" onclick="if(event.target===this) this.style.display='none'">
+    <div class="modal-content">
+      <h3 style="margin-top:0; color:#2c3e50;">📝 最近點數異動</h3>
+      <div id="log-list" style="max-height:300px; overflow-y:auto; font-size:14px; line-height:1.6; color:#555;">
+        載入中...
+      </div>
+      <button class="btn btn-gray" style="margin-top:15px; padding:10px;" onclick="document.getElementById('logModal').style.display='none'">關閉</button>
+    </div>
+  </div>
+
+  <script>
+    // ⚠️ 記得替換為你的 GAS 網址！
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbyWm-WnRO5h3dliEPR36Cq1hCf5DgM4GIgJqXVUREclhtYOHjxq9DptApmQPkU5p5Ys/exec";
+    
+    const params = new URLSearchParams(window.location.search);
+    const STUDENT_ID = params.get('id');
+    const ADMIN_SECRET = params.get('admin');
+
+    // 🚀 初始化：從 GAS 抓取 Dashboard 資料
+    window.onload = () => {
+      if (!STUDENT_ID) {
+        alert("找不到學生 ID，請重新刷卡！");
+        logout();
+        return;
+      }
+
+      fetch(`${GAS_URL}?action=get_dashboard_data&id=${STUDENT_ID}`)
+        .then(res => res.json())
+        .then(data => {
+          renderDashboard(data);
+          
+          // 關閉 Loading，顯示主畫面
+          document.getElementById('loading-screen').style.opacity = '0';
+          setTimeout(() => {
+            document.getElementById('loading-screen').style.display = 'none';
+            document.getElementById('main-view').style.opacity = '1';
+          }, 500);
+        })
+        .catch(err => {
+          alert("連線失敗，請檢查網路狀態！");
+          console.error(err);
+        });
+    };
+
+    function renderDashboard(data) {
+      document.getElementById('student-type').innerText = data.studentType;
+      document.getElementById('student-name').innerText = data.studentName;
+      document.getElementById('current-points').innerText = data.currentPoints;
+      document.getElementById('current-unit').innerText = data.currentUnit;
+      document.getElementById('end-date').innerText = data.endDate;
+      
+      // 處理單元任務進度條
+      const count = data.missionCount || 0;
+      document.getElementById('mission-count').innerText = count;
+      let percent = Math.min((count / 20) * 100, 100);
+      
+      // 確保畫面載入後才執行寬度動畫
+      setTimeout(() => {
+        document.getElementById('mission-fill').style.width = `${percent}%`;
+        if (count >= 5) document.getElementById('node-1').classList.add('active');
+        if (count >= 10) document.getElementById('node-2').classList.add('active');
+        if (count >= 20) document.getElementById('node-3').classList.add('active');
+      }, 600);
+
+      // 處理榮譽榜
+      const lbContent = document.getElementById('lb-content');
+      if (!data.leaderboard || data.leaderboard.length === 0) {
+        lbContent.innerHTML = "<div style='text-align:center; padding:10px; color:#999;'>目前還沒有人挑戰喔！</div>";
+      } else {
+        lbContent.innerHTML = data.leaderboard.map((lb, index) => {
+          let crown = index === 0 ? "🥇" : (index === 1 ? "🥈" : "🥉");
+          let isMe = lb.uid === STUDENT_ID;
+          return `
+            <div class="lb-row" style="${isMe ? 'background:#fff3cd; font-weight:bold;' : ''}">
+              <div class="lb-rank">${crown}</div>
+              <div class="lb-name">${lb.name}</div>
+              <div class="lb-score">${lb.score} 分</div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // 處理點數明細
+      const logList = document.getElementById('log-list');
+      if (!data.recentLogs || data.recentLogs.length === 0) {
+        logList.innerHTML = "尚無點數紀錄";
+      } else {
+        logList.innerHTML = data.recentLogs.map(log => {
+          let valClass = log.val > 0 ? "log-plus" : "log-minus";
+          let valText = log.val > 0 ? `+${log.val}` : log.val;
+          return `<div style="border-bottom:1px dashed #eee; padding:8px 0; display:flex; justify-content:space-between;">
+                    <span><span style="color:#999; font-size:12px; margin-right:10px;">${log.time}</span> ${log.reason || '系統變更'}</span>
+                    <span class="${valClass}">${valText}</span>
+                  </div>`;
+        }).join('');
+      }
+
+      // 管理員模式
+      if (ADMIN_SECRET === "marian2026") {
+        document.getElementById('admin-panel').style.display = 'block';
+      }
+    }
+
+    function toggleLeaderboard() {
+      const panel = document.getElementById('lb-panel');
+      panel.classList.toggle('open');
+    }
+
+    function goToLobby() {
+      window.location.href = `lobby.html?id=${STUDENT_ID}`;
+    }
+
+    function logout() {
+      // 🚀 登出直接跳回 GAS 的刷卡首頁
+      window.location.href = `${GAS_URL}`;
+    }
+
+    function addPoints(val) {
+      const btn = event.target;
+      const originalText = btn.innerText;
+      btn.innerText = "處理中...";
+      btn.style.pointerEvents = "none";
+
+      fetch(`${GAS_URL}?action=admin_add_points&id=${STUDENT_ID}&val=${val}&secret=${ADMIN_SECRET}`)
+        .then(res => res.json())
+        .then(resData => {
+          alert(resData.message);
+          window.location.reload(); // 重新整理網頁抓取最新點數
+        })
+        .catch(err => {
+          alert("連線失敗");
+          btn.innerText = originalText;
+          btn.style.pointerEvents = "auto";
+        });
+    }
+  </script>
+</body>
+</html>
