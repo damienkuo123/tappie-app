@@ -1136,31 +1136,6 @@
     
     window.onload = initLobby;
 
-    let nfcBuffer = "";
-    document.addEventListener('keydown', function(e) {
-      if (!isNaN(e.key)) {
-        nfcBuffer += e.key;
-      }
-      if (e.key === 'Enter') {
-        if (nfcBuffer.length > 3) { 
-          console.log("偵測到學生刷卡，準備強制跳轉：" + nfcBuffer);
-          const gatekeeperUrl = "https://script.google.com/macros/s/AKfycbyWm-WnRO5h3dliEPR36Cq1hCf5DgM4GIgJqXVUREclhtYOHjxq9DptApmQPkU5p5Ys/exec";
-          window.location.href = gatekeeperUrl + "?cardId=" + nfcBuffer;
-        }
-        nfcBuffer = ""; 
-      }
-    });
-
-    let idleTimer;
-    const resetIdleTimer = () => {
-      clearTimeout(idleTimer);
-      idleTimer = setTimeout(() => {
-        window.location.href = "https://script.google.com/macros/s/AKfycbyWm-WnRO5h3dliEPR36Cq1hCf5DgM4GIgJqXVUREclhtYOHjxq9DptApmQPkU5p5Ys/exec";
-      }, 180000);
-    };
-    document.addEventListener('touchstart', resetIdleTimer);
-    document.addEventListener('mousedown', resetIdleTimer);
-    resetIdleTimer();
 
     
     let currentEventWords = []; // 存儲目前的活動題庫
@@ -1322,12 +1297,9 @@
     resetIdleTimer();
 
     // =======================================================
-    // 🚀 升級 3：瑪麗安「無痕換人攔截器」 (Lobby 專用背景連線版)
+    // 🚀 升級 3：瑪麗安「無痕換人攔截器」 (支援免 Enter 停頓掃描)
     // =======================================================
     (function() {
-      let rawBuffer = "";
-      let lastPress = Date.now();
-
       const focusHunter = document.createElement('input');
       focusHunter.type = "text";
       focusHunter.style.position = "fixed";
@@ -1343,46 +1315,56 @@
         }
       }, 1000);
 
+      let scanTimer;
+      
+      // 機制 1：讀卡機有送出 Enter 鍵
       focusHunter.addEventListener('keydown', function(e) {
-        const now = Date.now();
-        if (now - lastPress > 300) rawBuffer = ""; 
-        lastPress = now;
-
-        if (e.key.length === 1) rawBuffer += e.key;
-
-        if (e.key === 'Enter' || rawBuffer.length >= 10) {
-          const finalID = rawBuffer.trim();
-          if (finalID.length >= 6) {
-            
-            // 秀出切換遮罩
-            const loader = document.createElement('div');
-            loader.style = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:999999;display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;backdrop-filter:blur(5px);";
-            loader.innerHTML = `
-              <h2 style="color:#ffd700;">🔄 正在切換學生...</h2>
-              <p>學生卡號：${finalID}</p>
-              <div style="margin:20px 0;width:40px;height:40px;border:4px solid #333;border-top:4px solid #ffd700;border-radius:50%;animation:spin 1s linear infinite;"></div>
-            `;
-            document.body.appendChild(loader);
-
-            // 背景 API 驗證卡號
-            fetch(`${GAS_URL}?action=verify_card&cardId=${encodeURIComponent(finalID)}`)
-              .then(res => res.json())
-              .then(data => {
-                if (data.success) {
-                   // 驗證成功，直接跳轉到該學生的 Dashboard
-                   window.location.href = `dashboard.html?id=${data.uid}`;
-                } else {
-                   alert("❌ 查無此卡！");
-                   document.body.removeChild(loader);
-                }
-              })
-              .catch(err => {
-                 document.body.removeChild(loader);
-              });
-          }
-          rawBuffer = ""; focusHunter.value = "";
+        if (e.key === 'Enter') {
+          clearTimeout(scanTimer);
+          const finalID = focusHunter.value.trim();
+          if (finalID.length >= 6) verifyCardForLobby(finalID);
+          focusHunter.value = "";
         }
       });
+
+      // 機制 2：讀卡機沒送 Enter 鍵，靠停頓 0.2 秒判斷
+      focusHunter.addEventListener('input', function() {
+        clearTimeout(scanTimer);
+        scanTimer = setTimeout(() => {
+          const finalID = focusHunter.value.trim();
+          if (finalID.length >= 6) {
+            verifyCardForLobby(finalID);
+            focusHunter.value = "";
+          }
+        }, 200);
+      });
+
+      function verifyCardForLobby(cardId) {
+        // 秀出切換遮罩
+        const loader = document.createElement('div');
+        loader.style = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:999999;display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;backdrop-filter:blur(5px);";
+        loader.innerHTML = `
+          <h2 style="color:#ffd700;">🔄 正在切換學生...</h2>
+          <p>學生卡號：${cardId}</p>
+          <div style="margin:20px 0;width:40px;height:40px;border:4px solid #333;border-top:4px solid #ffd700;border-radius:50%;animation:spin 1s linear infinite;"></div>
+        `;
+        document.body.appendChild(loader);
+
+        // 背景 API 驗證卡號
+        fetch(`${GAS_URL}?action=verify_card&cardId=${encodeURIComponent(cardId)}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+               window.location.href = `dashboard.html?id=${data.uid}`;
+            } else {
+               alert("❌ 查無此卡！");
+               document.body.removeChild(loader);
+            }
+          })
+          .catch(err => {
+             document.body.removeChild(loader);
+          });
+      }
     })();
     
   </script>
