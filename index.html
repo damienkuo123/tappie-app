@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+  <title>Happy Marian 刷卡系統</title>
+  <style>
+    :root { --primary-blue: #0066cc; --marian-yellow: #ff9900; --marian-green: #27ae60; --gold: #ffd700; }
+    
+    html, body { height: 100%; margin: 0; padding: 0; width: 100%; overflow: hidden; }
+    body { 
+      font-family: -apple-system, sans-serif; 
+      background: radial-gradient(circle at 50% 30%, #2c3e50 0%, #0a0e17 100%);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      color: white; text-align: center;
+    }
+
+    .portal-card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 40px 30px;
+      border-radius: 30px;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+      backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+      width: 85%; max-width: 380px; position: relative;
+    }
+
+    .logo-img { width: 120px; margin-bottom: 20px; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.3)); }
+    .title { font-size: 26px; font-weight: 900; margin: 0 0 10px 0; letter-spacing: 2px; color: var(--gold); }
+    .subtitle { font-size: 15px; color: #bdc3c7; margin-bottom: 40px; letter-spacing: 1px; }
+
+    /* 📡 NFC 雷達掃描動畫 */
+    .radar-box { position: relative; width: 150px; height: 150px; margin: 0 auto; display: flex; align-items: center; justify-content: center; }
+    .nfc-icon { font-size: 60px; z-index: 10; filter: drop-shadow(0 0 15px rgba(241,196,15,0.6)); animation: float 3s ease-in-out infinite; }
+    .ripple { position: absolute; width: 100%; height: 100%; border: 3px solid var(--gold); border-radius: 50%; opacity: 0; animation: ripple-effect 2s cubic-bezier(0.15, 0.45, 0.8, 0.3) infinite; }
+    .ripple:nth-child(2) { animation-delay: 0.5s; }
+    .ripple:nth-child(3) { animation-delay: 1s; }
+
+    @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
+    @keyframes ripple-effect { 0% { transform: scale(0.5); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
+
+    .status-text { margin-top: 40px; font-size: 16px; font-weight: bold; color: #2ecc71; letter-spacing: 2px; animation: blink 1.5s infinite; }
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+    /* 登入遮罩 */
+    #loader-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.9); z-index: 9999; display: none;
+      flex-direction: column; align-items: center; justify-content: center;
+      backdrop-filter: blur(10px);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="portal-card">
+    <img src="https://cdn.jsdelivr.net/gh/damienkuo123/marian-app@main/assets/logo.webp" class="logo-img" alt="Marian Logo">
+    <h1 class="title">瑪麗安傳說系統</h1>
+    <p class="subtitle">Happy Marian English</p>
+    
+    <div class="radar-box">
+      <div class="ripple"></div>
+      <div class="ripple"></div>
+      <div class="ripple"></div>
+      <div class="nfc-icon">🪪</div>
+    </div>
+
+    <div class="status-text">🟢 系統準備就緒，請刷卡</div>
+  </div>
+
+  <div id="loader-overlay">
+    <h2 style="color:var(--gold); letter-spacing: 2px; margin-bottom: 20px;">🔄 正在驗證身分...</h2>
+    <div style="width:50px; height:50px; border:5px solid #333; border-top:5px solid var(--gold); border-radius:50%; animation:spin 1s linear infinite;"></div>
+  </div>
+
+  <script>
+    // ⚠️ 記得替換為你的 GAS 網址！
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbyWm-WnRO5h3dliEPR36Cq1hCf5DgM4GIgJqXVUREclhtYOHjxq9DptApmQPkU5p5Ys/exec";
+
+    // =======================================================
+    // 🚀 瑪麗安「無痕換人攔截器」：Portal 專用版
+    // =======================================================
+    (function() {
+      let rawBuffer = "";
+      let lastPress = Date.now();
+
+      const focusHunter = document.createElement('input');
+      focusHunter.type = "text";
+      focusHunter.style.position = "fixed";
+      focusHunter.style.top = "-500px"; 
+      focusHunter.style.opacity = "0";
+      document.body.appendChild(focusHunter);
+
+      setInterval(() => { focusHunter.focus(); }, 1000);
+
+      focusHunter.addEventListener('keydown', function(e) {
+        const now = Date.now();
+        if (now - lastPress > 300) rawBuffer = ""; 
+        lastPress = now;
+
+        if (e.key.length === 1) rawBuffer += e.key;
+
+        if (e.key === 'Enter' || rawBuffer.length >= 10) {
+          const finalID = rawBuffer.trim();
+          if (finalID.length >= 6) {
+            
+            // 秀出登入中的帥氣遮罩
+            document.getElementById('loader-overlay').style.display = 'flex';
+            
+            // 🚀 將卡號送給 GAS 進行驗證，GAS 會自動負責查出 UID 並導向 dashboard.html
+            const jumpUrl = GAS_URL + "?cardId=" + finalID;
+            setTimeout(() => { window.location.href = jumpUrl; }, 300);
+          }
+          rawBuffer = ""; focusHunter.value = "";
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
