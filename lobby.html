@@ -1097,7 +1097,8 @@
 
     // 7. 最終跳轉指令 (前往對戰 APP)
     function jumpToBattle(roomId) {
-      const targetUrl = `${GITHUB_APP_URL}?id=${STUDENT_ID}&mode=battle&roomId=${roomId}`;
+      // 🚀 明確指向 arena.html！
+      const targetUrl = `${GITHUB_APP_URL}arena.html?id=${STUDENT_ID}&mode=battle&roomId=${roomId}`;
       window.location.href = targetUrl;
     }
     
@@ -1289,8 +1290,8 @@
             .then(res => res.json())
             .then(data => {
               if (data.roomId) {
-                // 🚀 將活動角色 ID 放入網址，讓對戰室知道 Boss 是誰！
-                window.location.href = `index.html?roomId=${data.roomId}&id=${STUDENT_ID}&isEvent=true&eventAvatar=${eventAvatarId}`;
+                // 🚀 將活動角色 ID 放入網址，突發事件直達車改為駛向 arena.html！
+                window.location.href = `arena.html?roomId=${data.roomId}&id=${STUDENT_ID}&isEvent=true&eventAvatar=${eventAvatarId}`;
               } else {
                 alert("活動載入失敗，請稍後再試！");
                 cancelAiChallenge(); // 隱藏倒數畫面
