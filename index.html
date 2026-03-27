@@ -146,15 +146,17 @@
     <div class="container" id="mainCard">
         <div class="logo-wrapper">
             <div class="pulse-ring" id="ring"></div>
-            <img src="https://cdn.jsdelivr.net/gh/damienkuo123/marian-app@main/assets/logo.webp" style="width:90px; margin: 0 auto; display: block;">
+            <img src="https://raw.githubusercontent.com/damienkuo123/marian-app/refs/heads/main/assets/logo.webp" style="width:90px; margin: 0 auto; display: block;">
         </div>
         <h1>快樂瑪麗安</h1>
-        <p class="subtitle">數位系統</p>
+        <p class="subtitle">數位傳說系統</p>
         
         <div class="status-badge" id="statusBadge">
             <div class="status-dot"></div>
-            <p id="msg">請感應學生卡</p>
+            <p id="msg">🟢 請感應學生卡</p>
         </div>
+
+        <input type="text" id="scanner" autofocus style="opacity: 0; position: absolute; top: -100px;">
     </div>
 
     <script>
@@ -163,42 +165,61 @@
         
         const msg = document.getElementById('msg');
         const card = document.getElementById('mainCard');
-        const badge = document.getElementById('statusBadge');
         const scanner = document.getElementById('scanner');
+        let scanTimer; // 用來計算打字停頓的計時器
 
         // =======================================================
-        // 🚀 恢復你原本最穩定的：原生輸入框焦點鎖定
+        // 🚀 無痕焦點鎖定系統 (每秒強制抓回焦點)
         // =======================================================
         document.addEventListener('click', () => scanner.focus());
         setInterval(() => scanner.focus(), 1000);
 
+        // =======================================================
+        // 🚀 雙重觸發機制：支援「Enter觸發」與「停頓觸發」
+        // =======================================================
+        
+        // 機制 1：如果有按 Enter，立刻送出
         scanner.addEventListener('keydown', function(e) {
             if (e.key === 'Enter') {
+                clearTimeout(scanTimer); // 取消停頓計時器
                 const val = scanner.value.trim();
-                if (val) {
-                    verifyCard(val); // 把乾淨的卡號交給驗證系統
-                }
-                scanner.value = ""; // 清空準備下一次刷卡
+                if (val.length >= 6) verifyCard(val);
+                scanner.value = "";
             }
+        });
+
+        // 機制 2：如果讀卡機不按 Enter，靠「打字停頓 0.2 秒」自動送出
+        scanner.addEventListener('input', function() {
+            clearTimeout(scanTimer);
+            scanTimer = setTimeout(() => {
+                const val = scanner.value.trim();
+                if (val.length >= 6) {
+                    verifyCard(val);
+                    scanner.value = ""; // 送出後清空
+                }
+            }, 200); // 停頓 200 毫秒就視為感應完畢
         });
 
         // =======================================================
         // 🚀 背景 API 連線 (無痕跳轉)
         // =======================================================
         function verifyCard(cardId) {
+            // 防止重複觸發
+            if (card.classList.contains('loading')) return;
+
             // 1. 切換至載入狀態 UI
             card.className = 'container loading';
             msg.innerText = "🚀 驗證資料中...";
             msg.style.color = "#ffcc00";
 
-            // 2. 透過背景 API (fetch) 向 GAS 確認身份，網址列不會改變！
+            // 2. 透過背景 API (fetch) 向 GAS 確認身份
             fetch(`${GAS_URL}?action=verify_card&cardId=${encodeURIComponent(cardId)}`)
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
                         msg.innerText = "✅ 驗證成功，傳送中...";
                         msg.style.color = "#2ecc71";
-                        // 直接由 GitHub 跳轉至 Dashboard
+                        // 直接由 GitHub 跳轉至 Dashboard，完美避開 GAS 的 HTML
                         setTimeout(() => {
                             window.location.href = `dashboard.html?id=${data.uid}`;
                         }, 300);
