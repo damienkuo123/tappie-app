@@ -224,6 +224,14 @@
     const STUDENT_ID = params.get('id');
     const ADMIN_SECRET = params.get('admin');
 
+    // =======================================================
+    // 🚀 智慧導航 (Smart Routing)：如果這台手機是老師的，瞬間傳送至中控台！
+    // (加上 view=true 參數，讓老師如果真的想看學生主頁，還是進得來)
+    // =======================================================
+    if (localStorage.getItem('marian_auth') === "marian2026" && params.get('view') !== 'true') {
+        window.location.href = `admin.html?id=${STUDENT_ID}`;
+    }
+
     // 🚀 初始化：從 GAS 抓取 Dashboard 資料
     window.onload = () => {
       if (!STUDENT_ID) {
