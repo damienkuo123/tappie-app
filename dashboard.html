@@ -373,17 +373,6 @@
     document.addEventListener('mousedown', resetIdleTimer);
     resetIdleTimer();
 
-    // 👨‍🏫 管理員 API 呼叫
-    function send(val) {
-      if (val >= 101 && !confirm("確定一次給予 " + val + " 點？")) return;
-      fetch(`${GAS_URL}?action=admin_add_points&id=${STUDENT_ID}&val=${val}&secret=marian2026`)
-        .then(res => res.json())
-        .then(resData => { alert(resData.message); window.location.reload(); })
-        .catch(err => alert("連線失敗"));
-    }
-    function handleAdd() { let v = document.getElementById('customAdd').value; if(v > 0) send(Number(v)); }
-    function handleMinus() { let v = document.getElementById('customMinus').value; if(v > 0) { if(v >= 101 && !confirm("確定扣除 " + v + " 點？")) return; send(-Math.abs(Number(v))); } }
-
     // =======================================================
     // 🚀 瑪麗安「無痕換人攔截器」：正式上線版
     // =======================================================
