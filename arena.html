@@ -1280,11 +1280,12 @@
             buildDynamicPrizePool();                    
 
             showPortal();
+            hideLoadingScreen();
           }).catch(err => {
             console.log("圖鑑載入失敗，使用預設", err);
-            // 🚀 就算網路異常，也要建立預設的點數獎池，否則打贏後會當機！
             buildDynamicPrizePool();
             showPortal();
+            hideLoadingScreen(); // 失敗時也要解開畫面
           });
       } catch(err) { alert("請開啟麥克風權限才能對戰！"); }
     } else {
