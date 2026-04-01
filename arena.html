@@ -2353,9 +2353,9 @@
           { type: 'points', value: 30, label: '30 點', class: 'prize-R', glow: 'crack-white', weight: 3 },
           { type: 'points', value: 50, label: '50 點', class: 'prize-R', glow: 'crack-white', weight: 2 },
           { type: 'points', value: 70, label: '70 點', class: 'prize-SR', glow: 'crack-purple', weight: 1 },
-          { type: 'points', value: 90, label: '90 點', class: 'prize-SR', glow: 'crack-purple', weight: 1 },
+          { type: 'points', value: 90, label: '90 點', class: 'prize-SR', glow: 'crack-purple', weight: 0.5 },
           { type: 'points', value: 150, label: '150 點', class: 'prize-SR', glow: 'crack-purple', weight: 0.3 },
-          { type: 'points', value: 500, label: '500 點', class: 'prize-SSR', glow: 'crack-gold', weight: 0.3 },
+          { type: 'points', value: 500, label: '500 點', class: 'prize-SSR', glow: 'crack-gold', weight: 0.1 },
           { type: 'points', value: 888, label: '888 點', class: 'prize-SSR', glow: 'crack-gold', weight: 0.1 }
       ];
 
@@ -2369,7 +2369,7 @@
       });
 
       // 4. 設定各稀有度的「總機率權重」(你的完美設計)
-      const totalWeights = { 'N': 2, 'R': 1, 'SR': 0.3, 'SSR': 0.1 };
+      const totalWeights = { 'N': 2, 'R': 0.8, 'SR': 0.2, 'SSR': 0.1 };
 
       // 5. 將「一般」角色動態加入獎池，自動計算平分權重與開卡特效
       normalAvatars.forEach(([id, char]) => {
