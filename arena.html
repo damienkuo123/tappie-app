@@ -924,22 +924,38 @@
       .btn-cyber { bottom: 80px; font-size: 24px; padding: 22px 60px; border-radius: 40px; }
 
       /* ----------------------------------
-         2. 戰鬥室 (Arena) 畫面放大
+         2. 戰鬥室 (Arena) 畫面放大 (精準校正版)
          ---------------------------------- */
-      .arena-card-wrapper { max-width: 420px; }
-      .op-container { top: -8vh; transform: translateX(-50%) scale(0.85) translateZ(-200px); }
+      .arena-card-wrapper { 
+        max-width: 320px; /* 從 420px 縮減，保留大氣感但不擋畫面 */
+      }
+      
+      /* 🚀 對手卡片：再往上推一點，縮小比例，營造遠景深度 */
+      .op-container { 
+        top: -12vh; 
+        transform: translateX(-50%) scale(0.7) translateZ(-200px); 
+      }
       @keyframes recoilOpAnim {
-        0%, 100% { transform: translateX(-50%) scale(0.85) translateZ(-200px); }
-        20% { transform: translateX(-50%) scale(0.8) translateZ(-250px) rotateX(-15deg) translateY(-30px); }
+        0%, 100% { transform: translateX(-50%) scale(0.7) translateZ(-200px); }
+        20% { transform: translateX(-50%) scale(0.65) translateZ(-250px) rotateX(-15deg) translateY(-30px); }
       }
-      .my-container { bottom: 8vh; transform: translateX(-50%) scale(1.1) translateZ(50px); }
+      
+      /* 🚀 我方卡片：往下壓，稍微縮小比例，讓出中間空間 */
+      .my-container { 
+        bottom: 0vh; 
+        transform: translateX(-50%) scale(0.9) translateZ(50px); 
+      }
       @keyframes recoilMyAnim {
-        0%, 100% { transform: translateX(-50%) scale(1.1) translateZ(50px); }
-        20% { transform: translateX(-50%) scale(1.05) translateZ(0px) rotateX(15deg) translateY(30px); }
+        0%, 100% { transform: translateX(-50%) scale(0.9) translateZ(50px); }
+        20% { transform: translateX(-50%) scale(0.85) translateZ(0px) rotateX(15deg) translateY(30px); }
       }
-      .arena-stage-center { top: 32vh; }
-      #target-word { font-size: 8vw; padding: 0 60px; }
-      #battle-timer { font-size: 55px; }
+      
+      /* 🚀 中央題目區：精準定位在兩張卡片中間的空白處 */
+      .arena-stage-center { top: 35vh; }
+      #target-word { font-size: 6vw; padding: 0 60px; } /* 字體稍微收斂，避免太長折行擋住 */
+      #battle-timer { font-size: 50px; }
+      
+      /* 控制按鈕維持好按的大尺寸 */
       #battle-controls { bottom: 10vh; }
       #battle-record-btn { width: 130px; height: 130px; font-size: 60px; border-width: 6px; }
       #skill-btn { font-size: 22px; padding: 15px 45px; border-radius: 25px; }
