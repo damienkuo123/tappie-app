@@ -1578,11 +1578,11 @@
         isGrading = true;
         rb.style.opacity = "0.5";
         
-        // 🚀 關鍵修復 1：評分中，強制鎖死上下題按鈕，防止幽靈分數！
+        // 🔒 1. 錄音一結束，立刻鎖死上下題按鈕！
         document.getElementById('prev-btn').disabled = true;
         document.getElementById('next-btn').disabled = true;
         document.getElementById('back-summary-btn').disabled = true;
-        
+
         if (gradingInterval) clearInterval(gradingInterval);
         let dots = 0;
         gradingInterval = setInterval(() => { 
@@ -1604,12 +1604,8 @@
               document.getElementById('status').innerText = "評分完成！";
               isGrading = false;
               rb.style.opacity = "1";
-            }).catch(() => {
-              clearInterval(gradingInterval);
-              document.getElementById('status').innerText = "連線超時，請重新錄音";
-              isGrading = false;
-              rb.style.opacity = "1";
-              // 🚀 關鍵修復 1：評分完畢，解開上下題按鈕封印！
+              
+              // 🔓 2. 【分數真的回來了】才解開上下題按鈕封印！
               document.getElementById('prev-btn').disabled = currentIndex === 0;
               document.getElementById('next-btn').disabled = false;
               document.getElementById('back-summary-btn').disabled = false;
@@ -1620,7 +1616,7 @@
               isGrading = false;
               rb.style.opacity = "1";
               
-              // 🚀 連線失敗也要解開按鈕！
+              // 🔓 3. 【連線發生錯誤】也要解開按鈕以免卡死！
               document.getElementById('prev-btn').disabled = currentIndex === 0;
               document.getElementById('next-btn').disabled = false;
               document.getElementById('back-summary-btn').disabled = false;
@@ -1646,6 +1642,7 @@
       }
     };
   }
+
 
   document.getElementById('play-btn').onclick = () => { window.speechSynthesis.cancel(); const msg = new SpeechSynthesisUtterance(quizData[currentIndex].en); msg.lang = 'en-US'; window.speechSynthesis.speak(msg); };
   document.getElementById('prev-btn').onclick = () => { if(currentIndex > 0){ currentIndex--; renderWord(); } };
