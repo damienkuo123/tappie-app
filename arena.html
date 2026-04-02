@@ -1578,6 +1578,11 @@
         isGrading = true;
         rb.style.opacity = "0.5";
         
+        // 🚀 關鍵修復 1：評分中，強制鎖死上下題按鈕，防止幽靈分數！
+        document.getElementById('prev-btn').disabled = true;
+        document.getElementById('next-btn').disabled = true;
+        document.getElementById('back-summary-btn').disabled = true;
+        
         if (gradingInterval) clearInterval(gradingInterval);
         let dots = 0;
         gradingInterval = setInterval(() => { 
@@ -1604,6 +1609,21 @@
               document.getElementById('status').innerText = "連線超時，請重新錄音";
               isGrading = false;
               rb.style.opacity = "1";
+              // 🚀 關鍵修復 1：評分完畢，解開上下題按鈕封印！
+              document.getElementById('prev-btn').disabled = currentIndex === 0;
+              document.getElementById('next-btn').disabled = false;
+              document.getElementById('back-summary-btn').disabled = false;
+              
+            }).catch(() => {
+              clearInterval(gradingInterval);
+              document.getElementById('status').innerText = "連線超時，請重新錄音";
+              isGrading = false;
+              rb.style.opacity = "1";
+              
+              // 🚀 連線失敗也要解開按鈕！
+              document.getElementById('prev-btn').disabled = currentIndex === 0;
+              document.getElementById('next-btn').disabled = false;
+              document.getElementById('back-summary-btn').disabled = false;
             });
         };
       };
