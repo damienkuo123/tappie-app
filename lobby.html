@@ -1104,7 +1104,7 @@
           const now = new Date().getTime();
           
           container.innerHTML = data.map(room => {
-            const isMyRoom = (room.hostId === STUDENT_ID);
+            const isMyRoom = (String(room.hostId).trim().toUpperCase() === String(STUDENT_ID).trim().toUpperCase());
             const remain = Math.max(0, 120 - Math.floor((now - room.startTime) / 1000));
 
             let btnHtml = '';
