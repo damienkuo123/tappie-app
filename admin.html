@@ -28,6 +28,11 @@
         
         .container::-webkit-scrollbar { display: none; }
 
+        /* 🚀 頂部導航按鈕群 */
+        .top-nav { position: absolute; top: 25px; right: 25px; display: flex; gap: 10px; z-index: 10; }
+        .nav-btn { cursor: pointer; color: #7f8c8d; font-size: 13px; font-weight: bold; transition: 0.2s; border: 1px solid rgba(255,255,255,0.2); padding: 6px 12px; border-radius: 8px; background: rgba(0,0,0,0.3); backdrop-filter: blur(5px); }
+        .nav-btn:active { transform: scale(0.9); background: rgba(255,255,255,0.1); color: white; }
+
         .logo-wrapper { position: relative; width: 100px; height: 100px; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; }
         .pulse-ring { position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 4px solid #ffd700; animation: pulse 2s infinite; }
 
@@ -65,17 +70,39 @@
         .btn-return { background: transparent; border: 1px solid #95a5a6; color: #bdc3c7; padding: 12px; border-radius: 12px; cursor: pointer; transition: 0.2s; font-weight: bold; font-size: 18px; }
         .btn-return:active { background: rgba(255,255,255,0.1); color: white; transform: scale(0.95); }
 
-        /* 📋 點數明細深色彈窗 */
-        #logModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
-        .modal-content { background: rgba(30, 10, 10, 0.95); width: 85%; max-width: 350px; border-radius: 25px; padding: 25px; text-align: left; border: 1px solid rgba(255, 215, 0, 0.3); box-shadow: 0 15px 40px rgba(0,0,0,0.8); }
+        /* 📋 彈窗共用設定 */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+        .modal-content { background: rgba(30, 10, 10, 0.95); width: 90%; max-width: 400px; max-height: 85vh; border-radius: 25px; padding: 25px; text-align: left; border: 1px solid rgba(255, 215, 0, 0.3); box-shadow: 0 15px 40px rgba(0,0,0,0.8); display: flex; flex-direction: column; box-sizing: border-box; }
         .modal-title { text-align: center; color: #ffd700; margin-top: 0; margin-bottom: 15px; font-size: 20px; font-weight: 900; letter-spacing: 1px; }
+        .modal-scroll-area { overflow-y: auto; padding-right: 5px; flex: 1; }
+        .modal-scroll-area::-webkit-scrollbar { display: none; }
+
+        /* 📝 點數明細清單 */
         .log-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px dashed rgba(255,255,255,0.1); font-size: 14px; color: #ecf0f1; }
         .log-time { color: #7f8c8d; font-size: 12px; margin-right: 8px; }
         .log-plus { color: #2ecc71 !important; font-weight: bold; }
         .log-minus { color: #e74c3c !important; font-weight: bold; }
 
+        /* 🚀 全校進度手風琴 (Accordion) UI */
+        .class-group { background: rgba(0,0,0,0.4); border-radius: 15px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 12px; overflow: hidden; transition: 0.3s; }
+        .class-header { padding: 15px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-weight: 900; color: #fff; background: rgba(255,255,255,0.05); }
+        .class-header:active { background: rgba(255,255,255,0.1); }
+        .class-unit { font-size: 12px; color: #f1c40f; font-weight: bold; }
+        
+        .class-body { display: none; padding: 0 15px 15px 15px; background: rgba(0,0,0,0.2); }
+        .class-group.active .class-body { display: block; animation: fadeIn 0.3s; }
+        .class-group.active .class-header { border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,215,0,0.1); }
+
+        .stu-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px dashed rgba(255,255,255,0.05); }
+        .stu-row:last-child { border-bottom: none; }
+        .s-name { font-size: 15px; font-weight: bold; color: #bdc3c7; }
+        .s-count { font-size: 14px; font-weight: 900; padding: 4px 10px; border-radius: 8px; }
+        .c-danger { background: rgba(231,76,60,0.2); color: #e74c3c; border: 1px solid #e74c3c; }
+        .c-safe { background: rgba(46,204,113,0.2); color: #2ecc71; border: 1px solid #2ecc71; }
+        .c-good { background: rgba(241,196,15,0.2); color: #f1c40f; border: 1px solid #f1c40f; }
+
         @keyframes pulse { 0% { transform: scale(1); opacity: 0.8; } 70% { transform: scale(1.3); opacity: 0; } 100% { transform: scale(1); opacity: 0; } }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
         @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -94,8 +121,9 @@
 
     <div class="container" id="mainCard">
         
-        <div style="position: absolute; top: 25px; right: 25px; cursor: pointer; color: #7f8c8d; font-size: 13px; font-weight: bold; transition: 0.2s; z-index: 10; border: 1px solid #7f8c8d; padding: 5px 10px; border-radius: 8px;" onclick="adminLogout()">
-            🔒 登出
+        <div class="top-nav">
+            <div class="nav-btn" onclick="openProgressModal()">📊 班級進度</div>
+            <div class="nav-btn" onclick="adminLogout()">🔒 登出</div>
         </div>
         
         <div id="scan-ui">
@@ -153,12 +181,20 @@
         <input type="text" id="scanner" inputmode="none" autofocus style="opacity: 0; position: absolute; top: -100px;">
     </div>
 
-    <div id="logModal" onclick="toggleLogs(false)">
+    <div id="logModal" class="modal-overlay" onclick="toggleLogs(false)">
         <div class="modal-content" onclick="event.stopPropagation()">
             <h3 class="modal-title">📝 最近點數紀錄</h3>
-            <div id="log-container" style="max-height: 350px; overflow-y: auto; padding-right: 5px;">
+            <div id="log-container" class="modal-scroll-area"></div>
+            <button class="btn-action btn-gray" style="margin-top: 15px; padding: 12px;" onclick="toggleLogs(false)">關閉</button>
+        </div>
+    </div>
+
+    <div id="progressModal" class="modal-overlay" onclick="closeProgressModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <h3 class="modal-title">📊 各班口說進度</h3>
+            <div id="progress-container" class="modal-scroll-area">
                 </div>
-            <button class="btn-action btn-gray" style="width: 100%; margin-top: 20px; padding: 12px;" onclick="toggleLogs(false)">關閉</button>
+            <button class="btn-action btn-gray" style="margin-top: 15px; padding: 12px;" onclick="closeProgressModal()">關閉</button>
         </div>
     </div>
 
@@ -168,37 +204,32 @@
         
         const params = new URLSearchParams(window.location.search);
         
-        // ⏳ 設定授權有效期限：這裡設為 2 小時 (2 * 60 * 60 * 1000 毫秒)
+        // ⏳ 設定授權有效期限：這裡設為 2 小時
         const AUTH_EXPIRE_MS = 2 * 60 * 60 * 1000; 
 
-        // 1. 如果有刷教師卡，記錄密碼與「當下時間」
         if (params.get('secret')) {
             localStorage.setItem('marian_auth', params.get('secret'));
             localStorage.setItem('marian_auth_time', Date.now().toString()); 
             window.history.replaceState(null, null, 'admin.html');
         }
 
-        // 2. 檢查鑰匙是否過期
         const authTime = localStorage.getItem('marian_auth_time');
         if (authTime && (Date.now() - parseInt(authTime) > AUTH_EXPIRE_MS)) {
-            // 時間超過，立刻銷毀鑰匙
             localStorage.removeItem('marian_auth');
             localStorage.removeItem('marian_auth_time');
             alert("⏳ 安全防護：管理員登入已過期，請重新感應教師卡！");
         }
 
-        // 3. 檢查最終權限
         const ADMIN_SECRET = localStorage.getItem('marian_auth');
         if (ADMIN_SECRET !== "marian2026") {
             document.getElementById('unauth-mask').style.display = 'flex';
         }
 
-        // 🔒 手動登出機制
         function adminLogout() {
             if (confirm("確定要登出中控台嗎？登出後需重新感應教師卡。")) {
                 localStorage.removeItem('marian_auth');
                 localStorage.removeItem('marian_auth_time');
-                window.location.reload(); // 重新整理網頁，直接觸發封鎖畫面
+                window.location.reload(); 
             }
         }
 
@@ -270,7 +301,6 @@
                 .catch(err => showError("⚠️ 網路連線異常"));
         }
 
-        // 🚀 修改：載入資料時同步把 log 明細渲染出來
         function loadStudentData(uid) {
             fetch(`${GAS_URL}?action=get_dashboard_data&id=${uid}&secret=${ADMIN_SECRET}`)
                 .then(res => res.json())
@@ -284,7 +314,6 @@
                     currentPointsValue = Number(data.currentPoints);
                     document.getElementById('stu-points').innerText = `${currentPointsValue} PTS`;
 
-                    // 處理點數明細渲染
                     const logContainer = document.getElementById('log-container');
                     if (!data.recentLogs || data.recentLogs.length === 0) {
                         logContainer.innerHTML = `<p style="text-align:center; color:#7f8c8d;">尚無紀錄</p>`;
@@ -303,10 +332,58 @@
                 .catch(err => showError("⚠️ 無法讀取資料"));
         }
 
-        // 開關明細彈窗函數
-        function toggleLogs(show) {
-            document.getElementById('logModal').style.display = show ? 'flex' : 'none';
+        function toggleLogs(show) { document.getElementById('logModal').style.display = show ? 'flex' : 'none'; }
+
+        // 🚀 全校進度抓取與渲染邏輯
+        function openProgressModal() {
+            const modal = document.getElementById('progressModal');
+            const container = document.getElementById('progress-container');
+            modal.style.display = 'flex';
+            container.innerHTML = '<p style="text-align:center; color:#ffd700; margin-top:20px;">⏳ 正在彙調整全校資料...</p>';
+
+            fetch(`${GAS_URL}?action=get_all_progress&secret=${ADMIN_SECRET}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.error) { container.innerHTML = `<p style="color:#e74c3c; text-align:center;">${data.error}</p>`; return; }
+                    
+                    let html = '';
+                    for (const classId in data) {
+                        const classInfo = data[classId];
+                        
+                        // 排序：次數少的 (危險) 排前面
+                        classInfo.students.sort((a, b) => a.count - b.count);
+                        
+                        let stuHtml = classInfo.students.map(s => {
+                            let badgeClass = "c-safe"; let icon = "✅";
+                            if (s.count < 5) { badgeClass = "c-danger"; icon = "⚠️"; }
+                            else if (s.count >= 10) { badgeClass = "c-good"; icon = "🔥"; }
+
+                            return `
+                            <div class="stu-row">
+                                <span class="s-name">${s.name}</span>
+                                <span class="s-count ${badgeClass}">${icon} ${s.count} 次</span>
+                            </div>`;
+                        }).join('');
+
+                        html += `
+                        <div class="class-group" onclick="this.classList.toggle('active')">
+                            <div class="class-header">
+                                <span>🏷️ ${classId}</span>
+                                <span class="class-unit">${classInfo.unit} ▾</span>
+                            </div>
+                            <div class="class-body">
+                                ${stuHtml}
+                            </div>
+                        </div>`;
+                    }
+                    container.innerHTML = html || '<p style="text-align:center; color:#7f8c8d;">目前尚無班級資料</p>';
+                })
+                .catch(err => {
+                    container.innerHTML = '<p style="text-align:center; color:#e74c3c;">⚠️ 連線失敗</p>';
+                });
         }
+
+        function closeProgressModal() { document.getElementById('progressModal').style.display = 'none'; }
 
         function send(val, btnElement) {
             if (!currentStudentId) return;
@@ -329,7 +406,6 @@
                     ptsEl.style.transform = "scale(1.3)";
                     setTimeout(() => ptsEl.style.transform = "scale(1)", 300);
 
-                    // 🚀 老師加扣分後，背景自動刷新一次資料，確保「歷史明細」是最新的！
                     loadStudentData(currentStudentId);
 
                     allBtns.forEach(b => { b.style.pointerEvents = 'auto'; b.style.opacity = '1'; });
