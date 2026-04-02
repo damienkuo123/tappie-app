@@ -1702,31 +1702,43 @@
     btn.style.pointerEvents = "none";
     btn.style.backgroundColor = "#95a5a6";
 
-    const finalUrl = `${GAS_URL}?id=${STUDENT_ID}&action=add_score&score=${avg}&mode=${MODE}`;
+    // 🚀 1. 核心實作：打包這次練習的所有單字、分數與 AI 評語 (Detail_JSON)
+    let detailArr = [];
+    quizData.forEach((item, i) => {
+      detailArr.push({
+        word: item.en,
+        score: scores[i] || 0,
+        feedback: (window.feedbacks && window.feedbacks[i]) ? window.feedbacks[i] : "尚未錄音"
+      });
+    });
+    const detailJSON = JSON.stringify(detailArr);
+
+    // 🚀 2. 將 details 參數轉碼後，加入 URL 一併傳給後端 GAS
+    const finalUrl = `${GAS_URL}?id=${STUDENT_ID}&action=add_score&score=${avg}&mode=${MODE}&details=${encodeURIComponent(detailJSON)}`;
+    
     fetch(finalUrl, { mode: 'no-cors' })
       .then(() => { 
         alert(MODE === 'review' ? "👍 練習辛苦了！" : "🎉 挑戰完成！"); 
-        window.location.href = `${GAS_URL}?id=${STUDENT_ID}`; 
+        // 建議直接導回 GitHub Pages 的大廳/主頁，體驗會比導回 GAS 網址更絲滑
+        window.location.href = `https://damienkuo123.github.io/marian-app/dashboard.html?id=${STUDENT_ID}`; 
       }).catch(err => {
         console.log("Fetch 失敗，啟動備案...", err);
         const img = new Image();
         img.src = finalUrl;
         setTimeout(() => {
           alert("🎉 挑戰完成！");
-          window.location.href = `${GAS_URL}?id=${STUDENT_ID}`;
+          window.location.href = `https://damienkuo123.github.io/marian-app/dashboard.html?id=${STUDENT_ID}`;
         }, 1000);
       });
   }
   
-  function reRead(i) { currentIndex = i; isReReading = true; document.getElementById('summary').style.display = 'none'; document.getElementById('studio').style.display = 'block'; renderWord(); }
-  document.getElementById('submit-btn').onclick = () => {
-    const avg = parseInt(document.getElementById('total-avg').innerText);
-    fetch(`${GAS_URL}?id=${STUDENT_ID}&action=add_score&score=${avg}&mode=${MODE}`)
-      .then(() => { 
-        alert(MODE === 'review' ? "👍 練習辛苦了！" : "🎉 挑戰完成！"); 
-        window.location.href = `${GAS_URL}?id=${STUDENT_ID}`; 
-      });
-  };
+  function reRead(i) { 
+      currentIndex = i; 
+      isReReading = true; 
+      document.getElementById('summary').style.display = 'none'; 
+      document.getElementById('studio').style.display = 'block'; 
+      renderWord(); 
+  }
 
   // =======================================================
   // ⚔️ 對戰室外掛引擎
