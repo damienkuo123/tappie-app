@@ -318,7 +318,7 @@
         }
 
         function loadStudentData(uid) {
-            fetch(`${GAS_URL}?action=get_dashboard_data&id=${uid}&secret=${ADMIN_SECRET}`)
+            fetch(`${GAS_URL}?action=get_admin_student_data&id=${uid}&secret=${ADMIN_SECRET}`)
                 .then(res => res.json())
                 .then(data => {
                     card.className = 'container';
