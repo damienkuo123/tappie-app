@@ -211,6 +211,26 @@
     
     .hidden { display: none !important; }
 
+    /* =======================================================
+       🚀 平板與大螢幕自動適應 (Responsive Design)
+       ======================================================= */
+    @media (min-width: 768px) {
+      /* 在平板上，將最大寬度從 420px 解放至 680px，讓畫面更舒展 */
+      .glass-panel, .action-stack {
+        max-width: 680px;
+      }
+      
+      /* 自由練習區在平板上空間夠大，可以從一排 2 個變成一排 3 個 */
+      .review-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      /* 頂部點數的字體在平板上可以稍微放大，更有氣勢 */
+      .points {
+        font-size: 90px;
+      }
+    }
+
   </style>
 </head>
 
