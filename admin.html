@@ -101,6 +101,25 @@
             .container { max-width: 550px; padding: 50px 40px; }
             .modal-content { max-width: 600px; padding: 40px; }
         }
+        
+        /* 🚀 拖曳排序專屬物理特效 */
+        .sortable-ghost { 
+            opacity: 0.3 !important; 
+            background: #f8fafc !important; 
+            border: 2px dashed #94a3b8 !important; 
+        }
+        .sortable-drag { 
+            background: rgba(255, 255, 255, 0.95) !important; 
+            box-shadow: 0 30px 60px rgba(0,0,0,0.4) !important; 
+            transform: scale(1.02) rotate(2deg) !important; 
+            opacity: 1 !important; 
+            z-index: 99999 !important; 
+            cursor: grabbing !important; 
+            border-radius: 18px !important;
+            backdrop-filter: blur(10px) !important;
+        }
+        .drag-handle { cursor: grab; padding: 0 10px; color: #cbd5e1; font-size: 22px; transition: 0.2s; user-select: none; }
+        .drag-handle:active { cursor: grabbing; color: #ffd700; transform: scale(1.2); }
     </style>
 </head>
 <body>
