@@ -306,9 +306,17 @@
             <div class="tm-title">學習任務排定</div>
         </div>
         
-        <div class="tm-calendar-zone">
-            <div style="font-size: 40px; margin-bottom: 5px;">📆</div>
-            <div>智慧日曆區 (下階段實作)</div>
+        <div class="tm-calendar-zone" style="padding: 15px; box-sizing: border-box;">
+            <div class="cal-header" style="width: 100%; margin-bottom: 10px;">
+                <button class="cal-nav-btn" onclick="changeTopMonth(-1)">❮</button>
+                <div id="top-cal-month-title" class="cal-month-title" style="font-size: 16px;"></div>
+                <button class="cal-nav-btn" onclick="changeTopMonth(1)">❯</button>
+            </div>
+            <div class="cal-weekdays" style="width: 100%;">
+                <div>日</div><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div>
+            </div>
+            <div id="top-cal-grid" class="cal-grid" style="width: 100%;"></div>
+        </div>
             <div style="font-size: 13px; color: #64748b; margin-top: 5px;">將支援動態防撞期與視覺化排程</div>
         </div>
         
@@ -419,6 +427,17 @@
         let currentStudentId = null;
         let currentPointsValue = 0; 
         let scanTimer;
+        
+        // 🚀 救命工具：補上前端日期格式化引擎 (沒有它排定按鈕會壞掉)
+        const Utilities = {
+            formatDate: function(date, tz, format) {
+                let d = new Date(date);
+                let yyyy = d.getFullYear();
+                let MM = String(d.getMonth() + 1).padStart(2, '0');
+                let dd = String(d.getDate()).padStart(2, '0');
+                return `${yyyy}-${MM}-${dd}`; 
+            }
+        };
 
         const scanner = document.getElementById('scanner');
         const card = document.getElementById('mainCard');
@@ -888,104 +907,62 @@
             renderSmartCalendar(); // 🚀 渲染上方的時間軸
         }
 
-        // 🚀 新增：全動態甘特圖日曆 (Gantt Chart Calendar)
+        // 🚀 新增：頂部視圖專用的全域變數與切換函數
+        let topCalDate = new Date();
+        
+        function changeTopMonth(offset) {
+            topCalDate.setMonth(topCalDate.getMonth() + offset);
+            renderSmartCalendar();
+        }
+
+        // 🚀 華麗回歸：方格式漂亮月曆 (頂部視圖版)
         function renderSmartCalendar() {
             const filterClass = document.getElementById('tm-class-filter').value;
-            const calZone = document.querySelector('.tm-calendar-zone');
+            const grid = document.getElementById('top-cal-grid');
+            const title = document.getElementById('top-cal-month-title');
             
             if (!filterClass) {
-                calZone.innerHTML = '<div style="color:#94a3b8; font-size:14px; padding:25px; text-align:center; width:100%;">👆<br><br>請先選擇班級<br>以查看排程日曆</div>';
+                title.innerText = "請選擇班級";
+                grid.innerHTML = '<div style="grid-column: span 7; text-align:center; padding: 20px; color:#94a3b8; font-weight:bold;">👆 請於下方選擇班級以顯示排程</div>';
                 return;
             }
 
-            let classSchedules = allSchedulesData.filter(s => s.classId === filterClass && s.startDate);
+            const year = topCalDate.getFullYear();
+            const month = topCalDate.getMonth();
+            title.innerText = `${year}年 ${month + 1}月`;
+
+            const firstDay = new Date(year, month, 1).getDay(); 
+            const daysInMonth = new Date(year, month + 1, 0).getDate(); 
             
-            // 建立 35 天視圖 (往前 7 天，往後 28 天)
-            const DAY_WIDTH = 55;
-            const TOTAL_DAYS = 35;
-            let baseDate = new Date();
-            baseDate.setDate(baseDate.getDate() - 7);
-            baseDate.setHours(0,0,0,0);
+            grid.innerHTML = '';
+            // 填補空天數
+            for (let i = 0; i < firstDay; i++) { grid.innerHTML += `<div class="cal-day empty"></div>`; }
 
-            let datesHtml = '';
-            for(let i=0; i<TOTAL_DAYS; i++) {
-                let d = new Date(baseDate);
-                d.setDate(d.getDate() + i);
-                let dayName = ["日","一","二","三","四","五","六"][d.getDay()];
-                let dateNum = d.getDate();
-                let isToday = (d.toDateString() === new Date().toDateString());
-                let todayClass = isToday ? 'sc-today' : '';
+            let classSchedules = allSchedulesData.filter(s => s.classId === filterClass && s.startDate);
+            let todayStr = Utilities.formatDate(new Date(), "GMT+8", "yyyy-MM-dd");
+
+            for (let i = 1; i <= daysInMonth; i++) {
+                let cellDate = new Date(year, month, i);
+                let dateStr = Utilities.formatDate(cellDate, "GMT+8", "yyyy-MM-dd");
                 
-                datesHtml += `
-                <div class="sc-day-col" style="width:${DAY_WIDTH}px;">
-                    <div class="sc-weekday">${dayName}</div>
-                    <div class="sc-date-num ${todayClass}">${dateNum}</div>
-                </div>`;
-            }
+                let isToday = (dateStr === todayStr);
+                let classNames = "cal-day";
+                if (isToday) classNames += " sc-today"; // 今日高亮
 
-            let tracksHtml = '';
-            if (classSchedules.length > 0) {
-                // 按照開始日期排序
-                classSchedules.sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+                let innerHtml = `<span class="day-num" style="font-size:13px; margin-top:3px;">${i}</span>`;
                 
-                classSchedules.forEach((sch, idx) => {
-                    let sD = new Date(sch.startDate); sD.setHours(0,0,0,0);
-                    let eD = new Date(sch.endDate); eD.setHours(0,0,0,0);
-                    
-                    // 計算在視圖中的相對位置
-                    let startDiff = Math.floor((sD - baseDate) / (1000 * 60 * 60 * 24));
-                    let endDiff = Math.floor((eD - baseDate) / (1000 * 60 * 60 * 24));
-                    
-                    // 如果任務落在視圖範圍內
-                    if (endDiff >= 0 && startDiff < TOTAL_DAYS) {
-                        let visibleStart = Math.max(0, startDiff);
-                        let visibleEnd = Math.min(TOTAL_DAYS - 1, endDiff);
-                        
-                        let left = visibleStart * DAY_WIDTH;
-                        let width = (visibleEnd - visibleStart + 1) * DAY_WIDTH;
-                        
-                        // 處理超出邊界的圓角
-                        let isCutLeft = startDiff < 0;
-                        let isCutRight = endDiff >= TOTAL_DAYS;
-                        let bRad = `border-radius: ${isCutLeft ? '0' : '14px'} ${isCutRight ? '0' : '14px'} ${isCutRight ? '0' : '14px'} ${isCutLeft ? '0' : '14px'};`;
-                        
-                        // 交替顏色
-                        let colors = ['linear-gradient(90deg, #3498db, #2980b9)', 'linear-gradient(90deg, #9b59b6, #8e44ad)', 'linear-gradient(90deg, #e67e22, #d35400)'];
-                        let bg = sch.classId.toUpperCase().includes('EVENT') ? 'linear-gradient(90deg, #f1c40f, #e67e22)' : colors[idx % colors.length];
+                // 🚀 尋找這一天有沒有被排定任務
+                let sch = classSchedules.find(s => dateStr >= s.startDate && dateStr <= s.endDate);
+                
+                if (sch) {
+                    classNames += " in-range"; // 套用漂亮的藍色底框
+                    let shortUnit = sch.unit.length > 5 ? sch.unit.substring(0,4)+'..' : sch.unit;
+                    // 在格子裡面塞入單元名稱的標籤
+                    innerHtml += `<div class="cal-tiny-text" style="color:white; background:var(--primary-blue); border-radius:4px; padding:2px; margin-top:2px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">${shortUnit}</div>`;
+                }
 
-                        let safeClassId = sch.classId.replace(/'/g, "\\'");
-                        let safeUnit = sch.unit.replace(/'/g, "\\'");
-
-                        tracksHtml += `
-                        <div class="sc-track-bar" 
-                             onclick="openCalendarModal(${sch.row}, '${safeClassId}', '${safeUnit}')"
-                             style="top:${idx * 36}px; left:${left + 4}px; width:${width - 8}px; background:${bg}; ${bRad}">
-                            ${sch.unit}
-                        </div>`;
-                    }
-                });
-            } else {
-                tracksHtml = '<div style="color:#64748b; font-size:13px; padding-left:20px; margin-top:10px;">尚未排定任何任務</div>';
+                grid.innerHTML += `<div class="${classNames}">${innerHtml}</div>`;
             }
-
-            let trackHeight = classSchedules.length > 0 ? classSchedules.length * 36 : 40;
-
-            let html = `
-            <div id="smart-cal-scroll" class="sc-scroll-box">
-                <div style="width:${TOTAL_DAYS * DAY_WIDTH}px; height:100%;">
-                    <div class="sc-date-header">${datesHtml}</div>
-                    <div class="sc-tracks-container" style="height:${trackHeight}px;">
-                        ${tracksHtml}
-                    </div>
-                </div>
-            </div>`;
-            calZone.innerHTML = html;
-
-            // 自動滾動，將「今天」置中
-            setTimeout(() => {
-                let scrollBox = document.getElementById('smart-cal-scroll');
-                if (scrollBox) scrollBox.scrollLeft = (7 * DAY_WIDTH) - (scrollBox.clientWidth / 2) + (DAY_WIDTH / 2);
-            }, 50);
         }
 
         function changeTaskPage(direction) {
@@ -1018,18 +995,6 @@
                 const safeClassId = task.classId.replace(/'/g, "\\'");
                 const safeUnit = task.unit.replace(/'/g, "\\'");
                 
-                html += `
-                <div class="task-card">
-                    <div class="task-info">
-                        <div class="task-class">${task.classId}</div>
-                        <div class="task-unit">${task.unit}</div>
-                        <div style="font-size:12px; color:#94a3b8; margin-top:4px; font-weight:bold;">共 ${task.words.length} 個單字</div>
-                    </div>
-                    <div class="task-actions">
-                        <button class="btn-icon" title="編輯任務" onclick="openTaskEditor(${task.row}, '${safeClassId}', '${safeUnit}', '${wordsJsonStr}')">✏️</button>
-                        <button class="btn-icon btn-schedule" title="排定日期" onclick="openCalendarModal(${task.row}, '${safeClassId}', '${safeUnit}')">📅</button>
-                    </div>
-                </div>`;
                 
                 html += `
                 <div class="task-card">
