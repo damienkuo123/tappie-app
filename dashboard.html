@@ -370,8 +370,10 @@
     const STUDENT_ID = params.get('id');
 
     // 🚀 智慧導航 (Smart Routing)
-    if (localStorage.getItem('marian_auth') === "marian2026" && params.get('view') !== 'true') {
-        window.location.href = `admin.html?id=${STUDENT_ID}`;
+    const storedAuth = localStorage.getItem('marian_auth');
+    if ((storedAuth === "marian2026" || storedAuth === "marian_super_2026") && params.get('view') !== 'true') {
+        // 如果是老師或超級管理員，並且沒有帶 view=true 參數，就把他帶回專屬中控台
+        window.location.href = `admin.html?id=${STUDENT_ID}&secret=${storedAuth}`;
     }
 
     // 🚀 初始化：從 GAS 抓取 Dashboard 資料
