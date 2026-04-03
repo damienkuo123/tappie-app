@@ -323,10 +323,21 @@
                         let titleMatch = item.content.match(/<h3[^>]*>(.*?)<\/h3>/i);
                         let title = titleMatch ? titleMatch[1].replace(/<[^>]+>/g, '') : `文章 #${index+1}`;
                         
+                        // 順位標籤
+                        let queueBadge = index === 0 
+                            ? `<span style="background:#e74c3c; color:white; padding:3px 8px; border-radius:8px; font-size:12px; margin-right:8px; font-weight:bold; flex-shrink:0;">即將寄出</span>` 
+                            : `<span style="background:#64748b; color:white; padding:3px 8px; border-radius:8px; font-size:12px; margin-right:8px; font-weight:bold; flex-shrink:0;">順位 ${index+1}</span>`;
+                        
+                        // 🚀 加上 data-row，並獨立出拖拉用的 ☰ 抓手按鈕，避免點擊衝突
                         html += `
-                        <div class="accordion-group">
-                            <div class="accordion-header" onclick="this.parentElement.classList.toggle('active')">
-                                <span>📄 ${title.substring(0, 15)}...</span><span>▾</span>
+                        <div class="accordion-group" data-row="${item.row}">
+                            <div class="accordion-header" style="cursor:default;">
+                                <div style="display:flex; align-items:center; width:90%; overflow:hidden;">
+                                    <span class="drag-handle" style="cursor:grab; margin-right:12px; font-size:22px; color:#cbd5e1; padding:0 5px;">☰</span>
+                                    ${queueBadge}
+                                    <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex:1; cursor:pointer;" onclick="this.closest('.accordion-group').classList.toggle('active')">📄 ${title}</span>
+                                </div>
+                                <span onclick="this.closest('.accordion-group').classList.toggle('active')" style="cursor:pointer; padding:5px 15px;">▾</span>
                             </div>
                             <div class="accordion-body" id="nl-body-${item.row}">
                                 <div style="background:white; color:#333; padding:15px; border-radius:10px; font-size:14px; margin-bottom:15px;">${item.content}</div>
@@ -337,7 +348,44 @@
                             </div>
                         </div>`;
                     });
+                    
                     container.innerHTML = html || '<p style="text-align:center;">目前沒有庫存文章</p>';
+
+                    // 🚀 初始化 SortableJS 拖曳引擎
+                    if (data.length > 0) {
+                        new Sortable(container, {
+                            animation: 200,          // 絲滑動畫
+                            handle: '.drag-handle',  // 只能抓住 ☰ 才能拖拉
+                            ghostClass: 'sortable-ghost', // 拖拉時的樣式
+                            onEnd: function () {
+                                // 拖拉結束後，自動觸發儲存新順序
+                                saveNewOrder();
+                            }
+                        });
+                    }
+                });
+        }
+
+        // 🚀 將新順序送回後端的 API
+        function saveNewOrder() {
+            const items = document.querySelectorAll('#newsletter-container .accordion-group');
+            let newOrder = [];
+            items.forEach(item => {
+                newOrder.push(parseInt(item.getAttribute('data-row')));
+            });
+            
+            // 讓標題暫時變成儲存中，避免破壞畫面
+            const headerTitle = document.querySelector('#newsletterModal .modal-title');
+            headerTitle.innerHTML = '⏳ 儲存新排序中...';
+            
+            const formData = new URLSearchParams();
+            formData.append('order', JSON.stringify(newOrder));
+
+            fetch(`${GAS_URL}?action=reorder_newsletters&secret=${ADMIN_SECRET}`, { method: 'POST', body: formData })
+                .then(res => res.json())
+                .then(data => {
+                    headerTitle.innerHTML = '📝 專欄編輯系統';
+                    loadNewsletters(); // 重新讀取以更新紅色的 [即將寄出] 標籤
                 });
         }
 
