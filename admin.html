@@ -341,8 +341,26 @@
         }
 
         function addNewsletter() {
-            document.getElementById('newsletter-container').innerHTML = '<p style="text-align:center; color:#00b894;">✨ AI 正在撰寫中，大約需要 10~15 秒鐘...</p>';
-            fetch(`${GAS_URL}?action=add_newsletter&secret=${ADMIN_SECRET}&content=AI_GENERATE`).then(()=>loadNewsletters());
+            document.getElementById('newsletter-container').innerHTML = '<p style="text-align:center; color:#00b894;">✨ AI 正在努力撰寫中，大約需要 10~15 秒鐘...</p>';
+            
+            // 🚀 改用 POST 發送，確保長時間的 AI 運算不會被瀏覽器中斷
+            const formData = new URLSearchParams();
+            formData.append('content', 'AI_GENERATE');
+            
+            fetch(`${GAS_URL}?action=add_newsletter&secret=${ADMIN_SECRET}`, { method: 'POST', body: formData })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        loadNewsletters();
+                    } else {
+                        alert(data.error || "生成失敗，請檢查權限或庫存上限。");
+                        loadNewsletters(); // 失敗也要重新載入，避免卡在轉圈圈
+                    }
+                })
+                .catch(err => {
+                    alert("網路連線超時，但 AI 可能還在後台寫作。請稍後再重整查看！");
+                    loadNewsletters(); 
+                });
         }
 
         function deleteNewsletter(row) {
