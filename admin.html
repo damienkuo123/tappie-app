@@ -207,6 +207,19 @@
         /* 🔵 有排程的班級提示點 */
         .cal-dots-zone { display: flex; gap: 3px; position: absolute; bottom: 4px; }
         .cal-dot { width: 4px; height: 4px; border-radius: 50%; background: #f1c40f; }
+        
+        /* 🚀 任務卡片刪除按鈕 */
+        .btn-del-task { position: absolute; top: 12px; right: 15px; background: transparent; color: #e74c3c; border: none; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; padding: 5px; }
+        .btn-del-task:active { transform: scale(0.8); }
+
+        /* 🚀 連續彩帶專屬樣式 */
+        .cal-ribbon {
+            color: white; font-size: 11px; font-weight: bold; height: 18px; line-height: 18px; 
+            overflow: hidden; white-space: nowrap; text-align: left; padding-left: 6px; 
+            position: relative; z-index: 5; margin-top: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            /* 讓文字不可反白，增強 APP 體驗 */
+            user-select: none; -webkit-user-select: none;
+        }
     </style>
 </head>
 <body>
@@ -362,6 +375,18 @@
                 <button id="save-task-btn" class="btn-action" style="background:#2ecc71; font-size:18px; padding:15px;" onclick="saveTaskData()">💾 儲存</button>
                 <button class="btn-action btn-gray" style="font-size:18px; padding:15px;" onclick="closeModal('taskEditorModal')">取消</button>
             </div>
+        </div>
+    </div>
+    
+    <div id="quickSelectModal" class="modal-overlay" onclick="closeModal('quickSelectModal')">
+        <div class="modal-content" onclick="event.stopPropagation()" style="max-width:350px;">
+            <h3 class="modal-title" style="color:#f1c40f; margin-bottom:5px;">📌 快速排定任務</h3>
+            <p style="text-align:center; color:#94a3b8; font-size:14px; margin-bottom:20px;">開始日期：<span id="qs-date" style="color:white; font-weight:bold; padding:2px 8px; background:rgba(255,255,255,0.1); border-radius:6px;"></span></p>
+            
+            <select id="qs-task-select" class="word-input" style="width:100%; margin-bottom:25px; padding:15px;">
+                </select>
+            
+            <button class="btn-action btn-green" style="width:100%; padding:15px; font-size:16px;" onclick="confirmQuickSchedule()">前往排定 ➔</button>
         </div>
     </div>
 
@@ -916,7 +941,7 @@
             renderSmartCalendar();
         }
 
-        // 🚀 華麗回歸：方格式漂亮月曆 (頂部視圖版 - 具備自動配色與智慧去名)
+        // 🚀 華麗進化：連續彩帶式月曆 (Gantt Ribbon Calendar)
         function renderSmartCalendar() {
             const filterClass = document.getElementById('tm-class-filter').value;
             const grid = document.getElementById('top-cal-grid');
@@ -936,24 +961,14 @@
             const daysInMonth = new Date(year, month + 1, 0).getDate(); 
             
             grid.innerHTML = '';
-            // 填補空天數
             for (let i = 0; i < firstDay; i++) { grid.innerHTML += `<div class="cal-day empty"></div>`; }
 
             let classSchedules = allSchedulesData.filter(s => s.classId === filterClass && s.startDate);
             let todayStr = Utilities.formatDate(new Date(), "GMT+8", "yyyy-MM-dd");
 
-            // 🎨 建立專屬單元的「彩色調色盤」
             const colorPalette = ['#3498db', '#e74c3c', '#9b59b6', '#00b894', '#e67e22', '#0984e3', '#fd79a8'];
-            let unitColorMap = {};
-            let colorIndex = 0;
-            
-            // 把該班級出現過的所有單元，依照順序發配顏色
-            classSchedules.forEach(s => {
-                if (!unitColorMap[s.unit]) {
-                    unitColorMap[s.unit] = colorPalette[colorIndex % colorPalette.length];
-                    colorIndex++;
-                }
-            });
+            let unitColorMap = {}; let colorIndex = 0;
+            classSchedules.forEach(s => { if (!unitColorMap[s.unit]) { unitColorMap[s.unit] = colorPalette[colorIndex % colorPalette.length]; colorIndex++; } });
 
             for (let i = 1; i <= daysInMonth; i++) {
                 let cellDate = new Date(year, month, i);
@@ -961,37 +976,76 @@
                 
                 let isToday = (dateStr === todayStr);
                 let classNames = "cal-day";
-                if (isToday) classNames += " sc-today"; // 今日高亮
+                if (isToday) classNames += " sc-today";
 
                 let innerHtml = `<span class="day-num" style="font-size:13px; margin-top:3px;">${i}</span>`;
                 let extraStyle = "";
                 
-                // 🚀 尋找這一天有沒有被排定任務
                 let sch = classSchedules.find(s => dateStr >= s.startDate && dateStr <= s.endDate);
                 
+                // 🚀 核心：判斷點擊事件 (如果已經排定，就傳入該排程；如果沒排定，觸發快速排程)
+                let clickAction = `onclick="promptQuickSchedule('${dateStr}')"`;
+
                 if (sch) {
-                    // 🧠 智慧去名：如果單元名稱開頭是班級代碼 (例如 E1 Unit1)，就把 E1 喀掉！
+                    let safeClassId = sch.classId.replace(/'/g, "\\'");
+                    let safeUnit = sch.unit.replace(/'/g, "\\'");
+                    clickAction = `onclick="openCalendarModal(${sch.row}, '${safeClassId}', '${safeUnit}')"`;
+
                     let cleanUnit = sch.unit;
                     if (cleanUnit.toUpperCase().startsWith(filterClass.toUpperCase())) {
                         cleanUnit = cleanUnit.substring(filterClass.length).trim();
-                        // 順便濾掉可能多出來的連字號 (例如 "- Unit1")
                         if (cleanUnit.startsWith('-')) cleanUnit = cleanUnit.substring(1).trim();
                     }
 
-                    // 🎨 抓取專屬顏色，並把整個格子的背景跟邊框上色！
                     let unitColor = unitColorMap[sch.unit];
-                    extraStyle = `style="background: ${unitColor}25; border: 1px solid ${unitColor}50;"`;
+                    extraStyle = `style="background: ${unitColor}15;"`;
 
-                    // 保留最多 6 個字元，確保方格不會破版
-                    let shortUnit = cleanUnit.length > 6 ? cleanUnit.substring(0,5)+'..' : cleanUnit;
-                    
-                    // 中間的標籤，套用專屬的滿版底色
-                    innerHtml += `<div class="cal-tiny-text" style="color:white; background:${unitColor}; border-radius:4px; padding:2px; margin-top:2px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); width:90%;">${shortUnit}</div>`;
+                    // 🎀 彩帶連接魔法：判斷是不是頭、尾，或是週日/週六 (視覺截斷點)
+                    let dOb = new Date(cellDate);
+                    let isStart = dateStr === sch.startDate || i === 1 || dOb.getDay() === 0;
+                    let isEnd = dateStr === sch.endDate || i === daysInMonth || dOb.getDay() === 6;
+
+                    // 利用負邊距 (-4px) 穿越 grid 的 6px 縫隙，讓視覺相連！
+                    let mLeft = isStart ? '2px' : '-4px';
+                    let mRight = isEnd ? '2px' : '-4px';
+                    let bRad = `${isStart ? '4px' : '0'} ${isEnd ? '4px' : '0'} ${isEnd ? '4px' : '0'} ${isStart ? '4px' : '0'}`;
+
+                    // 只有在彩帶的「起點」才顯示文字，其他天留白延續顏色
+                    let displayText = isStart ? cleanUnit : '&nbsp;';
+
+                    innerHtml += `<div class="cal-ribbon" style="background:${unitColor}; border-radius:${bRad}; margin-left:${mLeft}; margin-right:${mRight};">${displayText}</div>`;
                 }
 
-                grid.innerHTML += `<div class="${classNames}" ${extraStyle}>${innerHtml}</div>`;
+                grid.innerHTML += `<div class="${classNames}" ${extraStyle} ${clickAction}>${innerHtml}</div>`;
             }
         }
+
+        // 🚀 新增：快速排定彈窗邏輯
+        let quickSelectDate = null;
+        function promptQuickSchedule(dateStr) {
+            quickSelectDate = dateStr;
+            document.getElementById('qs-date').innerText = dateStr;
+            const select = document.getElementById('qs-task-select');
+            
+            select.innerHTML = '<option value="">-- 請選擇要排定的任務單元 --</option>';
+            filteredTasks.forEach(t => {
+                // 將所有需要的參數打包在 value 裡面
+                select.innerHTML += `<option value="${t.row}|${t.classId}|${t.unit}">${t.unit}</option>`;
+            });
+            
+            document.getElementById('quickSelectModal').style.display = 'flex';
+        }
+
+        function confirmQuickSchedule() {
+            const val = document.getElementById('qs-task-select').value;
+            if (!val) { alert("請先選擇一個單元！"); return; }
+            const parts = val.split('|');
+            closeModal('quickSelectModal');
+            
+            // 呼叫原本的排定視窗，並且附帶「強制預設起始日」參數
+            openCalendarModal(parseInt(parts[0]), parts[1], parts[2], quickSelectDate);
+        }
+        
 
         function changeTaskPage(direction) {
             currentTaskPage += direction;
@@ -1018,14 +1072,14 @@
 
             let html = '';
             pageTasks.forEach(task => {
-                // 🚀 核心修復：強制將單引號轉碼，確保按鈕百分之百可以按
                 const wordsJsonStr = encodeURIComponent(JSON.stringify(task.words)).replace(/'/g, "%27");
                 const safeClassId = task.classId.replace(/'/g, "\\'");
                 const safeUnit = task.unit.replace(/'/g, "\\'");
                 
-                // 🚀 清除重複，只留一張卡片
+                // 🚀 加入相對定位與右上角的刪除按鈕 ✖
                 html += `
-                <div class="task-card">
+                <div class="task-card" style="position:relative;">
+                    <button class="btn-del-task" title="刪除任務" onclick="deleteTaskData(${task.row}, '${safeUnit}')">✖</button>
                     <div class="task-info">
                         <div class="task-class">${task.classId}</div>
                         <div class="task-unit">${task.unit}</div>
@@ -1039,6 +1093,26 @@
             });
             listZone.innerHTML = html;
         }
+
+        // 🚀 新增：刪除任務功能
+        function deleteTaskData(row, unitName) {
+            if(!confirm(`⚠️ 警告：確定要徹底刪除【${unitName}】嗎？\n(包含裡面的所有單字都會被清空，此動作無法復原！)`)) return;
+            
+            const listZone = document.getElementById('tm-list-zone');
+            listZone.innerHTML = '<p style="text-align:center; color:#e74c3c; margin-top:40px; font-weight:bold;">🗑️ 正在刪除資料中...</p>';
+            
+            const formData = new URLSearchParams();
+            formData.append('type', 'word');
+            formData.append('row', row);
+
+            fetch(`${GAS_URL}?action=delete_task_data&secret=${ADMIN_SECRET}`, { method: 'POST', body: formData })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) fetchTaskData(); // 重新讀取
+                    else { alert("刪除失敗，請檢查權限！"); renderTaskList(); }
+                });
+        }
+        
         
 
         // --- 📝 動態任務編輯器邏輯 ---
