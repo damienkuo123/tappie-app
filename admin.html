@@ -1057,27 +1057,59 @@
         let blockedDates = []; // 儲存該班級已經被佔用的日期
 
         function openCalendarModal(row, classId, unit) {
-            calTargetTask = { row, classId, unit };
-            document.getElementById('cal-task-info').innerText = `班級：${classId} | 單元：${unit}`;
+            // 🚀 核心：檢查是不是「已經排定」的任務
+            let existingSch = allSchedulesData.find(s => s.classId === classId && s.unit === unit);
             
-            calSelectingStart = null;
-            calSelectingEnd = null;
-            document.getElementById('cal-status-text').innerText = "請點擊選擇「開始日期」";
+            calTargetTask = { 
+                row: existingSch ? existingSch.row : 0, // 如果存在，抓它原本的 Row (變成修改模式)
+                classId: classId, 
+                unit: unit 
+            };
             
-            // 🚀 防撞期系統：找出這個班級已經排定過的所有日期區間
+            document.getElementById('cal-task-info').innerText = `班級：${classId} | 單元：${unit} ${existingSch ? '(修改排程)' : ''}`;
+            
+            calSelectingStart = existingSch ? existingSch.startDate : null;
+            calSelectingEnd = existingSch ? existingSch.endDate : null;
+
+            if (calSelectingStart && calSelectingEnd) {
+                 document.getElementById('cal-status-text').innerText = `✅ 已選擇：${calSelectingStart} ~ ${calSelectingEnd}`;
+                 document.getElementById('cal-status-text').style.color = "#2ecc71";
+            } else {
+                 document.getElementById('cal-status-text').innerText = "請點擊選擇「開始日期」";
+                 document.getElementById('cal-status-text').style.color = "#cbd5e1";
+            }
+
+            // 🚀 Event 角色選單邏輯
+            const eventZone = document.getElementById('event-avatar-zone');
+            const eventSelect = document.getElementById('event-avatar-select');
+            if (classId.toUpperCase().includes('EVENT') || classId.includes('突發')) {
+                eventZone.style.display = 'flex';
+                eventSelect.innerHTML = '<option value="">-- 請選擇首領角色 --</option>';
+                allEventAvatars.forEach(av => {
+                    let sel = (existingSch && existingSch.avatar === av.id) ? 'selected' : '';
+                    eventSelect.innerHTML += `<option value="${av.id}" ${sel}>${av.id} - ${av.name}</option>`;
+                });
+            } else {
+                eventZone.style.display = 'none';
+                eventSelect.value = '';
+            }
+            
+            // 🚀 防撞期計算：把自己排除在外！
             blockedDates = [];
             allSchedulesData.forEach(sch => {
                 if (sch.classId === classId && sch.startDate && sch.endDate) {
+                    if (existingSch && sch.unit === unit) return; // 🌟 讓自己的舊日期可以被重新點選！
+
                     let d = new Date(sch.startDate);
                     let endD = new Date(sch.endDate);
                     while (d <= endD) {
-                        blockedDates.push(Utilities.formatDate(d, "GMT+8", "yyyy-MM-dd"));
+                        blockedDates.push({ date: Utilities.formatDate(d, "GMT+8", "yyyy-MM-dd"), unit: sch.unit });
                         d.setDate(d.getDate() + 1);
                     }
                 }
             });
 
-            calCurrentDate = new Date(); // 預設顯示當下月份
+            calCurrentDate = calSelectingStart ? new Date(calSelectingStart) : new Date(); 
             renderCalendar();
             document.getElementById('calendarModal').style.display = 'flex';
         }
@@ -1092,45 +1124,44 @@
             const month = calCurrentDate.getMonth();
             document.getElementById('cal-month-title').innerText = `${year}年 ${month + 1}月`;
 
-            const firstDay = new Date(year, month, 1).getDay(); // 這個月第一天是星期幾
-            const daysInMonth = new Date(year, month + 1, 0).getDate(); // 這個月有幾天
-
+            const firstDay = new Date(year, month, 1).getDay(); 
+            const daysInMonth = new Date(year, month + 1, 0).getDate(); 
             const grid = document.getElementById('cal-grid');
             grid.innerHTML = '';
 
-            // 填補月初的空白天數
-            for (let i = 0; i < firstDay; i++) {
-                grid.innerHTML += `<div class="cal-day empty"></div>`;
-            }
+            for (let i = 0; i < firstDay; i++) { grid.innerHTML += `<div class="cal-day empty"></div>`; }
 
-            // 產生日子
+            let todayStr = Utilities.formatDate(new Date(), "GMT+8", "yyyy-MM-dd");
+
             for (let i = 1; i <= daysInMonth; i++) {
                 let cellDate = new Date(year, month, i);
                 let dateStr = Utilities.formatDate(cellDate, "GMT+8", "yyyy-MM-dd");
                 
+                let isPast = dateStr < todayStr;
+                let blockInfo = blockedDates.find(b => b.date === dateStr);
+                let isDisabled = !!blockInfo; 
+
                 let classNames = "cal-day";
-                let isDisabled = blockedDates.includes(dateStr); // 是否被該班級的其他單元佔用
-
-                if (isDisabled) classNames += " disabled";
-
-                // 檢查是否被選中 (頭、尾、或是中間)
-                if (calSelectingStart && dateStr === calSelectingStart) classNames += " selected";
-                if (calSelectingEnd && dateStr === calSelectingEnd) classNames += " selected";
-                if (calSelectingStart && calSelectingEnd && dateStr > calSelectingStart && dateStr < calSelectingEnd) {
-                    classNames += " in-range";
+                let innerHtml = `<span class="day-num">${i}</span>`;
+                
+                if (isDisabled) {
+                    classNames += " disabled";
+                    if (isPast) {
+                        innerHtml += `<div class="cal-tiny-text" style="color:#7f8c8d;">已過期</div>`;
+                    } else {
+                        // 🚀 顯示佔用的單元名稱！
+                        let shortUnit = blockInfo.unit.length > 5 ? blockInfo.unit.substring(0,4)+'..' : blockInfo.unit;
+                        innerHtml += `<div class="cal-tiny-text" style="color:#ff7675;">${shortUnit}</div>`;
+                    }
+                } else if (isPast && !calSelectingStart) {
+                    classNames += " past-date"; // 只是暗一點，但還是可以點
                 }
 
-                // 如果今天有排任何班級的課，畫一個小黃點提示
-                let hasEvent = allSchedulesData.some(s => s.startDate <= dateStr && s.endDate >= dateStr);
-                let dotHtml = hasEvent ? `<div class="cal-dots-zone"><div class="cal-dot"></div></div>` : "";
+                if (calSelectingStart && dateStr === calSelectingStart) classNames += " selected";
+                if (calSelectingEnd && dateStr === calSelectingEnd) classNames += " selected";
+                if (calSelectingStart && calSelectingEnd && dateStr > calSelectingStart && dateStr < calSelectingEnd) classNames += " in-range";
 
-                // 點擊事件：如果 disabled 就傳 null
-                grid.innerHTML += `
-                    <div class="${classNames}" onclick="handleDateClick('${dateStr}', ${isDisabled})">
-                        ${i}
-                        ${dotHtml}
-                    </div>
-                `;
+                grid.innerHTML += `<div class="${classNames}" onclick="handleDateClick('${dateStr}', ${isDisabled})">${innerHtml}</div>`;
             }
         }
 
@@ -1197,15 +1228,15 @@
             formData.append('unit', calTargetTask.unit);
             formData.append('startDate', calSelectingStart);
             formData.append('endDate', calSelectingEnd);
-            // row 我們送 0，讓後端用 appendRow 新增一筆紀錄
-            formData.append('row', 0); 
+            formData.append('row', calTargetTask.row); // 🚀 送出 0 代表新增，送出數字代表覆寫！
+            formData.append('avatar', document.getElementById('event-avatar-select') ? document.getElementById('event-avatar-select').value : ""); // 🚀 把大魔王 ID 一併送出
 
             fetch(`${GAS_URL}?action=save_schedule&secret=${ADMIN_SECRET}`, { method: 'POST', body: formData })
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
                         closeModal('calendarModal');
-                        fetchTaskData(); // 重新抓資料，刷新防呆清單
+                        fetchTaskData(); 
                     } else {
                         alert("排程失敗，請重試！");
                     }
@@ -1216,17 +1247,6 @@
                     btn.style.pointerEvents = "auto";
                 });
         }
-        
-        // 幫 Utilities 補一個前端用的 FormatDate 函數 (因為前端沒有 Google 的 Utilities)
-        const Utilities = {
-            formatDate: function(date, tz, format) {
-                let d = new Date(date);
-                let yyyy = d.getFullYear();
-                let MM = String(d.getMonth() + 1).padStart(2, '0');
-                let dd = String(d.getDate()).padStart(2, '0');
-                return `${yyyy}-${MM}-${dd}`; // 簡化版的前端日期格式化
-            }
-        };
     </script>
 </body>
 </html>
