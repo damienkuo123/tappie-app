@@ -809,6 +809,7 @@
         let currentTaskPage = 1;
         const TASKS_PER_PAGE = 10;
         let editingTaskRow = 0; // 0 代表新增
+        let allSchedulesData = [];
 
         function openTaskManager() {
             document.getElementById('menu-dropdown').classList.remove('show');
@@ -832,6 +833,7 @@
                     if (data.error) return listZone.innerHTML = `<p style="color:#e74c3c;">${data.error}</p>`;
                     
                     allTasksData = data.words;
+                    allSchedulesData = data.schedules; // 🚀 把 Schedule_Bank 的資料也存起來！
                     
                     // 建立班級篩選器 (提取不重複的 ClassID)
                     const classSet = new Set();
