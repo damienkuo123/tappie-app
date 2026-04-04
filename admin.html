@@ -189,7 +189,12 @@
         .cal-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; color: #94a3b8; font-size: 12px; font-weight: bold; margin-bottom: 10px; }
         .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
         
-        .cal-day { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 16px; font-weight: bold; color: white; background: rgba(255,255,255,0.05); border-radius: 12px; cursor: pointer; transition: 0.2s; position: relative; border: 1px solid transparent; }
+        .cal-day { 
+            aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            font-size: 16px; font-weight: bold; color: white; background: rgba(255,255,255,0.05); 
+            border-radius: 12px; cursor: pointer; transition: 0.2s; position: relative; border: 1px solid transparent; 
+            min-width: 0; /* 🚀 終極防爆：告訴瀏覽器「格子不能被裡面的文字撐大」！ */
+        }
         .cal-day:active:not(.disabled) { transform: scale(0.9); }
         .cal-day.empty { background: transparent; cursor: default; pointer-events: none; }
     
@@ -229,11 +234,13 @@
             align-self: stretch; 
         }
 
-        /* 🚀 拖動拉桿樣式 */
+        /* 🚀 拖動拉桿樣式 (裝甲防護版) */
         .tm-resizer {
             height: 24px; width: 100%; background: rgba(255,255,255,0.05);
             display: flex; align-items: center; justify-content: center;
             cursor: ns-resize; touch-action: none; border-top: 1px solid rgba(255,255,255,0.1);
+            flex-shrink: 0; /* 🚀 絕對防護：禁止瀏覽器把拉桿擠扁！ */
+            position: relative; z-index: 50; /* 🚀 提高層級：防止點擊穿透到日曆！ */
         }
         .tm-resizer::after {
             content: ''; width: 40px; height: 4px; background: rgba(255,255,255,0.2); border-radius: 2px;
