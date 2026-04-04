@@ -483,17 +483,48 @@
         const GAS_URL = "https://script.google.com/macros/s/AKfycbyWm-WnRO5h3dliEPR36Cq1hCf5DgM4GIgJqXVUREclhtYOHjxq9DptApmQPkU5p5Ys/exec";
         const params = new URLSearchParams(window.location.search);
         
-        // 🚀 權限與角色驗證
+        // 🛡️ 權限與角色驗證 (資安升級版：前端無密碼)
         if (params.get('secret')) {
             localStorage.setItem('marian_auth', params.get('secret'));
+            localStorage.setItem('marian_auth_time', new Date().getTime());
             window.history.replaceState(null, null, 'admin.html');
         }
 
-        const ADMIN_SECRET = localStorage.getItem('marian_auth');
-        const IS_SUPER_ADMIN = (ADMIN_SECRET === "marian_super_2026");
+        let ADMIN_SECRET = localStorage.getItem('marian_auth');
+        const authTime = localStorage.getItem('marian_auth_time');
 
-        if (ADMIN_SECRET !== "marian2026" && !IS_SUPER_ADMIN) {
+        // ⏳ 檢查是否超過 1 小時 (3600000毫秒)
+        if (ADMIN_SECRET && authTime) {
+            const now = new Date().getTime();
+            if (now - parseInt(authTime) > 3600000) {
+                localStorage.removeItem('marian_auth');
+                localStorage.removeItem('marian_auth_time');
+                ADMIN_SECRET = null;
+                alert("⚠️ 授權已過期（超過 1 小時），為保護系統安全，請重新感應管理員卡片！");
+            }
+        }
+
+        // 🛡️ 將鑰匙傳給後端查驗，前端絕不進行明碼比對
+        if (!ADMIN_SECRET) {
             document.getElementById('unauth-mask').style.display = 'flex';
+        } else {
+            fetch(`${GAS_URL}?action=verify_auth&secret=${ADMIN_SECRET}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (!data.valid) {
+                        // 密碼錯誤或隨便亂打，直接鎖定並清空假鑰匙
+                        document.getElementById('unauth-mask').style.display = 'flex';
+                        localStorage.removeItem('marian_auth');
+                    } else if (data.role === "super") {
+                        // 後端認證是超級管理員，解鎖進階 UI
+                        document.getElementById('role-text').innerText = "⭐ 超級管理員權限";
+                        document.querySelectorAll('.super-only').forEach(el => el.style.display = 'flex');
+                    }
+                })
+                .catch(err => {
+                    alert("連線後端驗證失敗，請檢查網路連線。");
+                    document.getElementById('unauth-mask').style.display = 'flex';
+                });
         }
 
         if (IS_SUPER_ADMIN) {
