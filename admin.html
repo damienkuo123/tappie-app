@@ -448,8 +448,9 @@
             </div>
             
             <div style="display:flex; gap:10px; margin-top: 20px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1);">
-                <button id="save-cal-btn" class="btn-action" style="background:linear-gradient(135deg, #27ae60, #2ecc71); font-size:18px; padding:15px;" onclick="submitSchedule()">🚀 確認排定</button>
-                <button class="btn-action btn-gray" style="font-size:18px; padding:15px;" onclick="closeModal('calendarModal')">取消</button>
+                <button id="cal-cancel-btn" class="btn-cancel-schedule" style="display:none;" onclick="deleteSchedule()">取消排程</button>
+                <button id="save-cal-btn" class="btn-action" style="background:linear-gradient(135deg, #27ae60, #2ecc71); font-size:18px; padding:15px; flex:1;" onclick="submitSchedule()">🚀 確認排定</button>
+                <button class="btn-action btn-gray" style="font-size:18px; padding:15px; flex:0.4;" onclick="closeModal('calendarModal')">關閉</button>
             </div>
         </div>
     </div>
