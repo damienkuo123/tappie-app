@@ -594,47 +594,65 @@
             document.getElementById(id).style.display = 'none'; 
         }
 
-        // --- 📊 學習進度邏輯 ---
+        // --- 📊 學習進度邏輯 (雙管齊下抓取截止日版) ---
         function openProgressModal() {
             document.getElementById('progressModal').style.display = 'flex';
             document.getElementById('progress-container').innerHTML = '<p style="text-align:center; color:#ffd700;">⏳ 正在彙整全校資料...</p>';
             
-            fetch(`${GAS_URL}?action=get_all_progress&secret=${ADMIN_SECRET}`)
-                .then(res => res.json())
-                .then(data => {
-                    if(data.error) return document.getElementById('progress-container').innerHTML = `<p style="color:#e74c3c;">${data.error}</p>`;
+            // 🚀 同時跟後端要「進度」與「排程」這兩包資料
+            Promise.all([
+                fetch(`${GAS_URL}?action=get_all_progress&secret=${ADMIN_SECRET}`).then(res => res.json()),
+                fetch(`${GAS_URL}?action=get_task_data&secret=${ADMIN_SECRET}`).then(res => res.json())
+            ])
+            .then(([progressData, taskData]) => {
+                if(progressData.error) return document.getElementById('progress-container').innerHTML = `<p style="color:#e74c3c;">${progressData.error}</p>`;
+                
+                const schedules = taskData.schedules || [];
+                let html = '';
+                
+                for (const classId in progressData) {
+                    const info = progressData[classId]; 
+                    info.students.sort((a, b) => a.count - b.count);
                     
-                    let html = '';
-                    for (const classId in data) {
-                        const info = data[classId]; 
-                        info.students.sort((a, b) => a.count - b.count);
-                        
-                        let stuHtml = info.students.map(s => {
-                            let badgeClass = "c-safe"; let icon = "✅";
-                            if (s.count < 5) { badgeClass = "c-danger"; icon = "⚠️"; }
-                            else if (s.count >= 10) { badgeClass = "c-good"; icon = "🔥"; }
+                    let stuHtml = info.students.map(s => {
+                        let badgeClass = "c-safe"; let icon = "✅";
+                        if (s.count < 5) { badgeClass = "c-danger"; icon = "⚠️"; }
+                        else if (s.count >= 10) { badgeClass = "c-good"; icon = "🔥"; }
 
-                            return `
-                            <div class="stu-row" style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px dashed rgba(255,255,255,0.1);">
-                                <span class="s-name" style="color:#e2e8f0; font-weight:bold;">${s.name}</span>
-                                <span class="s-count" style="color:${s.count>=10?'#f1c40f':(s.count>=5?'#2ecc71':'#e74c3c')}; font-weight:900;">${icon} ${s.count} 次</span>
-                            </div>`;
-                        }).join('');
-
-                        html += `
-                        <div class="accordion-group" onclick="this.classList.toggle('active')">
-                            <div class="accordion-header">
-                                <span>🏷️ ${classId}</span>
-                                <span style="font-size:14px;">${info.unit} ▾</span>
-                            </div>
-                            <div class="accordion-body">${stuHtml}</div>
+                        return `
+                        <div class="stu-row" style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px dashed rgba(255,255,255,0.1);">
+                            <span class="s-name" style="color:#e2e8f0; font-weight:bold;">${s.name}</span>
+                            <span class="s-count" style="color:${s.count>=10?'#f1c40f':(s.count>=5?'#2ecc71':'#e74c3c')}; font-weight:900;">${icon} ${s.count} 次</span>
                         </div>`;
+                    }).join('');
+
+                    // 🚀 尋找該班級正在進行單元的「截止日期」
+                    let deadlineHtml = "";
+                    if (info.unit !== "未排定") {
+                        let activeSch = schedules.find(s => s.classId.toUpperCase() === classId.toUpperCase() && s.unit === info.unit);
+                        if (activeSch && activeSch.endDate) {
+                            // 格式化日期：把 2026-04-15 變成 04/15 讓排版更精緻
+                            let dText = activeSch.endDate.substring(5).replace('-', '/');
+                            deadlineHtml = `<div style="font-size:12px; color:#ff7675; font-weight:bold; margin-top:5px; letter-spacing:0.5px;">⏰ 截止日: ${dText}</div>`;
+                        }
                     }
-                    document.getElementById('progress-container').innerHTML = html || '<p style="text-align:center; color:#7f8c8d;">目前尚無班級資料</p>';
-                })
-                .catch(err => {
-                    document.getElementById('progress-container').innerHTML = '<p style="text-align:center; color:#e74c3c;">⚠️ 連線失敗</p>';
-                });
+
+                    html += `
+                    <div class="accordion-group" onclick="this.classList.toggle('active')">
+                        <div class="accordion-header">
+                            <span>🏷️ ${classId}</span>
+                            <div style="text-align:right;">
+                                <span style="font-size:14px;">${info.unit} ▾</span>
+                                ${deadlineHtml} </div>
+                        </div>
+                        <div class="accordion-body">${stuHtml}</div>
+                    </div>`;
+                }
+                document.getElementById('progress-container').innerHTML = html || '<p style="text-align:center; color:#7f8c8d;">目前尚無班級資料</p>';
+            })
+            .catch(err => {
+                document.getElementById('progress-container').innerHTML = '<p style="text-align:center; color:#e74c3c;">⚠️ 連線失敗</p>';
+            });
         }
 
         // --- 📝 專欄管理邏輯 (超級管理員專屬) ---
