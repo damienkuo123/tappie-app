@@ -1627,8 +1627,12 @@
         reader.readAsDataURL(new Blob(chunks, { type: 'audio/webm' }));
         reader.onloadend = () => {
           const base64 = reader.result.split(',')[1];
-          fetch(`${GAS_URL}?action=evaluate_speech&word=${encodeURIComponent(quizData[currentIndex].en)}`, { method: 'POST', body: base64 })
+          // 🚀 關鍵改動：把瀏覽器聽到的字 (browserHeardText) 打包成 &stt 參數一起射給後端！
+          const finalFetchUrl = `${GAS_URL}?action=evaluate_speech&word=${encodeURIComponent(quizData[currentIndex].en)}&stt=${encodeURIComponent(browserHeardText)}`;
+          
+          fetch(finalFetchUrl, { method: 'POST', body: base64 })
             .then(res => res.json()).then(data => {
+              // ... (後續 UI 處理不變)
               clearInterval(gradingInterval);
               scores[currentIndex] = data.score;
               if(!window.feedbacks) window.feedbacks = [];
