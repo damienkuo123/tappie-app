@@ -2012,6 +2012,11 @@
       mediaRecorder.onstop = () => {
         const r = new FileReader(); r.readAsDataURL(new Blob(chunks, { type: 'audio/webm' }));
         r.onloadend = () => {
+          // 🚀 戰鬥區關鍵改動：帶上 &stt 參數！
+          const finalBattleUrl = `${GAS_URL}?action=evaluate_speech_battle&word=${encodeURIComponent(battleQuizArr[currentBattleRound].en)}&stt=${encodeURIComponent(browserHeardText)}`;
+          
+          fetch(finalBattleUrl, { method: 'POST', body: r.result.split(',')[1] })
+            .then(res => res.json()).then(data => {
           fetch(`${GAS_URL}?action=evaluate_speech_battle&word=${encodeURIComponent(battleQuizArr[currentBattleRound].en)}`, { method: 'POST', body: r.result.split(',')[1] })
             .then(res => res.json()).then(data => {
                 clearInterval(gradingAnim);
