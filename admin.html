@@ -269,6 +269,20 @@
             font-weight: bold; font-size: 16px; flex: 0.6;
         }
         .btn-cancel-schedule:active { background: rgba(255,118,117,0.1); transform: scale(0.95); }
+
+        /* =======================================================
+           🧑‍🎓 學生管理系統專屬 UI
+           ======================================================= */
+        .stu-checkbox { width: 22px; height: 22px; margin-right: 15px; cursor: pointer; accent-color: var(--primary-color); display: none; }
+        .batch-mode-active .stu-checkbox { display: block; animation: fadeIn 0.3s; }
+        .batch-mode-active .btn-schedule { display: none; } /* 批量模式隱藏編輯鈕 */
+        
+        .sm-search-bar { display: flex; gap: 10px; margin-bottom: 10px; }
+        .sm-search-input { flex: 1; padding: 12px 15px; border-radius: 12px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.2); color: white; font-size: 15px; }
+        .sm-search-input::placeholder { color: #94a3b8; }
+        
+        .sm-batch-bar { display: none; background: rgba(241, 196, 15, 0.2); border: 1px solid #f1c40f; padding: 10px 15px; border-radius: 12px; margin-bottom: 10px; justify-content: space-between; align-items: center; }
+        .batch-mode-active ~ .sm-batch-bar { display: flex; animation: fadeIn 0.3s; }
     </style>
 </head>
 <body>
@@ -286,6 +300,7 @@
                 <div class="dropdown-item" onclick="openProgressModal()">📊 學習進度</div>
                 <div class="dropdown-item super-only" onclick="openNewsletterModal()">📝 專欄編輯</div>
                 <div class="dropdown-item super-only" onclick="openTaskManager()">📅 學習任務排定</div>
+                <div class="dropdown-item super-only" onclick="openStudentManager()">🧑‍🎓 編輯學生資料</div>
             </div>
         </div>
         <div class="nav-btn" onclick="adminLogout()">🔒 登出</div>
