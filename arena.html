@@ -1259,33 +1259,6 @@
   let hasUsedSkill = false; 
   let isUltimateMode = false; 
 
-  // 🚀 新增：Web Speech API 語音辨識引擎 (Agent 1)
-  let recognition = null;
-  let browserHeardText = ""; // 用來儲存瀏覽器聽到的字
-  if ('webkitSpeechRecognition' in window) {
-      recognition = new webkitSpeechRecognition();
-      recognition.continuous = true;
-      recognition.interimResults = true; // 允許即時辨識
-      recognition.lang = 'en-US'; // 強制設定為美式英語
-
-      recognition.onresult = function(event) {
-          let interimTranscript = '';
-          let finalTranscript = '';
-          for (let i = event.resultIndex; i < event.results.length; ++i) {
-              if (event.results[i].isFinal) {
-                  finalTranscript += event.results[i][0].transcript;
-              } else {
-                  interimTranscript += event.results[i][0].transcript;
-              }
-          }
-          // 將最終結果或即時結果存起來
-          browserHeardText = finalTranscript || interimTranscript;
-      };
-      recognition.onerror = function(event) {
-          console.log("瀏覽器聽診器異常:", event.error);
-      };
-  } 
-
   let battleQuizArr = [], currentBattleRound = 0;
   let readyTimer = null, currentLimitTimer = null, waitOpTimer = null, syncTimer = null; 
   let myTotalWins = 0, opTotalWins = 0;
@@ -1593,12 +1566,6 @@
       document.getElementById('feedback').innerHTML = ""; 
       maxVolume = 0; chunks = []; tooQuietFlag = false;
       
-      // 🚀 清空上一次的聽診紀錄，並啟動瀏覽器耳朵
-      browserHeardText = "";
-      if (recognition) {
-          try { recognition.start(); } catch(e){} 
-      }
-      
       mediaRecorder = new MediaRecorder(stream);
       mediaRecorder.ondataavailable = ev => chunks.push(ev.data);
       
@@ -1627,12 +1594,8 @@
         reader.readAsDataURL(new Blob(chunks, { type: 'audio/webm' }));
         reader.onloadend = () => {
           const base64 = reader.result.split(',')[1];
-          // 🚀 關鍵改動：把瀏覽器聽到的字 (browserHeardText) 打包成 &stt 參數一起射給後端！
-          const finalFetchUrl = `${GAS_URL}?action=evaluate_speech&word=${encodeURIComponent(quizData[currentIndex].en)}&stt=${encodeURIComponent(browserHeardText)}`;
-          
-          fetch(finalFetchUrl, { method: 'POST', body: base64 })
+          fetch(`${GAS_URL}?action=evaluate_speech&word=${encodeURIComponent(quizData[currentIndex].en)}`, { method: 'POST', body: base64 })
             .then(res => res.json()).then(data => {
-              // ... (後續 UI 處理不變)
               clearInterval(gradingInterval);
               scores[currentIndex] = data.score;
               if(!window.feedbacks) window.feedbacks = [];
@@ -1670,8 +1633,6 @@
     rb.onpointerup = () => {
       if (!mediaRecorder || mediaRecorder.state !== "recording") return;
       rb.classList.remove('active');
-      // 🚀 關閉瀏覽器耳朵
-      if (recognition) recognition.stop();
       if (maxVolume < 30) { 
         tooQuietFlag = true; 
         document.getElementById('status').innerText = "太小聲了，再大聲點！";
@@ -1957,13 +1918,6 @@
     battleBtn.onpointerdown = (e) => {
       if (roundSubmitted) return;
       e.preventDefault(); maxVolume = 0; chunks = [];
-      
-      // 🚀 戰鬥區：清空並啟動瀏覽器耳朵
-      browserHeardText = "";
-      if (recognition) {
-          try { recognition.start(); } catch(e){} 
-      }
-
       mediaRecorder = new MediaRecorder(stream);
       mediaRecorder.ondataavailable = ev => chunks.push(ev.data);
       mediaRecorder.start(); 
@@ -1987,9 +1941,6 @@
       roundSubmitted = true; clearInterval(currentLimitTimer);
       mediaRecorder.stop(); 
       
-      // 🚀 戰鬥區：關閉瀏覽器耳朵
-      if (recognition) recognition.stop(); 
-      
       battleBtn.classList.remove('active', 'ult-active');
       
       // 🚀 關鍵修復：放開按鈕的瞬間，強制拔除卡片的發光特效！
@@ -2012,10 +1963,7 @@
       mediaRecorder.onstop = () => {
         const r = new FileReader(); r.readAsDataURL(new Blob(chunks, { type: 'audio/webm' }));
         r.onloadend = () => {
-          // 🚀 戰鬥區關鍵改動：帶上 &stt 參數！
-          const finalBattleUrl = `${GAS_URL}?action=evaluate_speech_battle&word=${encodeURIComponent(battleQuizArr[currentBattleRound].en)}&stt=${encodeURIComponent(browserHeardText)}`;
-          
-          fetch(finalBattleUrl, { method: 'POST', body: r.result.split(',')[1] })
+          fetch(`${GAS_URL}?action=evaluate_speech_battle&word=${encodeURIComponent(battleQuizArr[currentBattleRound].en)}`, { method: 'POST', body: r.result.split(',')[1] })
             .then(res => res.json()).then(data => {
                 clearInterval(gradingAnim);
                 submitBattleScore(ROOM_ID, data.score);
