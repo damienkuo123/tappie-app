@@ -1628,7 +1628,42 @@
               scores[currentIndex] = data.score;
               if(!window.feedbacks) window.feedbacks = [];
               window.feedbacks[currentIndex] = data.feedback;
-              document.getElementById('feedback').innerHTML = `得分：${data.score}<br><small>${data.feedback}</small>`;
+              
+              // 🚀 1. Elsa Speak 級錯字標紅系統
+              const originalText = quizData[currentIndex].en;
+              const words = originalText.split(/\s+/);
+              if (data.errorWords && data.errorWords.length > 0) {
+                  const highlightedHTML = words.map((w, idx) => {
+                      return data.errorWords.includes(idx) ? `<span style="color: var(--marian-red); text-shadow: 0 0 10px rgba(214,48,49,0.3);">${w}</span>` : w;
+                  }).join(" ");
+                  document.getElementById('word-display').innerHTML = highlightedHTML;
+              }
+
+              // 🚀 2. 動態嘴型圖片切換系統
+              const mouthShape = data.mouthShape || "relax"; 
+              const visualZone = document.getElementById('visual-feedback-zone');
+              const mouthImg = document.getElementById('mouth-guide-img');
+              
+              if (mouthShape === "perfect" || data.score === 100) {
+                  // 💯 滿分時隱藏嘴型，畫面乾淨！
+                  mouthImg.style.display = 'none';
+              } else {
+                  const mouthImages = {
+                      "open_wide": "https://cdn.jsdelivr.net/gh/damienkuo123/marian-app@main/assets/mouth_open.png",
+                      "round_lips": "https://cdn.jsdelivr.net/gh/damienkuo123/marian-app@main/assets/mouth_round.png",
+                      "teeth_on_lip": "https://cdn.jsdelivr.net/gh/damienkuo123/marian-app@main/assets/mouth_teeth.png",
+                      "tongue_up": "https://cdn.jsdelivr.net/gh/damienkuo123/marian-app@main/assets/mouth_tongue.png",
+                      "relax": "https://cdn.jsdelivr.net/gh/damienkuo123/marian-app@main/assets/mouth_relax.png"
+                  };
+                  mouthImg.src = mouthImages[mouthShape] || mouthImages["relax"];
+                  mouthImg.style.display = 'block';
+              }
+              visualZone.style.display = 'flex';
+
+              // 🚀 3. 渲染高質感回饋文字
+              let scoreColor = data.score >= 80 ? 'var(--marian-green)' : (data.score >= 60 ? '#f39c12' : 'var(--marian-red)');
+              document.getElementById('feedback').innerHTML = `<span style="color:${scoreColor}; font-size:28px;">${data.score} 分</span><br><span style="font-size:15px;">${data.feedback}</span>`;
+              
               document.getElementById('status').innerText = "評分完成！";
               isGrading = false;
               rb.style.opacity = "1";
