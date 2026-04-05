@@ -1949,6 +1949,9 @@
             document.getElementById('edit-stu-type').value = type;
             document.getElementById('edit-stu-class').value = classId;
             
+            // 🚀 核心控制：如果是新增學生(row=0)，隱藏刪除鍵；如果是編輯舊學生，顯示刪除鍵！
+            document.getElementById('del-stu-btn').style.display = row === 0 ? 'none' : 'block';
+            
             toggleStuClassInput('edit-stu-type', 'edit-stu-class-container');
             document.getElementById('studentEditorModal').style.display = 'flex';
         }
@@ -1978,6 +1981,42 @@
                     } else { alert(data.error || "儲存失敗！"); }
                 })
                 .finally(() => { btn.innerText = "💾 儲存"; btn.style.pointerEvents = "auto"; });
+        }
+
+        // --- 🗑️ 刪除單一學生邏輯 ---
+        function deleteStudentData() {
+            const name = document.getElementById('edit-stu-name').value.trim();
+            
+            // 🛑 核彈級安全鎖：要求手動打字
+            const userInput = prompt(`⚠️ 危險動作警告 ⚠️\n\n您即將徹底刪除學生【${name}】的所有資料！\n(包含點數、角色卡牌等，且完全無法復原)\n\n請在下方輸入「刪除」兩個字來確認執行：`);
+            
+            if (userInput !== "刪除") {
+                if (userInput !== null) {
+                    alert("❌ 輸入錯誤！安全鎖已啟動，取消刪除動作。");
+                }
+                return; 
+            }
+            
+            const btn = document.getElementById('del-stu-btn');
+            btn.innerText = "⏳..."; btn.style.pointerEvents = "none";
+
+            const formData = new URLSearchParams();
+            formData.append('row', editingStuRow);
+
+            fetch(`${GAS_URL}?action=delete_student_data&secret=${ADMIN_SECRET}`, { method: 'POST', body: formData })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        closeModal('studentEditorModal');
+                        fetchStudentList(); // 刪除成功後重新洗牌名單
+                    } else { 
+                        alert("刪除失敗，請檢查權限！"); 
+                    }
+                })
+                .finally(() => {
+                    btn.innerHTML = "🗑️ 刪除"; 
+                    btn.style.pointerEvents = "auto";
+                });
         }
 
         function toggleBatchMode() {
