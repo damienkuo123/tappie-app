@@ -1593,6 +1593,12 @@
       document.getElementById('feedback').innerHTML = ""; 
       maxVolume = 0; chunks = []; tooQuietFlag = false;
       
+      // 🚀 清空上一次的聽診紀錄，並啟動瀏覽器耳朵
+      browserHeardText = "";
+      if (recognition) {
+          try { recognition.start(); } catch(e){} 
+      }
+      
       mediaRecorder = new MediaRecorder(stream);
       mediaRecorder.ondataavailable = ev => chunks.push(ev.data);
       
