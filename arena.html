@@ -1259,6 +1259,33 @@
   let hasUsedSkill = false; 
   let isUltimateMode = false; 
 
+  // 🚀 新增：Web Speech API 語音辨識引擎 (Agent 1)
+  let recognition = null;
+  let browserHeardText = ""; // 用來儲存瀏覽器聽到的字
+  if ('webkitSpeechRecognition' in window) {
+      recognition = new webkitSpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true; // 允許即時辨識
+      recognition.lang = 'en-US'; // 強制設定為美式英語
+
+      recognition.onresult = function(event) {
+          let interimTranscript = '';
+          let finalTranscript = '';
+          for (let i = event.resultIndex; i < event.results.length; ++i) {
+              if (event.results[i].isFinal) {
+                  finalTranscript += event.results[i][0].transcript;
+              } else {
+                  interimTranscript += event.results[i][0].transcript;
+              }
+          }
+          // 將最終結果或即時結果存起來
+          browserHeardText = finalTranscript || interimTranscript;
+      };
+      recognition.onerror = function(event) {
+          console.log("瀏覽器聽診器異常:", event.error);
+      };
+  } 
+
   let battleQuizArr = [], currentBattleRound = 0;
   let readyTimer = null, currentLimitTimer = null, waitOpTimer = null, syncTimer = null; 
   let myTotalWins = 0, opTotalWins = 0;
