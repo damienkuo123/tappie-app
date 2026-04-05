@@ -1568,7 +1568,12 @@
     rb.onpointerdown = (e) => {
       if(isGrading) return;
       e.preventDefault(); 
+      
+      // 🚀 每次重新錄音時，藏起教練面板，並把標紅的錯字恢復成原本的黑色
+      document.getElementById('visual-feedback-zone').style.display = 'none';
       document.getElementById('feedback').innerHTML = ""; 
+      document.getElementById('word-display').innerText = quizData[currentIndex].en; 
+      
       maxVolume = 0; chunks = []; tooQuietFlag = false;
       
       mediaRecorder = new MediaRecorder(stream);
