@@ -1821,7 +1821,13 @@
             isBatchMode = false;
             selectedStuRows.clear();
             document.getElementById('sm-list-zone').classList.remove('batch-mode-active');
-            document.getElementById('sm-batch-toggle-btn').innerText = "批量修改";
+            
+            // 🚀 徹底重置按鈕與隱藏批量工具列
+            const toggleBtn = document.getElementById('sm-batch-toggle-btn');
+            toggleBtn.innerText = "批量修改";
+            toggleBtn.style.background = "rgba(255,255,255,0.1)";
+            toggleBtn.style.color = "white";
+            document.querySelector('.sm-batch-bar').style.display = 'none';
         }
 
         function fetchStudentList() {
@@ -1969,22 +1975,24 @@
                 .finally(() => { btn.innerText = "💾 儲存"; btn.style.pointerEvents = "auto"; });
         }
 
-        // --- ⚡ 批量修改邏輯 ---
         function toggleBatchMode() {
             isBatchMode = !isBatchMode;
             const listZone = document.getElementById('sm-list-zone');
             const toggleBtn = document.getElementById('sm-batch-toggle-btn');
+            const batchBar = document.querySelector('.sm-batch-bar'); // 🚀 抓出那條隱形的工具列
             
             if (isBatchMode) {
                 listZone.classList.add('batch-mode-active');
                 toggleBtn.innerText = "取消批量";
                 toggleBtn.style.background = "rgba(231, 76, 60, 0.2)";
                 toggleBtn.style.color = "#e74c3c";
+                batchBar.style.display = "flex"; // 🚀 強制讓它現形！
             } else {
                 listZone.classList.remove('batch-mode-active');
                 toggleBtn.innerText = "批量修改";
                 toggleBtn.style.background = "rgba(255,255,255,0.1)";
                 toggleBtn.style.color = "white";
+                batchBar.style.display = "none"; // 🚀 關閉時隱藏起來
                 selectedStuRows.clear();
                 updateBatchCount();
             }
