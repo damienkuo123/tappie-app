@@ -1957,6 +1957,13 @@
     battleBtn.onpointerdown = (e) => {
       if (roundSubmitted) return;
       e.preventDefault(); maxVolume = 0; chunks = [];
+      
+      // 🚀 戰鬥區：清空並啟動瀏覽器耳朵
+      browserHeardText = "";
+      if (recognition) {
+          try { recognition.start(); } catch(e){} 
+      }
+
       mediaRecorder = new MediaRecorder(stream);
       mediaRecorder.ondataavailable = ev => chunks.push(ev.data);
       mediaRecorder.start(); 
