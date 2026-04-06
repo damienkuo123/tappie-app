@@ -1760,16 +1760,19 @@
     btn.style.pointerEvents = "none";
     btn.style.backgroundColor = "#95a5a6";
 
-    // 🚀 1. 核心實作：打包這次練習的所有單字、分數與 AI 評語 (Detail_JSON)
+    // 🚀 1. 核心實作：打包這次練習的所有單字、分數與 AI 評語
     let detailArr = [];
     quizData.forEach((item, i) => {
       detailArr.push({
         word: item.en,
         score: scores[i] || 0,
         feedback: (window.feedbacks && window.feedbacks[i]) ? window.feedbacks[i] : "尚未錄音",
-        azure_report: azureReports[i] || null  // 🚀 關鍵：把微軟的音素細節一起打包帶走！
+        // 🚀 關鍵加料：把微軟的音素細節報告一起塞進這個包裹裡！
+        // (加上 typeof 防呆，避免萬一前面的資料夾沒宣告好而報錯)
+        azure_report: (typeof azureReports !== 'undefined' && azureReports[i]) ? azureReports[i] : null
       });
     });
+    
     const detailJSON = JSON.stringify(detailArr);
 
     // 🚀 2. 將 details 參數轉碼後，加入 URL 一併傳給後端 GAS
@@ -1778,7 +1781,7 @@
     fetch(finalUrl, { mode: 'no-cors' })
       .then(() => { 
         alert(MODE === 'review' ? "👍 練習辛苦了！" : "🎉 挑戰完成！"); 
-        // 建議直接導回 GitHub Pages 的大廳/主頁，體驗會比導回 GAS 網址更絲滑
+        // 建議直接導回 GitHub Pages 的大廳/主頁
         window.location.href = `https://damienkuo123.github.io/marian-app/dashboard.html?id=${STUDENT_ID}`; 
       }).catch(err => {
         console.log("Fetch 失敗，啟動備案...", err);
