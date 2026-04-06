@@ -1541,6 +1541,11 @@
     document.getElementById('zh-display').innerText = current.zh;
     document.getElementById('feedback').innerText = scores[currentIndex] !== null ? "得分：" + scores[currentIndex] : "";
     document.getElementById('record-btn').style.display = 'block';
+    
+    // 🚀 就是缺了這行！切換題目時，把狀態文字重置回預設提示
+    document.getElementById('status').innerText = "按住錄音，放開打分";
+    document.getElementById('status').style.color = "#636e72"; // 順便把顏色變回原本的低調灰
+
     document.getElementById('progress-fill').style.width = (((currentIndex + 1) / quizData.length) * 100) + "%";
     if (isReReading) {
       document.getElementById('prev-btn').style.display = 'none';
