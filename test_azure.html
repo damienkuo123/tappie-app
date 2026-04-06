@@ -109,10 +109,15 @@
                             
                             const words = pronunciationResult.detailResult.Words;
                             words.forEach(word => {
-                                report += `\n單字: [ ${word.Word} ] (得分: ${word.PronunciationScore})\n`;
+                                // 🚀 修正：微軟把分數藏在 PronunciationAssessment 裡面
+                                let wordScore = word.PronunciationAssessment.AccuracyScore;
+                                report += `\n單字: [ ${word.Word} ] (得分: ${wordScore})\n`;
+                                
                                 word.Phonemes.forEach(phoneme => {
-                                    let scoreClass = phoneme.AccuracyScore >= 80 ? "high-score" : "low-score";
-                                    report += `  ↳ 音素 /${phoneme.Phoneme}/ ➔ 準確度: <span class="${scoreClass}">${phoneme.AccuracyScore}</span> 分\n`;
+                                    // 🚀 修正：精準讀取每個音素的分數
+                                    let pScore = phoneme.PronunciationAssessment.AccuracyScore;
+                                    let scoreClass = pScore >= 80 ? "high-score" : "low-score";
+                                    report += `  ↳ 音素 /${phoneme.Phoneme}/ ➔ 準確度: <span class="${scoreClass}">${pScore}</span> 分\n`;
                                 });
                             });
 
