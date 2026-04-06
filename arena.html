@@ -1568,86 +1568,108 @@
 
   const rb = document.getElementById('record-btn');
   if(rb) {
-    rb.onpointerdown = (e) => {
+    rb.onclick = (e) => {
       if(isGrading) return;
       e.preventDefault(); 
       document.getElementById('feedback').innerHTML = ""; 
-      maxVolume = 0; chunks = []; tooQuietFlag = false;
       
-      mediaRecorder = new MediaRecorder(stream);
-      mediaRecorder.ondataavailable = ev => chunks.push(ev.data);
+      isGrading = true;
+      rb.classList.add('active');
+      document.getElementById('status').innerText = "啟動微軟聲學引擎...";
       
-      mediaRecorder.onstop = () => {
-        if (tooQuietFlag) {
-          isGrading = false;
-          rb.style.opacity = "1";
-          return; 
-        }
-        isGrading = true;
-        rb.style.opacity = "0.5";
-        
-        // 🔒 1. 錄音一結束，立刻鎖死上下題按鈕！
-        document.getElementById('prev-btn').disabled = true;
-        document.getElementById('next-btn').disabled = true;
-        document.getElementById('back-summary-btn').disabled = true;
+      // 🔒 鎖死按鈕
+      document.getElementById('prev-btn').disabled = true;
+      document.getElementById('next-btn').disabled = true;
+      document.getElementById('back-summary-btn').disabled = true;
 
-        if (gradingInterval) clearInterval(gradingInterval);
-        let dots = 0;
-        gradingInterval = setInterval(() => { 
-          dots = (dots + 1) % 4; 
-          document.getElementById('status').innerText = "老師評分中" + ".".repeat(dots); 
-        }, 400);
+      const targetWord = quizData[currentIndex].en;
+      
+      // 🚀 建立 Azure 連線
+      const speechConfig = SpeechSDK.SpeechConfig.fromSubscription(AZURE_KEY, AZURE_REGION);
+      speechConfig.speechRecognitionLanguage = "en-US";
+      speechConfig.setProperty(SpeechSDK.PropertyId.SpeechServiceConnection_InitialSilenceTimeoutMs, "5000");
+      speechConfig.setProperty(SpeechSDK.PropertyId.SpeechServiceConnection_EndSilenceTimeoutMs, "1500");
 
-        const reader = new FileReader();
-        reader.readAsDataURL(new Blob(chunks, { type: 'audio/webm' }));
-        reader.onloadend = () => {
-          const base64 = reader.result.split(',')[1];
-          fetch(`${GAS_URL}?action=evaluate_speech&word=${encodeURIComponent(quizData[currentIndex].en)}`, { method: 'POST', body: base64 })
-            .then(res => res.json()).then(data => {
-              clearInterval(gradingInterval);
-              scores[currentIndex] = data.score;
-              if(!window.feedbacks) window.feedbacks = [];
-              window.feedbacks[currentIndex] = data.feedback;
-              document.getElementById('feedback').innerHTML = `得分：${data.score}<br><small>${data.feedback}</small>`;
-              document.getElementById('status').innerText = "評分完成！";
-              isGrading = false;
-              rb.style.opacity = "1";
-              
-              // 🔓 2. 【分數真的回來了】才解開上下題按鈕封印！
-              document.getElementById('prev-btn').disabled = currentIndex === 0;
-              document.getElementById('next-btn').disabled = false;
-              document.getElementById('back-summary-btn').disabled = false;
-              
-            }).catch(() => {
-              clearInterval(gradingInterval);
-              document.getElementById('status').innerText = "連線超時，請重新錄音";
-              isGrading = false;
-              rb.style.opacity = "1";
-              
-              // 🔓 3. 【連線發生錯誤】也要解開按鈕以免卡死！
-              document.getElementById('prev-btn').disabled = currentIndex === 0;
-              document.getElementById('next-btn').disabled = false;
-              document.getElementById('back-summary-btn').disabled = false;
-            });
-        };
+      const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
+      const pronConfig = new SpeechSDK.PronunciationAssessmentConfig(
+          targetWord,
+          SpeechSDK.PronunciationAssessmentGradingSystem.HundredMark,
+          SpeechSDK.PronunciationAssessmentGranularity.Phoneme, true
+      );
+
+      const recognizer = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig);
+      pronConfig.applyTo(recognizer);
+
+      recognizer.recognizing = (s, e) => {
+          document.getElementById('status').innerText = `🟢 聽到: ${e.result.text}`;
       };
 
-      mediaRecorder.start(); 
-      rb.classList.add('active');
-      document.getElementById('status').innerText = "正在錄音中...";
-      const checkVol = () => { if (mediaRecorder.state === "recording") { analyser.getByteFrequencyData(dataArray); let v = 0; for (let i = 0; i < dataArray.length; i++) v += dataArray[i]; if ((v / dataArray.length) > maxVolume) maxVolume = (v / dataArray.length); requestAnimationFrame(checkVol); } }; checkVol();
-    };
+      // 🚀 開始放手讓微軟聽
+      recognizer.recognizeOnceAsync(
+          (result) => {
+              rb.classList.remove('active');
+              
+              if (result.reason === SpeechSDK.ResultReason.RecognizedSpeech) {
+                  document.getElementById('status').innerText = "✅ 聽寫完畢，呼叫 AI 教練中...";
+                  
+                  const pronResult = SpeechSDK.PronunciationAssessmentResult.fromResult(result);
+                  const finalScore = Math.round(pronResult.pronunciationScore);
+                  
+                  // 📦 打包微軟的法醫報告，準備傳給 GAS 的 Gemini
+                  let evidenceJSON = {
+                      score: finalScore,
+                      accuracy: pronResult.accuracyScore,
+                      fluency: pronResult.fluencyScore,
+                      completeness: pronResult.completenessScore,
+                      words: []
+                  };
+                  
+                  pronResult.detailResult.Words.forEach(word => {
+                      let wData = { word: word.Word, score: word.PronunciationAssessment.AccuracyScore, phonemes: [] };
+                      word.Phonemes.forEach(p => {
+                          wData.phonemes.push({ p: p.Phoneme, score: p.PronunciationAssessment.AccuracyScore });
+                      });
+                      evidenceJSON.words.push(wData);
+                  });
 
-    rb.onpointerup = () => {
-      if (!mediaRecorder || mediaRecorder.state !== "recording") return;
-      rb.classList.remove('active');
-      if (maxVolume < 30) { 
-        tooQuietFlag = true; 
-        document.getElementById('status').innerText = "太小聲了，再大聲點！";
-        mediaRecorder.stop();
-      } else {
-        mediaRecorder.stop();
-      }
+                  // 🚀 呼叫 GAS 讓 Gemini 寫評語 (只傳純文字，極速又便宜！)
+                  fetch(`${GAS_URL}?action=evaluate_speech_azure&word=${encodeURIComponent(targetWord)}`, { 
+                      method: 'POST', 
+                      body: JSON.stringify(evidenceJSON) 
+                  })
+                  .then(res => res.json()).then(data => {
+                      scores[currentIndex] = finalScore;
+                      if(!window.feedbacks) window.feedbacks = [];
+                      window.feedbacks[currentIndex] = data.feedback;
+                      
+                      document.getElementById('feedback').innerHTML = `得分：${finalScore}<br><small>${data.feedback}</small>`;
+                      document.getElementById('status').innerText = "評分完成！";
+                      isGrading = false;
+                      
+                      document.getElementById('prev-btn').disabled = currentIndex === 0;
+                      document.getElementById('next-btn').disabled = false;
+                      document.getElementById('back-summary-btn').disabled = false;
+                  }).catch(() => {
+                      document.getElementById('status').innerText = "⚠️ AI 寫評語失敗";
+                      isGrading = false;
+                      document.getElementById('next-btn').disabled = false;
+                  });
+
+              } else {
+                  document.getElementById('status').innerText = "❌ 未辨識到聲音，請重試";
+                  isGrading = false;
+                  document.getElementById('next-btn').disabled = false;
+              }
+              recognizer.close();
+          },
+          (err) => {
+              rb.classList.remove('active');
+              document.getElementById('status').innerText = "🚨 麥克風或連線錯誤";
+              isGrading = false;
+              document.getElementById('next-btn').disabled = false;
+              recognizer.close();
+          }
+      );
     };
   }
 
