@@ -1592,16 +1592,19 @@
       
       isGrading = true;
       rb.classList.add('active');
+      
+      // 🚀 1. 物理封印麥克風按鈕！防止任何點擊
+      rb.style.pointerEvents = "none"; 
+      
       document.getElementById('status').innerText = "啟動微軟聲學引擎...";
       
-      // 🔒 鎖死按鈕
+      // 🔒 鎖死下方的導航按鈕
       document.getElementById('prev-btn').disabled = true;
       document.getElementById('next-btn').disabled = true;
       document.getElementById('back-summary-btn').disabled = true;
 
       const targetWord = quizData[currentIndex].en;
       
-      // 🚀 建立 Azure 連線
       const speechConfig = SpeechSDK.SpeechConfig.fromAuthorizationToken(azureAuthToken, azureRegionCode);
       speechConfig.speechRecognitionLanguage = "en-US";
       speechConfig.setProperty(SpeechSDK.PropertyId.SpeechServiceConnection_InitialSilenceTimeoutMs, "5000");
@@ -1623,63 +1626,63 @@
           document.getElementById('status').innerText = "🟢 正在專心聽" + ".".repeat(dots);
       };
 
-      // 🚀 開始放手讓微軟聽
       recognizer.recognizeOnceAsync(
           (result) => {
-              rb.classList.remove('active');
+              rb.classList.remove('active'); // 停止呼吸燈
               
               if (result.reason === SpeechSDK.ResultReason.RecognizedSpeech) {
                   document.getElementById('status').innerText = "呼叫 AI 教練中...";
                   
+                  // 🚀 2. 視覺封印：讓按鈕變半透明，明確暗示「請勿打擾」
+                  rb.style.opacity = "0.5"; 
+                  
                   const pronResult = SpeechSDK.PronunciationAssessmentResult.fromResult(result);
                   const finalScore = Math.round(pronResult.pronunciationScore);
                   
-                  // 📦 打包微軟的法醫報告，準備傳給 GAS 的 Gemini
-                  let evidenceJSON = {
-                      score: finalScore,
-                      accuracy: pronResult.accuracyScore,
-                      fluency: pronResult.fluencyScore,
-                      completeness: pronResult.completenessScore,
-                      words: []
-                  };
-                  
+                  let evidenceJSON = { score: finalScore, accuracy: pronResult.accuracyScore, fluency: pronResult.fluencyScore, completeness: pronResult.completenessScore, words: [] };
                   pronResult.detailResult.Words.forEach(word => {
                       let wData = { word: word.Word, score: word.PronunciationAssessment.AccuracyScore, phonemes: [] };
-                      word.Phonemes.forEach(p => {
-                          wData.phonemes.push({ p: p.Phoneme, score: p.PronunciationAssessment.AccuracyScore });
-                      });
+                      word.Phonemes.forEach(p => { wData.phonemes.push({ p: p.Phoneme, score: p.PronunciationAssessment.AccuracyScore }); });
                       evidenceJSON.words.push(wData);
                   });
-
-                  // 🚀 【就是加在這裡！】把這份完整的法醫報告存進我們的前端資料夾
+                  
+                  // 把微軟的法醫報告存進前端資料夾
                   azureReports[currentIndex] = evidenceJSON;
 
-                  // 🚀 呼叫 GAS 讓 Gemini 寫評語 (只傳純文字，極速又便宜！)
                   fetch(`${GAS_URL}?action=evaluate_speech_azure&word=${encodeURIComponent(targetWord)}`, { 
-                      method: 'POST', 
-                      body: JSON.stringify(evidenceJSON) 
-                  })
-                  .then(res => res.json()).then(data => {
+                      method: 'POST', body: JSON.stringify(evidenceJSON) 
+                  }).then(res => res.json()).then(data => {
                       scores[currentIndex] = finalScore;
                       if(!window.feedbacks) window.feedbacks = [];
                       window.feedbacks[currentIndex] = data.feedback;
                       
                       document.getElementById('feedback').innerHTML = `得分：${finalScore}<br><small>${data.feedback}</small>`;
-                      document.getElementById('status').innerText = "評分完成！";
+                      document.getElementById('status').innerText = "點擊錄音，安靜自動打分";
+                      
+                      // 🔓 3. 結算完成，全面解除封印！
                       isGrading = false;
+                      rb.style.pointerEvents = "auto";
+                      rb.style.opacity = "1";
                       
                       document.getElementById('prev-btn').disabled = currentIndex === 0;
                       document.getElementById('next-btn').disabled = false;
                       document.getElementById('back-summary-btn').disabled = false;
                   }).catch(() => {
                       document.getElementById('status').innerText = "⚠️ AI 寫評語失敗";
+                      
+                      // 🔓 發生錯誤也要解鎖，不然會卡死
                       isGrading = false;
+                      rb.style.pointerEvents = "auto";
+                      rb.style.opacity = "1";
                       document.getElementById('next-btn').disabled = false;
                   });
 
               } else {
                   document.getElementById('status').innerText = "❌ 未辨識到聲音，請重試";
+                  // 🔓 沒聽到聲音，直接解鎖
                   isGrading = false;
+                  rb.style.pointerEvents = "auto";
+                  rb.style.opacity = "1";
                   document.getElementById('next-btn').disabled = false;
               }
               recognizer.close();
@@ -1687,7 +1690,10 @@
           (err) => {
               rb.classList.remove('active');
               document.getElementById('status').innerText = "🚨 麥克風或連線錯誤";
+              // 🔓 發生錯誤，直接解鎖
               isGrading = false;
+              rb.style.pointerEvents = "auto";
+              rb.style.opacity = "1";
               document.getElementById('next-btn').disabled = false;
               recognizer.close();
           }
