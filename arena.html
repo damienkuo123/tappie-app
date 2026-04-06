@@ -1981,8 +1981,10 @@
       const recognizer = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig);
       pronConfig.applyTo(recognizer);
 
+      let bDots = 0;
       recognizer.recognizing = (s, e) => {
-          document.getElementById('battle-info').innerText = `🟢 聽到: ${e.result.text}`;
+          bDots = (bDots + 1) % 4;
+          document.getElementById('battle-info').innerText = "🟢 正在解析聲波" + ".".repeat(bDots);
       };
 
       recognizer.recognizeOnceAsync(
