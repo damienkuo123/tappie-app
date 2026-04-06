@@ -3,35 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Azure 發音檢定測試室</title>
+    <title>Azure 發音檢定 (VAD 解除封印版)</title>
     <script src="https://aka.ms/csspeech/jsbrowserpackageraw"></script>
     <style>
-        body { font-family: sans-serif; text-align: center; padding: 50px; background: #1e293b; color: white; }
-        input { padding: 10px; margin: 5px; width: 250px; border-radius: 8px; border: none; }
-        button { padding: 15px 30px; font-size: 20px; font-weight: bold; background: #2ecc71; color: white; border: none; border-radius: 10px; cursor: pointer; margin-top: 20px; }
-        button:disabled { background: #95a5a6; cursor: not-allowed; }
-        #result-box { margin-top: 30px; padding: 20px; background: #0f172a; border-radius: 10px; text-align: left; white-space: pre-wrap; font-family: monospace; color: #a4b0be; }
+        body { font-family: sans-serif; text-align: center; padding: 30px; background: #1e293b; color: white; }
+        input { padding: 12px; margin: 5px; width: 80%; max-width: 300px; border-radius: 8px; border: none; text-align: center;}
+        button { padding: 15px 30px; font-size: 18px; font-weight: bold; background: #2ecc71; color: white; border: none; border-radius: 10px; cursor: pointer; margin-top: 20px; box-shadow: 0 4px 10px rgba(46,204,113,0.3);}
+        button:disabled { background: #95a5a6; cursor: not-allowed; box-shadow: none; }
+        #status { margin-top: 20px; font-size: 16px; color: #f1c40f; font-weight: bold; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 8px;}
+        #result-box { margin-top: 20px; padding: 20px; background: #0f172a; border-radius: 10px; text-align: left; white-space: pre-wrap; font-family: monospace; color: #a4b0be; line-height: 1.5; height: 300px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.1);}
+        .high-score { color: #2ecc71; font-weight: bold; }
+        .low-score { color: #e74c3c; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <h2>🧪 Azure 發音檢定測試室</h2>
+    <h2 style="margin-bottom: 5px;">🧪 Azure 發音檢定測試室</h2>
+    <p style="color:#94a3b8; font-size: 13px; margin-bottom: 20px;">VAD 延遲解除版</p>
     
     <div>
-        <input type="text" id="azure-key" placeholder="7GrGGySZJ7wxugw35x4xgYx5IzIP9pd6eZL2Pqy5GOo8FhEoJhyTJQQJ99CCAC3pKaRXJ3w3AAAYACOGiIOL">
-        <input type="text" id="azure-region" placeholder="eastasia">
+        <input type="text" id="azure-key" placeholder="貼上 Azure Key 1">
+        <input type="text" id="azure-region" placeholder="輸入 Region (例如 eastasia)">
     </div>
     
-    <div>
-        <h1 style="color: #ffd700;">目標單字：APPLE</h1>
+    <div style="margin-top: 20px; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px;">
+        <p style="margin:0 0 10px 0; color:#cbd5e1;">請跟著唸目標單字：</p>
+        <h1 style="color: #ffd700; margin: 0; font-size: 40px; letter-spacing: 2px;">Apple</h1>
     </div>
 
-    <button id="record-btn" onclick="startAssessment()">🎤 按下開始唸 Apple</button>
-    <div id="status" style="margin-top: 15px; color: #f1c40f; font-weight: bold;"></div>
-
+    <button id="record-btn" onclick="startAssessment()">🎤 點擊後，等 1 秒再開口</button>
+    
+    <div id="status">準備就緒</div>
     <div id="result-box">等待測試結果...</div>
 
     <script>
+        let recognizer;
+
         function startAssessment() {
             const key = document.getElementById('azure-key').value.trim();
             const region = document.getElementById('azure-region').value.trim();
@@ -45,69 +52,81 @@
             }
 
             btn.disabled = true;
-            statusText.innerText = "⏳ 正在初始化微軟語音引擎...";
+            statusText.innerText = "⏳ 正在連接微軟超級電腦...";
+            resultBox.innerText = "";
 
             try {
-                // 1. 設定 Azure 語音引擎
-const speechConfig = SpeechSDK.SpeechConfig.fromSubscription(key, region);
-speechConfig.speechRecognitionLanguage = "en-US"; // 🚀 補上這行：強制設定為美式英文
-const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
+                const speechConfig = SpeechSDK.SpeechConfig.fromSubscription(key, region);
+                // 🚀 封印解除 1：強制指定語言，避免引擎混亂
+                speechConfig.speechRecognitionLanguage = "en-US"; 
                 
-                // 2. 設定發音檢定參數 (目標字設為 Apple)
-                const referenceText = "Good morning";
+                // 🚀 封印解除 2：逼微軟等你！把初始靜音等待時間拉長到 10 秒
+                speechConfig.setProperty(SpeechSDK.PropertyId.SpeechServiceConnection_InitialSilenceTimeoutMs, "10000");
+                // 🚀 封印解除 3：唸完後，多等 2 秒才切斷，避免尾音被吃掉
+                speechConfig.setProperty(SpeechSDK.PropertyId.SpeechServiceConnection_EndSilenceTimeoutMs, "2000");
+
+                const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
+                
+                const referenceText = "Apple";
                 const pronunciationAssessmentConfig = new SpeechSDK.PronunciationAssessmentConfig(
                     referenceText,
                     SpeechSDK.PronunciationAssessmentGradingSystem.HundredMark,
-                    SpeechSDK.PronunciationAssessmentGranularity.Phoneme, // 拆解到最細的音素級別
+                    SpeechSDK.PronunciationAssessmentGranularity.Phoneme,
                     true
                 );
 
-                const recognizer = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig);
+                recognizer = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig);
                 pronunciationAssessmentConfig.applyTo(recognizer);
 
-                statusText.innerText = "🔴 錄音中，請對著麥克風唸出 Apple！(安靜後會自動停止)";
+                // 🚀 雷達開啟：即時監控它到底有沒有聽到聲音
+                recognizer.recognizing = function (s, e) {
+                    statusText.innerText = `🟢 正在聽... [ ${e.result.text} ]`;
+                };
 
-                // 3. 開始辨識
+                recognizer.speechStartDetected = function () {
+                    statusText.innerText = "🔴 偵測到聲音！請繼續唸完...";
+                };
+
+                statusText.innerText = "🔴 錄音中，請大聲唸出 Apple！";
+
                 recognizer.recognizeOnceAsync(
                     function (result) {
                         btn.disabled = false;
                         
                         if (result.reason === SpeechSDK.ResultReason.RecognizedSpeech) {
-                            statusText.innerText = "✅ 辨識成功！正在解析分數...";
+                            statusText.innerText = "✅ 批改完成！";
                             
-                            // 抓取發音檢定結果
                             const pronunciationResult = SpeechSDK.PronunciationAssessmentResult.fromResult(result);
                             
-                            // 整理要顯示的報告
-                            let report = `【微軟判讀結果】\n`;
-                            report += `系統聽到的字: ${result.text}\n`;
-                            report += `準確度得分 (Accuracy): ${pronunciationResult.accuracyScore}\n`;
-                            report += `流暢度得分 (Fluency): ${pronunciationResult.fluencyScore}\n`;
-                            report += `完整度得分 (Completeness): ${pronunciationResult.completenessScore}\n`;
-                            report += `發音總分 (Pronunciation): ${pronunciationResult.pronunciationScore}\n\n`;
+                            let report = `🎯 系統實際聽到: "${result.text}"\n`;
+                            report += `========================\n`;
+                            report += `🏆 總體發音分數 (Pronunciation): <span class="high-score">${pronunciationResult.pronunciationScore}</span>\n`;
+                            report += `🔹 準確度 (Accuracy): ${pronunciationResult.accuracyScore}\n`;
+                            report += `🔹 流暢度 (Fluency): ${pronunciationResult.fluencyScore}\n`;
+                            report += `🔹 完整度 (Completeness): ${pronunciationResult.completenessScore}\n`;
+                            report += `========================\n`;
+                            report += `🔍 【法醫級音素拆解報告】\n`;
                             
-                            report += `【音素級別法醫報告】\n`;
                             const words = pronunciationResult.detailResult.Words;
                             words.forEach(word => {
+                                report += `\n單字: [ ${word.Word} ] (得分: ${word.PronunciationScore})\n`;
                                 word.Phonemes.forEach(phoneme => {
-                                    report += `音素 /${phoneme.Phoneme}/ -> 得分: ${phoneme.AccuracyScore}\n`;
+                                    let scoreClass = phoneme.AccuracyScore >= 80 ? "high-score" : "low-score";
+                                    report += `  ↳ 音素 /${phoneme.Phoneme}/ ➔ 準確度: <span class="${scoreClass}">${phoneme.AccuracyScore}</span> 分\n`;
                                 });
                             });
 
-                            resultBox.innerText = report;
-                            resultBox.style.color = "#2ecc71";
+                            resultBox.innerHTML = report;
                         } else {
-                            statusText.innerText = "❌ 辨識失敗或沒聽到聲音";
-                            resultBox.innerText = `原因: ${result.reason}\n錯誤細節: 可能是網路阻擋或是沒收到音`;
-                            resultBox.style.color = "#e74c3c";
+                            statusText.innerText = "❌ 辨識失敗";
+                            resultBox.innerText = `微軟引擎回傳: ${result.reason}\n(提示：如果一直看到這行，可能是您的瀏覽器雖然給了麥克風權限，但電腦系統底層把麥克風音量關掉了，請檢查電腦設定！)`;
                         }
                         recognizer.close();
                     },
                     function (err) {
                         btn.disabled = false;
-                        statusText.innerText = "🚨 發生毀滅性錯誤";
+                        statusText.innerText = "🚨 發生錯誤";
                         resultBox.innerText = err;
-                        resultBox.style.color = "#e74c3c";
                         recognizer.close();
                     }
                 );
