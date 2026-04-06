@@ -1279,6 +1279,9 @@
         }
       }).catch(err => console.error("Token 取得失敗", err));
   }
+  
+  // 🚀 【補上這行】網頁一載入，立刻啟動函數去後端拿 Token！
+  fetchAzureToken();
 
   // 🚀 隱藏載入畫面的共用函數
   function hideLoadingScreen() {
@@ -1979,7 +1982,7 @@
       document.getElementById('battle-info').innerText = "啟動微軟聲學引擎...";
       
       const targetWord = battleQuizArr[currentBattleRound].en;
-      const speechConfig = SpeechSDK.SpeechConfig.fromSubscription(AZURE_KEY, AZURE_REGION);
+      const speechConfig = SpeechSDK.SpeechConfig.fromAuthorizationToken(azureAuthToken, azureRegionCode);
       speechConfig.speechRecognitionLanguage = "en-US";
       speechConfig.setProperty(SpeechSDK.PropertyId.SpeechServiceConnection_InitialSilenceTimeoutMs, "5000");
       speechConfig.setProperty(SpeechSDK.PropertyId.SpeechServiceConnection_EndSilenceTimeoutMs, "1500");
