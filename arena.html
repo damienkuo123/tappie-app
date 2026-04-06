@@ -1240,8 +1240,8 @@
   const GAS_URL = "https://script.google.com/macros/s/AKfycbyWm-WnRO5h3dliEPR36Cq1hCf5DgM4GIgJqXVUREclhtYOHjxq9DptApmQPkU5p5Ys/exec";
   const params = new URLSearchParams(window.location.search);
   const STUDENT_ID = params.get('id') || "S001";
-  const AZURE_KEY = "7GrGGySZJ7wxugw35x4xgYx5IzIP9pd6eZL2Pqy5GOo8FhEoJhyTJQQJ99CCAC3pKaRXJ3w3AAAYACOGiIOL";
-  const AZURE_REGION = "eastasia";
+  let azureAuthToken = "";
+  let azureRegionCode = "";
   const TARGET_UNIT = params.get('unit') || "";
   
   // 🚀 判斷是否為突發事件 (直接用上面宣告好的 params 來抓就好，效能更好)
