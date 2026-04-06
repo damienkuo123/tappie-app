@@ -1600,8 +1600,10 @@
       const recognizer = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig);
       pronConfig.applyTo(recognizer);
 
+      let dots = 0;
       recognizer.recognizing = (s, e) => {
-          document.getElementById('status').innerText = `🟢 聽到: ${e.result.text}`;
+          dots = (dots + 1) % 4;
+          document.getElementById('status').innerText = "🟢 正在專心聽" + ".".repeat(dots);
       };
 
       // 🚀 開始放手讓微軟聽
