@@ -1978,7 +1978,14 @@
                     if (data.success) {
                         closeModal('studentEditorModal');
                         fetchStudentList(); 
-                    } else { alert(data.error || "儲存失敗！"); }
+                    } else { 
+                        // 🚀 攔截人數上限，跳出商業版提示
+                        if (data.error === "LIMIT_REACHED") {
+                            alert("⚠️ 已達到校區學生人數上限！\n\n您目前的系統授權已滿，若需擴充學生名額，請聯繫系統供應商進行方案升級。");
+                        } else {
+                            alert(data.error || "儲存失敗！"); 
+                        }
+                    }
                 })
                 .finally(() => { btn.innerText = "💾 儲存"; btn.style.pointerEvents = "auto"; });
         }
