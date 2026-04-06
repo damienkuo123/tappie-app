@@ -1568,30 +1568,27 @@
 
   const rb = document.getElementById('record-btn');
   if(rb) {
-    let azureRecognizer = null;
-
-    // 🔴 1. 按住：啟動微軟引擎
-    rb.onpointerdown = (e) => {
+    rb.onclick = (e) => {
       if(isGrading) return;
       e.preventDefault(); 
       document.getElementById('feedback').innerHTML = ""; 
       
       isGrading = true;
       rb.classList.add('active');
-      document.getElementById('status').innerText = "🔴 錄音中...";
+      document.getElementById('status').innerText = "啟動微軟聲學引擎...";
       
-      // 🔒 鎖死上下題按鈕
+      // 🔒 鎖死按鈕
       document.getElementById('prev-btn').disabled = true;
       document.getElementById('next-btn').disabled = true;
       document.getElementById('back-summary-btn').disabled = true;
 
       const targetWord = quizData[currentIndex].en;
       
+      // 🚀 建立 Azure 連線
       const speechConfig = SpeechSDK.SpeechConfig.fromSubscription(AZURE_KEY, AZURE_REGION);
       speechConfig.speechRecognitionLanguage = "en-US";
       speechConfig.setProperty(SpeechSDK.PropertyId.SpeechServiceConnection_InitialSilenceTimeoutMs, "5000");
-      // 🚀 極速切斷魔法：只要安靜 0.5 秒，微軟就會立刻結算！
-      speechConfig.setProperty(SpeechSDK.PropertyId.SpeechServiceConnection_EndSilenceTimeoutMs, "500");
+      speechConfig.setProperty(SpeechSDK.PropertyId.SpeechServiceConnection_EndSilenceTimeoutMs, "1500");
 
       const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
       const pronConfig = new SpeechSDK.PronunciationAssessmentConfig(
@@ -1600,32 +1597,55 @@
           SpeechSDK.PronunciationAssessmentGranularity.Phoneme, true
       );
 
-      azureRecognizer = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig);
-      pronConfig.applyTo(azureRecognizer);
+      const recognizer = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig);
+      pronConfig.applyTo(recognizer);
 
-      azureRecognizer.recognizeOnceAsync(
+      recognizer.recognizing = (s, e) => {
+          document.getElementById('status').innerText = `🟢 聽到: ${e.result.text}`;
+      };
+
+      // 🚀 開始放手讓微軟聽
+      recognizer.recognizeOnceAsync(
           (result) => {
+              rb.classList.remove('active');
+              
               if (result.reason === SpeechSDK.ResultReason.RecognizedSpeech) {
                   document.getElementById('status').innerText = "✅ 聽寫完畢，呼叫 AI 教練中...";
+                  
                   const pronResult = SpeechSDK.PronunciationAssessmentResult.fromResult(result);
                   const finalScore = Math.round(pronResult.pronunciationScore);
                   
-                  let evidenceJSON = { score: finalScore, accuracy: pronResult.accuracyScore, fluency: pronResult.fluencyScore, completeness: pronResult.completenessScore, words: [] };
+                  // 📦 打包微軟的法醫報告，準備傳給 GAS 的 Gemini
+                  let evidenceJSON = {
+                      score: finalScore,
+                      accuracy: pronResult.accuracyScore,
+                      fluency: pronResult.fluencyScore,
+                      completeness: pronResult.completenessScore,
+                      words: []
+                  };
+                  
                   pronResult.detailResult.Words.forEach(word => {
                       let wData = { word: word.Word, score: word.PronunciationAssessment.AccuracyScore, phonemes: [] };
-                      word.Phonemes.forEach(p => { wData.phonemes.push({ p: p.Phoneme, score: p.PronunciationAssessment.AccuracyScore }); });
+                      word.Phonemes.forEach(p => {
+                          wData.phonemes.push({ p: p.Phoneme, score: p.PronunciationAssessment.AccuracyScore });
+                      });
                       evidenceJSON.words.push(wData);
                   });
 
+                  // 🚀 呼叫 GAS 讓 Gemini 寫評語 (只傳純文字，極速又便宜！)
                   fetch(`${GAS_URL}?action=evaluate_speech_azure&word=${encodeURIComponent(targetWord)}`, { 
-                      method: 'POST', body: JSON.stringify(evidenceJSON) 
-                  }).then(res => res.json()).then(data => {
+                      method: 'POST', 
+                      body: JSON.stringify(evidenceJSON) 
+                  })
+                  .then(res => res.json()).then(data => {
                       scores[currentIndex] = finalScore;
                       if(!window.feedbacks) window.feedbacks = [];
                       window.feedbacks[currentIndex] = data.feedback;
+                      
                       document.getElementById('feedback').innerHTML = `得分：${finalScore}<br><small>${data.feedback}</small>`;
-                      document.getElementById('status').innerText = "按住錄音，放開打分";
+                      document.getElementById('status').innerText = "評分完成！";
                       isGrading = false;
+                      
                       document.getElementById('prev-btn').disabled = currentIndex === 0;
                       document.getElementById('next-btn').disabled = false;
                       document.getElementById('back-summary-btn').disabled = false;
@@ -1634,30 +1654,23 @@
                       isGrading = false;
                       document.getElementById('next-btn').disabled = false;
                   });
+
               } else {
                   document.getElementById('status').innerText = "❌ 未辨識到聲音，請重試";
                   isGrading = false;
                   document.getElementById('next-btn').disabled = false;
               }
-              azureRecognizer.close();
+              recognizer.close();
           },
           (err) => {
+              rb.classList.remove('active');
               document.getElementById('status').innerText = "🚨 麥克風或連線錯誤";
               isGrading = false;
               document.getElementById('next-btn').disabled = false;
-              azureRecognizer.close();
+              recognizer.close();
           }
       );
     };
-
-    // 🟢 2. 放開：切換 UI，讓微軟自然結算
-    rb.onpointerup = () => {
-      if (!isGrading) return;
-      rb.classList.remove('active');
-      document.getElementById('status').innerText = "評分中...";
-    };
-    rb.onpointerleave = rb.onpointerup;
-    rb.onpointercancel = rb.onpointerup;
   }
 
 
@@ -1932,12 +1945,11 @@
 
   const battleBtn = document.getElementById('battle-record-btn');
   if(battleBtn) {
-    let battleRecognizer = null;
-
-    // 🔴 1. 按住：啟動微軟引擎與特效
-    battleBtn.onpointerdown = (e) => {
+    // 🚀 改為點擊觸發，不必長按
+    battleBtn.onclick = (e) => {
       if (roundSubmitted) return;
       e.preventDefault();
+      roundSubmitted = true; // 鎖死按鈕，防止重複點擊
       clearInterval(currentLimitTimer);
       
       const myCard = document.getElementById('my-card');
@@ -1949,14 +1961,13 @@
           if(myCard) myCard.classList.add('charging-mana');
       }
 
-      document.getElementById('battle-info').innerText = "🔴 錄音中...";
+      document.getElementById('battle-info').innerText = "啟動微軟聲學引擎...";
       
       const targetWord = battleQuizArr[currentBattleRound].en;
       const speechConfig = SpeechSDK.SpeechConfig.fromSubscription(AZURE_KEY, AZURE_REGION);
       speechConfig.speechRecognitionLanguage = "en-US";
       speechConfig.setProperty(SpeechSDK.PropertyId.SpeechServiceConnection_InitialSilenceTimeoutMs, "5000");
-      // 🚀 對戰模式更講求極速，安靜 0.4 秒就切斷結算
-      speechConfig.setProperty(SpeechSDK.PropertyId.SpeechServiceConnection_EndSilenceTimeoutMs, "400");
+      speechConfig.setProperty(SpeechSDK.PropertyId.SpeechServiceConnection_EndSilenceTimeoutMs, "1500");
 
       const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
       const pronConfig = new SpeechSDK.PronunciationAssessmentConfig(
@@ -1965,47 +1976,39 @@
           SpeechSDK.PronunciationAssessmentGranularity.Phoneme, true
       );
 
-      battleRecognizer = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig);
-      pronConfig.applyTo(battleRecognizer);
+      const recognizer = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig);
+      pronConfig.applyTo(recognizer);
 
-      battleRecognizer.recognizeOnceAsync(
+      recognizer.recognizing = (s, e) => {
+          document.getElementById('battle-info').innerText = `🟢 聽到: ${e.result.text}`;
+      };
+
+      recognizer.recognizeOnceAsync(
           (result) => {
               if (result.reason === SpeechSDK.ResultReason.RecognizedSpeech) {
                   const pronResult = SpeechSDK.PronunciationAssessmentResult.fromResult(result);
                   let score = Math.round(pronResult.pronunciationScore);
+                  
+                  // 防撞分機制
                   if (score % 5 === 0 && score !== 0 && score !== 100) score += (Math.random() > 0.5 ? 1 : -1); 
+                  
                   document.getElementById('battle-info').innerText = "✅ 判定完成！";
+                  
+                  // 🚀 戰場極速特權：跳過 Gemini，直接發送分數給伺服器！
                   submitBattleScore(ROOM_ID, score);
               } else {
                   document.getElementById('battle-info').innerText = "❌ 挑戰失敗 (未收音)";
                   submitBattleScore(ROOM_ID, 0);
               }
-              battleRecognizer.close();
+              recognizer.close();
           },
           (err) => {
               document.getElementById('battle-info').innerText = "🚨 引擎連線錯誤";
               submitBattleScore(ROOM_ID, 0);
-              battleRecognizer.close();
+              recognizer.close();
           }
       );
     };
-
-    // 🟢 2. 放開：切換 UI 準備發射
-    battleBtn.onpointerup = () => {
-      if (roundSubmitted || !battleBtn.classList.contains('active') && !battleBtn.classList.contains('ult-active')) return;
-      
-      roundSubmitted = true; // 鎖死，防止連點
-      battleBtn.classList.remove('active', 'ult-active');
-      
-      const myCard = document.getElementById('my-card');
-      if (myCard) myCard.classList.remove('charging-mana', 'ultimate-charging');
-      
-      document.getElementById('battle-controls').style.visibility = 'hidden';
-      document.getElementById('battle-timer').innerText = "評分中...";
-      document.getElementById('battle-info').innerText = "微軟引擎解析中...";
-    };
-    battleBtn.onpointerleave = battleBtn.onpointerup;
-    battleBtn.onpointercancel = battleBtn.onpointerup;
   }
   
 
