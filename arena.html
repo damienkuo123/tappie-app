@@ -1631,46 +1631,50 @@
     document.getElementById('idx-display').innerText = currentIndex + 1;
     document.getElementById('word-display').innerText = current.en;
     document.getElementById('zh-display').innerText = current.zh;
-    document.getElementById('feedback').innerHTML = scores[currentIndex] !== null ? `得分：${scores[currentIndex]}<br><small>${window.feedbacks && window.feedbacks[currentIndex] ? window.feedbacks[currentIndex] : ''}</small>` : "";
     
-    // 🚀 霸道重置 1：強制顯示並解鎖麥克風按鈕
+    // 更新分數與 AI 評語
+    const currentScore = scores[currentIndex];
+    const currentFeedback = (window.feedbacks && window.feedbacks[currentIndex]) ? window.feedbacks[currentIndex] : "";
+    document.getElementById('feedback').innerHTML = currentScore !== null ? `得分：${currentScore}<br><small>${currentFeedback}</small>` : "";
+
+    // 🚀 全面解鎖 1：麥克風按鈕恢復
     const rb = document.getElementById('record-btn');
     if (rb) {
         rb.style.display = 'block';
-        rb.style.pointerEvents = 'auto';
-        rb.style.opacity = '1';
-        rb.classList.remove('active');
+        rb.style.pointerEvents = "auto"; 
+        rb.style.opacity = "1";
+        rb.classList.remove('active'); // 確保紅光熄滅
     }
-    
-    // 🚀 霸道重置 2：強制解開全域狀態鎖
-    isGrading = false;
-    isRecording = false;
-    
-    document.getElementById('status').innerText = "按住錄音，放開打分";
-    document.getElementById('status').style.color = "#636e72"; 
 
-    document.getElementById('progress-fill').style.width = (((currentIndex + 1) / quizData.length) * 100) + "%";
-    
-    // 🚀 霸道重置 3：精準控制導航按鈕的顯示與解鎖
+    // 🚀 全面解鎖 2：導航按鈕恢復
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const playBtn = document.getElementById('play-btn');
+    const backBtn = document.getElementById('back-summary-btn');
+
+    if (playBtn) playBtn.disabled = false; // 恢復播放按鈕點擊
+
     if (isReReading) {
-      document.getElementById('prev-btn').style.display = 'none';
-      document.getElementById('next-btn').style.display = 'none';
-      
-      const backBtn = document.getElementById('back-summary-btn');
+      prevBtn.style.display = 'none';
+      nextBtn.style.display = 'none';
       backBtn.style.display = 'inline-block';
       backBtn.disabled = false;
     } else {
-      document.getElementById('back-summary-btn').style.display = 'none';
-      
-      const prevBtn = document.getElementById('prev-btn');
+      backBtn.style.display = 'none';
       prevBtn.style.display = 'inline-block';
       prevBtn.disabled = (currentIndex === 0);
-      
-      const nextBtn = document.getElementById('next-btn');
       nextBtn.style.display = 'inline-block';
       nextBtn.disabled = false;
       nextBtn.innerText = currentIndex === quizData.length - 1 ? "查看結算" : "下一題 ▶";
     }
+
+    // 🚀 全面解鎖 3：重置全域狀態鎖
+    isGrading = false;
+    isRecording = false;
+
+    document.getElementById('status').innerText = "按住錄音，放開打分";
+    document.getElementById('status').style.color = "#636e72"; 
+    document.getElementById('progress-fill').style.width = (((currentIndex + 1) / quizData.length) * 100) + "%";
   }
 
   let isGrading = false; 
