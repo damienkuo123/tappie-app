@@ -2153,7 +2153,11 @@
         e.preventDefault();
         isBattleRecording = false;
         
-        battleBtn.classList.remove('active', 'ult-active'); // 🚀 瞬間解除動畫
+        battleBtn.classList.remove('active', 'ult-active'); 
+        
+        // 🚀 關鍵修復：放開按鈕，卡片充能也立刻停止
+        const myCard = document.getElementById('my-card');
+        if(myCard) myCard.classList.remove('charging-mana', 'ultimate-charging');
         
         if (!battleRecorder || battleRecorder.state !== "recording") return;
         
