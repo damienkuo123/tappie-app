@@ -2022,15 +2022,42 @@
           (result) => {
               if (result.reason === SpeechSDK.ResultReason.RecognizedSpeech) {
                   const pronResult = SpeechSDK.PronunciationAssessmentResult.fromResult(result);
-                  let score = Math.round(pronResult.pronunciationScore);
                   
-                  // 防撞分機制
-                  if (score % 5 === 0 && score !== 0 && score !== 100) score += (Math.random() > 0.5 ? 1 : -1); 
+                  // ----------------------------------------------------
+                  // ⚖️ 瑪麗安專屬嚴格算分公式 (前端對戰極速版)
+                  // ----------------------------------------------------
+                  // 1. 基礎計分：準確度 40% + 完整度 40% + 流暢度 20%
+                  let baseScore = (pronResult.accuracyScore * 0.4) + (pronResult.completenessScore * 0.4) + (pronResult.fluencyScore * 0.2);
+                  
+                  let missingCount = 0;
+                  let brokenCount = 0;
+
+                  // 2. 🕵️ 進行前端光速驗屍，掃描每個單字
+                  pronResult.detailResult.Words.forEach(w => {
+                      let wScore = w.PronunciationAssessment.AccuracyScore;
+                      let errType = w.PronunciationAssessment.ErrorType;
+                      
+                      // 微軟底層標記漏字為 Omission，或準確度給 0
+                      if (errType === "Omission" || wScore === 0) {
+                          missingCount++;
+                      } else if (wScore > 0 && wScore <= 45) {
+                          brokenCount++; // 抓出糊在一起的字
+                      }
+                  });
+
+                  // 3. 🩸 執行嚴格扣分：每漏一個字扣 15 分，每糊一個字扣 10 分
+                  let penalty = (missingCount * 15) + (brokenCount * 10);
+                  let strictScore = Math.max(0, Math.min(100, Math.round(baseScore - penalty)));
+                  
+                  // 4. 🎲 瑪麗安專屬防撞分機制 (避免雙方狂拿一樣的分數平手)
+                  if (strictScore % 5 === 0 && strictScore !== 0 && strictScore !== 100) {
+                      strictScore += (Math.random() > 0.5 ? 1 : -1); 
+                  }
                   
                   document.getElementById('battle-info').innerText = "✅ 判定完成！";
                   
-                  // 🚀 戰場極速特權：跳過 Gemini，直接發送分數給伺服器！
-                  submitBattleScore(ROOM_ID, score);
+                  // 🚀 傳送「嚴格處理過」的法醫級分數給資料庫！
+                  submitBattleScore(ROOM_ID, strictScore);
               } else {
                   document.getElementById('battle-info').innerText = "❌ 挑戰失敗 (未收音)";
                   submitBattleScore(ROOM_ID, 0);
