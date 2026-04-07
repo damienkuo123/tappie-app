@@ -1658,27 +1658,26 @@
     document.getElementById('word-display').innerText = current.en;
     document.getElementById('zh-display').innerText = current.zh;
     
-    // 更新分數與評語
     const currentScore = scores[currentIndex];
     const currentFeedback = (window.feedbacks && window.feedbacks[currentIndex]) ? window.feedbacks[currentIndex] : "";
     document.getElementById('feedback').innerHTML = currentScore !== null ? `得分：${currentScore}<br><small>${currentFeedback}</small>` : "";
 
-    // 🚀 全面解鎖 1：麥克風
+    // 🚀 【關鍵宣告區】—— 沒這幾行，後面都會死機
+    const playBtn = document.getElementById('play-btn'); // 👈 這行一定要回來！
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const backBtn = document.getElementById('back-summary-btn');
     const rb = document.getElementById('record-btn');
+
+    // 🚀 全面解鎖邏輯
+    if (playBtn) playBtn.disabled = false; // 現在它認識 playBtn 了，不會報錯
+
     if (rb) {
         rb.style.display = 'block';
         rb.style.pointerEvents = "auto"; 
         rb.style.opacity = "1";
         rb.classList.remove('active');
     }
-
-    // 🚀 全面解鎖 2：所有的操作按鈕 (強制移除 disabled)
-    const prevBtn = document.getElementById('prev-btn');
-    const nextBtn = document.getElementById('next-btn');
-    const playBtn = document.getElementById('play-btn');
-    const backBtn = document.getElementById('back-summary-btn');
-
-    if (playBtn) playBtn.disabled = false;
 
     if (isReReading) {
       prevBtn.style.display = 'none';
@@ -1688,19 +1687,18 @@
     } else {
       backBtn.style.display = 'none';
       prevBtn.style.display = 'inline-block';
-      prevBtn.disabled = (currentIndex === 0); // 只有第一題不能按上一頁
+      prevBtn.disabled = (currentIndex === 0);
       nextBtn.style.display = 'inline-block';
       nextBtn.disabled = false;
       nextBtn.innerText = currentIndex === quizData.length - 1 ? "查看結算" : "下一題 ▶";
     }
 
-    // 🚀 重置狀態鎖
     isGrading = false;
     isRecording = false;
     document.getElementById('status').innerText = "按住錄音，放開打分";
     document.getElementById('status').style.color = "#636e72"; 
   }
-
+  
   let isGrading = false; 
   let tooQuietFlag = false; 
 
