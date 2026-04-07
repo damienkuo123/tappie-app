@@ -2850,8 +2850,8 @@
   // 1. 先抽盲盒稀有度
   function getBoxRarity() {
     let r = Math.random() * 100;
-    if (r < 96) return 'N';
-    if (r < 98.5) return 'R';
+    if (r < 97) return 'N';
+    if (r < 99) return 'R';
     if (r < 99.5) return 'SR';
     return 'SSR';
   }
@@ -3132,7 +3132,7 @@
                       btn.style.pointerEvents = "auto";
                       if (result.reason === SpeechSDK.ResultReason.RecognizedSpeech) {
                           const pronResult = SpeechSDK.PronunciationAssessmentResult.fromResult(result);
-                          if ((pronResult.accuracyScore || 0) >= 50) {
+                          if ((pronResult.accuracyScore || 0) >= 70) {
                               status.innerText = "封印解除！";
                               status.style.color = "#26de81";
                               triggerReveal(index);
