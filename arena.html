@@ -7,6 +7,13 @@
   <script src="https://aka.ms/csspeech/jsbrowserpackageraw"></script>
   <style>
     :root {
+      /* 🎨 單字色彩回饋樣式 */
+    .word-excellent { color: #2ecc71; text-shadow: 0 0 8px rgba(46, 204, 113, 0.4); font-weight: 900; } /* 鮮綠 */
+    .word-average { color: #f39c12; text-shadow: 0 0 8px rgba(243, 156, 18, 0.4); font-weight: 800; } /* 橘黃 */
+    .word-bad { color: #e74c3c; text-shadow: 0 0 10px rgba(231, 76, 60, 0.6); font-weight: 900; animation: blink-red 1s infinite; } /* 紅色閃爍 */
+    .word-omission { color: #b2bec3; opacity: 0.3; text-decoration: line-through; filter: blur(0.5px); } /* 灰化漏唸 */
+
+    @keyframes blink-red { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
       /* 🚀 關鍵修復 1：把今日挑戰的專屬顏色加回來！沒有這些，按鈕會全部隱形破圖！ */
       --primary-blue: #0066cc; 
       --marian-yellow: #ff9900; 
