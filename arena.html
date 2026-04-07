@@ -1623,134 +1623,119 @@
   let tooQuietFlag = false; 
 
   const rb = document.getElementById('record-btn');
+  let practiceRecorder;
+  let practiceChunks = [];
+
   if(rb) {
-    rb.onclick = (e) => {
-      if(isGrading) return;
-      e.preventDefault(); 
-      document.getElementById('feedback').innerHTML = ""; 
-      
-      isGrading = true;
-      rb.classList.add('active');
-      
-      // 🚀 1. 物理封印麥克風按鈕！防止任何點擊
-      rb.style.pointerEvents = "none"; 
-      
-      document.getElementById('status').innerText = "啟動微軟聲學引擎...";
-      
-      // 🔒 鎖死下方的導航按鈕
-      document.getElementById('prev-btn').disabled = true;
-      document.getElementById('next-btn').disabled = true;
-      document.getElementById('back-summary-btn').disabled = true;
+    const startPracticeRecord = async (e) => {
+        if(isGrading) return;
+        e.preventDefault(); 
+        
+        // 🚀 開啟瀏覽器原生錄音
+        let tempStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        practiceRecorder = new MediaRecorder(tempStream);
+        practiceChunks = [];
+        practiceRecorder.ondataavailable = ev => practiceChunks.push(ev.data);
+        practiceRecorder.start();
 
-      const targetWord = quizData[currentIndex].en;
-      
-      const speechConfig = SpeechSDK.SpeechConfig.fromAuthorizationToken(azureAuthToken, azureRegionCode);
-      speechConfig.speechRecognitionLanguage = "en-US";
-      // 🚀 終極防護：設定超長初始等待 (15秒) 與超長分段容忍 (2秒)！
-      speechConfig.setProperty(SpeechSDK.PropertyId.SpeechServiceConnection_InitialSilenceTimeoutMs, "15000");
-      speechConfig.setProperty(SpeechSDK.PropertyId.Speech_SegmentationSilenceTimeoutMs, "2000");
-
-      const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
-      const pronConfig = new SpeechSDK.PronunciationAssessmentConfig(
-          targetWord,
-          SpeechSDK.PronunciationAssessmentGradingSystem.HundredMark,
-          SpeechSDK.PronunciationAssessmentGranularity.Phoneme, true
-      );
-
-      const recognizer = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig);
-      pronConfig.applyTo(recognizer);
-
-      // 🟢 這才是真正的綠燈
-      recognizer.sessionStarted = (s, e) => {
-          document.getElementById('status').innerText = "🟢 麥克風已開啟，請發音！";
-          document.getElementById('status').style.color = "#27ae60";
-      };
-
-      let dots = 0;
-      recognizer.recognizing = (s, e) => {
-          dots = (dots + 1) % 4;
-          document.getElementById('status').innerText = "🟢 接收聲波中" + ".".repeat(dots);
-      };
-
-      recognizer.recognizeOnceAsync(
-          (result) => {
-              rb.classList.remove('active'); 
-              
-              if (result.reason === SpeechSDK.ResultReason.RecognizedSpeech) {
-                  document.getElementById('status').innerText = "呼叫 AI 教練中...";
-                  rb.style.opacity = "0.5"; 
-                  
-                  let rawAzureData = SpeechSDK.PronunciationAssessmentResult.fromResult(result).detailResult;
-                  azureReports[currentIndex] = rawAzureData;
-
-                  fetch(`${GAS_URL}?action=evaluate_speech_azure&word=${encodeURIComponent(targetWord)}`, { 
-                      method: 'POST', body: JSON.stringify(rawAzureData) 
-                  }).then(res => res.json()).then(data => {
-                      scores[currentIndex] = data.score; 
-                      if(!window.feedbacks) window.feedbacks = [];
-                      window.feedbacks[currentIndex] = data.feedback;
-                      
-                      document.getElementById('feedback').innerHTML = `得分：${data.score}<br><small>${data.feedback}</small>`;
-                      document.getElementById('status').innerText = "點擊錄音，安靜自動打分";
-                      document.getElementById('status').style.color = "#636e72";
-                      
-                      isGrading = false;
-                      rb.style.pointerEvents = "auto";
-                      rb.style.opacity = "1";
-                      
-                      document.getElementById('prev-btn').disabled = currentIndex === 0;
-                      document.getElementById('next-btn').disabled = false;
-                      document.getElementById('back-summary-btn').disabled = false;
-                  }).catch(() => {
-                      document.getElementById('status').innerText = "⚠️ AI 寫評語失敗";
-                      isGrading = false;
-                      rb.style.pointerEvents = "auto";
-                      rb.style.opacity = "1";
-                      document.getElementById('next-btn').disabled = false;
-                  });
-
-              } 
-              // 🚀 終極診斷：告訴你到底是誰的問題！
-              else if (result.reason === SpeechSDK.ResultReason.NoMatch) {
-                  const noMatchDetail = SpeechSDK.NoMatchDetails.fromResult(result);
-                  let reasonStr = "發音太含糊或無關";
-                  if (noMatchDetail.reason === SpeechSDK.NoMatchReason.InitialSilenceTimeout) reasonStr = "太久沒聲音";
-                  else if (noMatchDetail.reason === SpeechSDK.NoMatchReason.EndSilenceTimeout) reasonStr = "收音被異常截斷";
-                  
-                  document.getElementById('status').innerText = `❌ 失敗：${reasonStr}`;
-                  document.getElementById('status').style.color = "#e74c3c";
-                  
-                  isGrading = false;
-                  rb.style.pointerEvents = "auto";
-                  rb.style.opacity = "1";
-                  document.getElementById('next-btn').disabled = false;
-              } else {
-                  document.getElementById('status').innerText = "❌ 引擎中斷，請重試";
-                  isGrading = false;
-                  rb.style.pointerEvents = "auto";
-                  rb.style.opacity = "1";
-                  document.getElementById('next-btn').disabled = false;
-              }
-              recognizer.close();
-          },
-          (err) => {
-              rb.classList.remove('active');
-              document.getElementById('status').innerText = "🚨 麥克風或連線錯誤";
-              isGrading = false;
-              rb.style.pointerEvents = "auto";
-              rb.style.opacity = "1";
-              document.getElementById('next-btn').disabled = false;
-              recognizer.close();
-          }
-      );
+        rb.classList.add('active');
+        document.getElementById('status').innerText = "🔴 錄音中... (放開按鈕送出)";
+        document.getElementById('status').style.color = "#eb3b5a";
+        document.getElementById('feedback').innerHTML = ""; 
+        document.getElementById('prev-btn').disabled = true;
+        document.getElementById('next-btn').disabled = true;
+        document.getElementById('back-summary-btn').disabled = true;
     };
+
+    const stopPracticeRecord = async (e) => {
+        if(isGrading || !practiceRecorder || practiceRecorder.state !== "recording") return;
+        e.preventDefault();
+        isGrading = true;
+        
+        rb.classList.remove('active');
+        rb.style.pointerEvents = "none"; 
+        rb.style.opacity = "0.5"; 
+        document.getElementById('status').innerText = "⚙️ 封裝音檔中...";
+        document.getElementById('status').style.color = "#f1c40f";
+
+        practiceRecorder.onstop = async () => {
+            practiceRecorder.stream.getTracks().forEach(t => t.stop()); // 立刻釋放麥克風！
+            const webmBlob = new Blob(practiceChunks, { type: 'audio/webm' });
+            
+            try {
+                // 🚀 將純淨的錄音瞬間轉為實體 WAV 檔！
+                const wavFile = await createWavFileFromBlob(webmBlob);
+                
+                document.getElementById('status').innerText = "🟢 傳送至微軟聲學引擎...";
+                document.getElementById('status').style.color = "#3498db";
+
+                const targetWord = quizData[currentIndex].en;
+                const speechConfig = SpeechSDK.SpeechConfig.fromAuthorizationToken(azureAuthToken, azureRegionCode);
+                speechConfig.speechRecognitionLanguage = "en-US";
+                
+                // 🚀 神奇之處：直接把實體 WAV 餵給 Azure！它不會再等安靜時間了！
+                const audioConfig = SpeechSDK.AudioConfig.fromWavFileInput(wavFile);
+                const pronConfig = new SpeechSDK.PronunciationAssessmentConfig(
+                    targetWord, SpeechSDK.PronunciationAssessmentGradingSystem.HundredMark,
+                    SpeechSDK.PronunciationAssessmentGranularity.Phoneme, true
+                );
+
+                const recognizer = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig);
+                pronConfig.applyTo(recognizer);
+
+                recognizer.recognizeOnceAsync(
+                    (result) => {
+                        if (result.reason === SpeechSDK.ResultReason.RecognizedSpeech) {
+                            document.getElementById('status').innerText = "呼叫 AI 教練中...";
+                            let rawAzureData = SpeechSDK.PronunciationAssessmentResult.fromResult(result).detailResult;
+                            azureReports[currentIndex] = rawAzureData;
+
+                            fetch(`${GAS_URL}?action=evaluate_speech_azure&word=${encodeURIComponent(targetWord)}`, { 
+                                method: 'POST', body: JSON.stringify(rawAzureData) 
+                            }).then(res => res.json()).then(data => {
+                                scores[currentIndex] = data.score; 
+                                if(!window.feedbacks) window.feedbacks = [];
+                                window.feedbacks[currentIndex] = data.feedback;
+                                
+                                document.getElementById('feedback').innerHTML = `得分：${data.score}<br><small>${data.feedback}</small>`;
+                                document.getElementById('status').innerText = "按住錄音，放開打分";
+                                document.getElementById('status').style.color = "#636e72";
+                                
+                                isGrading = false; rb.style.pointerEvents = "auto"; rb.style.opacity = "1";
+                                document.getElementById('prev-btn').disabled = currentIndex === 0;
+                                document.getElementById('next-btn').disabled = false;
+                                document.getElementById('back-summary-btn').disabled = false;
+                            });
+                        } else {
+                            document.getElementById('status').innerText = "❌ 發音含糊或無關，請重唸";
+                            document.getElementById('status').style.color = "#e74c3c";
+                            isGrading = false; rb.style.pointerEvents = "auto"; rb.style.opacity = "1";
+                            document.getElementById('next-btn').disabled = false;
+                        }
+                        recognizer.close();
+                    },
+                    (err) => {
+                        document.getElementById('status').innerText = "🚨 引擎連線錯誤";
+                        document.getElementById('status').style.color = "#e74c3c";
+                        isGrading = false; rb.style.pointerEvents = "auto"; rb.style.opacity = "1";
+                        document.getElementById('next-btn').disabled = false;
+                        recognizer.close();
+                    }
+                );
+            } catch(err) {
+                document.getElementById('status').innerText = "🚨 音檔處理失敗，請重試";
+                isGrading = false; rb.style.pointerEvents = "auto"; rb.style.opacity = "1";
+            }
+        };
+        practiceRecorder.stop();
+    };
+
+    // 🚀 綁定「按下」與「放開」事件
+    rb.onpointerdown = startPracticeRecord;
+    rb.onpointerup = stopPracticeRecord;
+    rb.onpointerout = stopPracticeRecord; // 滑鼠/手指滑到按鈕外也視同放開
+    rb.onpointercancel = stopPracticeRecord;
   }
-
-
-  document.getElementById('play-btn').onclick = () => { window.speechSynthesis.cancel(); const msg = new SpeechSynthesisUtterance(quizData[currentIndex].en); msg.lang = 'en-US'; window.speechSynthesis.speak(msg); };
-  document.getElementById('prev-btn').onclick = () => { if(currentIndex > 0){ currentIndex--; renderWord(); } };
-  document.getElementById('next-btn').onclick = () => { if (currentIndex < quizData.length - 1) { currentIndex++; renderWord(); } else { showSummary(); } };
-  document.getElementById('back-summary-btn').onclick = () => { isReReading = false; showSummary(); };
 
   function showSummary() {
     document.getElementById('studio').style.display = 'none';
