@@ -1366,23 +1366,44 @@
   }
   
 
-  // 🚀 瑪麗安專屬：色彩單字拼圖引擎
+  // 🚀 瑪麗安專屬：字母級 (Grapheme) 色彩診斷引擎
   function generateColoredHTML(azureData) {
       if (!azureData || !azureData.Words) return null;
       
-      return azureData.Words.map(w => {
-          const text = w.Word;
+      return azureData.Words.map((w, wordIdx) => {
           const assess = w.PronunciationAssessment || {};
-          const score = assess.AccuracyScore || 0;
-          const errorType = assess.ErrorType;
+          
+          // 處理漏唸 (Omission)
+          if (assess.ErrorType === "Omission") {
+              return `<span class="word-omission" style="margin: 0 2px;">${w.Word}</span>`;
+          }
 
-          let cls = "";
-          if (errorType === "Omission") cls = "word-omission";
-          else if (score >= 90) cls = "word-excellent";
-          else if (score >= 60) cls = "word-average";
-          else cls = "word-bad";
+          // 🚀 核心：如果微軟有給 Syllables (音節數據)，我們就進行「字母級」變色
+          if (w.Syllables && w.Syllables.length > 0) {
+              let wordHtml = w.Syllables.map(s => {
+                  const sScore = s.PronunciationAssessment.AccuracyScore || 0;
+                  const text = s.Grapheme || ""; // 👈 抓取這段聲音對應的實際字母塊
+                  
+                  let cls = "";
+                  if (sScore >= 90) cls = "word-excellent";
+                  else if (sScore >= 60) cls = "word-average";
+                  else cls = "word-bad";
 
-          return `<span class="${cls}" style="margin: 0 4px; display: inline-block;">${text}</span>`;
+                  return `<span class="${cls}">${text}</span>`;
+              }).join('');
+
+              // 🚀 自動修復標點符號：如果原本的題目有標點，補在後面
+              // (微軟的 Display 屬性通常包含符號，我們檢查該詞最後是否帶符號)
+              const originalWord = w.Word;
+              const displayWord = w.Display || w.Word;
+              const punctuation = displayWord.replace(/[a-zA-Z0-9]/g, ''); // 濾出符號
+              
+              return `<span style="margin: 0 4px; display: inline-block;">${wordHtml}${punctuation}</span>`;
+          } else {
+              // 備用方案：若無音節數據，才使用全單字變色
+              let cls = assess.AccuracyScore >= 90 ? "word-excellent" : (assess.AccuracyScore >= 60 ? "word-average" : "word-bad");
+              return `<span class="${cls}" style="margin: 0 4px; display: inline-block;">${w.Word}</span>`;
+          }
       }).join('');
   }
   
