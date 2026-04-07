@@ -496,8 +496,18 @@
 
     /* 🚀 控制台：疊加在我方卡片正上方！ */
     #battle-controls { 
-      position: absolute; bottom: 5vh; left: 50%; transform: translateX(-50%); 
-      display: flex; flex-direction: column; align-items: center; z-index: 60; gap: 15px; width: 100%;
+      position: absolute; 
+      /* 🚀 關鍵防禦：使用 max() 與 env() 確保不會被 iPhone 底部的橫線或 Safari 工具列吃掉 */
+      bottom: max(6vh, env(safe-area-inset-bottom) + 20px); 
+      left: 50%; transform: translateX(-50%); 
+      display: flex; flex-direction: column; align-items: center; 
+      z-index: 1000; /* 🚀 提高 z-index，確保絕對在最上層 */
+      gap: 15px; width: 100%;
+      pointer-events: none; /* 🚀 外層不擋點擊，交給子層按鈕自己決定 */
+    }
+    /* 確保裡面的按鈕可以被點擊 */
+    #battle-controls > button {
+      pointer-events: auto;
     }
     #skill-btn { background: linear-gradient(135deg, #f39c12, #e74c3c); color: white; border: 2px solid #f1c40f; border-radius: 20px; padding: 10px 30px; font-size: 18px; font-weight: 900; box-shadow: 0 5px 15px rgba(231, 76, 60, 0.5); cursor: pointer; transition: all 0.3s; animation: float-btn 2s infinite ease-in-out; white-space: nowrap; pointer-events: auto; }
     #skill-btn:active { transform: scale(0.9); }
