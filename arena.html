@@ -1407,21 +1407,37 @@
     hideLoadingScreen();
   };
 
-  // 🚀 補回遺失的「開始挑戰」按鈕點擊事件！(原汁原味恢復)
   document.getElementById('start-btn').onclick = () => {
     document.getElementById('info-text').innerText = "正在載入題目...";
     fetch(`${GAS_URL}?id=${STUDENT_ID}&action=get_data&unit=${encodeURIComponent(TARGET_UNIT)}`)
       .then(res => res.json()).then(data => {
         if (!data.words || data.words.length === 0) { alert("題目為空"); return; }
-        quizData = data.words; scores = new Array(quizData.length).fill(null);
+        quizData = data.words; 
+        scores = new Array(quizData.length).fill(null);
+        
         document.getElementById('total-display').innerText = quizData.length;
         document.getElementById('setup-zone').style.display = 'none';
         document.getElementById('progress-container').style.display = 'block';
         document.getElementById('studio').style.display = 'block';
+        
+        // 🚀 在這裡重新綁定所有按鈕，確保萬無一失
+        attachButtonListeners(); 
+        
         renderWord();
-      }).catch(err => { alert("連線失敗！"); });
+      });
   };
 
+  function attachButtonListeners() {
+    document.getElementById('play-btn').onclick = () => { 
+        window.speechSynthesis.cancel(); 
+        const msg = new SpeechSynthesisUtterance(quizData[currentIndex].en); 
+        msg.lang = 'en-US'; window.speechSynthesis.speak(msg); 
+    };
+    document.getElementById('prev-btn').onclick = () => { if(currentIndex > 0){ currentIndex--; renderWord(); } };
+    document.getElementById('next-btn').onclick = () => { if (currentIndex < quizData.length - 1) { currentIndex++; renderWord(); } else { showSummary(); } };
+    document.getElementById('back-summary-btn').onclick = () => { isReReading = false; showSummary(); };
+  }
+  
   window.onload = async () => {
     // 🚀 開發者測試外掛：直接進入高階 AI 抽獎畫面
     if (MODE === 'test_gacha') {
