@@ -1278,58 +1278,66 @@
   let myTotalWins = 0, opTotalWins = 0;
   let roundSubmitted = false, isChecking = false, opponentWaitTimer = null;
 
-  // 🚀 瑪麗安專屬：全域解碼器 (提早暖機，拒絕瀏覽器凍結)
+  // 🚀 瑪麗安專屬：全域解碼器與麥克風保溫
   let sysAudioCtx = null;
-  let globalMicStream = null; // 🚀 全域保溫麥克風
+  let globalMicStream = null;
 
-  // 🚀 WebM 轉 WAV 實體音檔工廠 (防死鎖極速版)
+  // 🚀 WebM/MP4 轉 WAV 實體音檔工廠 (防 Safari 死鎖終極版)
   async function createWavFileFromBlob(blob) {
       return new Promise((resolve, reject) => {
           const reader = new FileReader();
           reader.onerror = () => reject(new Error("音檔讀取失敗"));
-          reader.onloadend = async () => {
-              try {
-                  // 直接使用已暖機的全域解碼器，絕對不會卡死！
-                  const arrayBuffer = reader.result;
-                  const audioBuffer = await sysAudioCtx.decodeAudioData(arrayBuffer);
-                  
-                  const numOfChan = 1; 
-                  const sampleRate = 16000; // 強制轉為 Azure 最愛的 16kHz
-                  
-                  // 建立離線渲染器來處理重取樣
-                  const duration = Math.max(audioBuffer.duration, 0.1); // 防呆：避免錄音太短導致崩潰
-                  const offlineCtx = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(numOfChan, duration * sampleRate, sampleRate);
-                  const source = offlineCtx.createBufferSource();
-                  source.buffer = audioBuffer;
-                  source.connect(offlineCtx.destination);
-                  source.start();
-                  const resampledBuffer = await offlineCtx.startRendering();
+          reader.onloadend = () => {
+              if (!sysAudioCtx) sysAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+              const arrayBuffer = reader.result;
+              
+              // 🚀 核心修復：使用 Callback 包裝，完美相容 iOS Safari 和 Chrome！
+              const successCallback = async (audioBuffer) => {
+                  try {
+                      const numOfChan = 1; 
+                      const sampleRate = 16000; 
+                      const duration = Math.max(audioBuffer.duration, 0.1); 
+                      const offlineCtx = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(numOfChan, duration * sampleRate, sampleRate);
+                      const source = offlineCtx.createBufferSource();
+                      source.buffer = audioBuffer;
+                      source.connect(offlineCtx.destination);
+                      source.start();
+                      
+                      const resampledBuffer = await offlineCtx.startRendering();
 
-                  const length = resampledBuffer.length * 2 + 44; 
-                  const buffer = new ArrayBuffer(length);
-                  const view = new DataView(buffer);
-                  let pos = 0;
+                      const length = resampledBuffer.length * 2 + 44; 
+                      const buffer = new ArrayBuffer(length);
+                      const view = new DataView(buffer);
+                      let pos = 0;
 
-                  function setUint16(data) { view.setUint16(pos, data, true); pos += 2; }
-                  function setUint32(data) { view.setUint32(pos, data, true); pos += 4; }
+                      function setUint16(data) { view.setUint16(pos, data, true); pos += 2; }
+                      function setUint32(data) { view.setUint32(pos, data, true); pos += 4; }
 
-                  setUint32(0x46464952); setUint32(length - 8); setUint32(0x45564157); 
-                  setUint32(0x20746d66); setUint32(16); setUint16(1); setUint16(numOfChan);
-                  setUint32(sampleRate); setUint32(sampleRate * 2 * numOfChan);
-                  setUint16(numOfChan * 2); setUint16(16);
-                  setUint32(0x61746164); setUint32(length - pos - 4);
+                      setUint32(0x46464952); setUint32(length - 8); setUint32(0x45564157); 
+                      setUint32(0x20746d66); setUint32(16); setUint16(1); setUint16(numOfChan);
+                      setUint32(sampleRate); setUint32(sampleRate * 2 * numOfChan);
+                      setUint16(numOfChan * 2); setUint16(16);
+                      setUint32(0x61746164); setUint32(length - pos - 4);
 
-                  const channelData = resampledBuffer.getChannelData(0); 
-                  for (let i = 0; i < resampledBuffer.length; i++) {
-                      let sample = Math.max(-1, Math.min(1, channelData[i]));
-                      sample = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
-                      view.setInt16(pos, sample, true); pos += 2;
+                      const channelData = resampledBuffer.getChannelData(0); 
+                      for (let i = 0; i < resampledBuffer.length; i++) {
+                          let sample = Math.max(-1, Math.min(1, channelData[i]));
+                          sample = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
+                          view.setInt16(pos, sample, true); pos += 2;
+                      }
+                      
+                      resolve(new File([new Blob([buffer], { type: "audio/wav" })], "record.wav", { type: "audio/wav" }));
+                  } catch (err) {
+                      reject(err);
                   }
-                  
-                  resolve(new File([new Blob([buffer], { type: "audio/wav" })], "record.wav", { type: "audio/wav" }));
-              } catch (err) {
-                  console.error("WAV 轉檔失敗:", err);
-                  reject(err);
+              };
+
+              const errorCallback = (e) => reject(new Error("解碼失敗"));
+              
+              // 🚀 執行相容性解碼 (拔除 await，避免 Safari 死鎖)
+              const decodeResult = sysAudioCtx.decodeAudioData(arrayBuffer, successCallback, errorCallback);
+              if (decodeResult && typeof decodeResult.catch === 'function') {
+                  decodeResult.catch(errorCallback);
               }
           };
           reader.readAsArrayBuffer(blob);
