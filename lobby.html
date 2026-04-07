@@ -92,7 +92,7 @@
     /* =======================================================
        🚀 優化：裝備槽與畫廊 (全息投影質感)
        ======================================================= */
-    .gallery-container { position: relative; width: 100%; min-height: 420px; display: flex; align-items: center; justify-content: center; z-index: 10; margin-top: 10px; }
+    .gallery-container { position: relative; width: 100%; flex: 1; min-height: 380px; display: flex; align-items: center; justify-content: center; z-index: 10; margin-top: 10px; }
     
     .center-target-box { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 280px; height: 388px; border: 2px dashed rgba(255, 255, 255, 0.2); border-radius: 25px; pointer-events: none; z-index: 0; transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1); background: rgba(0,0,0,0.15); backdrop-filter: blur(5px); }
     .center-target-box::after { content: 'EQUIP SLOT'; position: absolute; bottom: -35px; left: 50%; transform: translateX(-50%); color: rgba(255,255,255,0.3); font-size: 13px; font-weight: 900; letter-spacing: 5px; transition: 0.3s; }
