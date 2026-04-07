@@ -1278,37 +1278,60 @@
   let myTotalWins = 0, opTotalWins = 0;
   let roundSubmitted = false, isChecking = false, opponentWaitTimer = null;
 
-  // WebM 轉 WAV 實體音檔工廠 (解決環境雜音與提早切斷的完美方案)
+  // 🚀 瑪麗安專屬：WebM 轉 WAV 實體音檔工廠 (更強壯的非同步版)
   async function createWavFileFromBlob(blob) {
-      const arrayBuffer = await blob.arrayBuffer();
-      if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      if (audioContext.state === 'suspended') await audioContext.resume();
-      
-      const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-      const numOfChan = 1; // 強制轉為單聲道 (語音辨識最佳格式)
-      const sampleRate = audioBuffer.sampleRate;
-      const length = audioBuffer.length * 2 + 44; 
-      const buffer = new ArrayBuffer(length);
-      const view = new DataView(buffer);
-      let pos = 0;
+      return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = async () => {
+              try {
+                  if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                  if (audioContext.state === 'suspended') await audioContext.resume();
+                  
+                  const arrayBuffer = reader.result;
+                  const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                  
+                  const numOfChan = 1; 
+                  const sampleRate = 16000; // 🚀 強制轉為 Azure 最愛的 16kHz 取樣率，極大提升辨識率！
+                  
+                  // 建立離線渲染器來處理重取樣
+                  const offlineCtx = new OfflineAudioContext(numOfChan, audioBuffer.duration * sampleRate, sampleRate);
+                  const source = offlineCtx.createBufferSource();
+                  source.buffer = audioBuffer;
+                  source.connect(offlineCtx.destination);
+                  source.start();
+                  const resampledBuffer = await offlineCtx.startRendering();
 
-      function setUint16(data) { view.setUint16(pos, data, true); pos += 2; }
-      function setUint32(data) { view.setUint32(pos, data, true); pos += 4; }
+                  const length = resampledBuffer.length * 2 + 44; 
+                  const buffer = new ArrayBuffer(length);
+                  const view = new DataView(buffer);
+                  let pos = 0;
 
-      setUint32(0x46464952); setUint32(length - 8); setUint32(0x45564157); 
-      setUint32(0x20746d66); setUint32(16); setUint16(1); setUint16(numOfChan);
-      setUint32(sampleRate); setUint32(sampleRate * 2 * numOfChan);
-      setUint16(numOfChan * 2); setUint16(16);
-      setUint32(0x61746164); setUint32(length - pos - 4);
+                  function setUint16(data) { view.setUint16(pos, data, true); pos += 2; }
+                  function setUint32(data) { view.setUint32(pos, data, true); pos += 4; }
 
-      const channelData = audioBuffer.getChannelData(0); 
-      for (let i = 0; i < audioBuffer.length; i++) {
-          let sample = Math.max(-1, Math.min(1, channelData[i]));
-          sample = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
-          view.setInt16(pos, sample, true); pos += 2;
-      }
-      return new File([new Blob([buffer], { type: "audio/wav" })], "record.wav", { type: "audio/wav" });
+                  setUint32(0x46464952); setUint32(length - 8); setUint32(0x45564157); 
+                  setUint32(0x20746d66); setUint32(16); setUint16(1); setUint16(numOfChan);
+                  setUint32(sampleRate); setUint32(sampleRate * 2 * numOfChan);
+                  setUint16(numOfChan * 2); setUint16(16);
+                  setUint32(0x61746164); setUint32(length - pos - 4);
+
+                  const channelData = resampledBuffer.getChannelData(0); 
+                  for (let i = 0; i < resampledBuffer.length; i++) {
+                      let sample = Math.max(-1, Math.min(1, channelData[i]));
+                      sample = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
+                      view.setInt16(pos, sample, true); pos += 2;
+                  }
+                  
+                  resolve(new File([new Blob([buffer], { type: "audio/wav" })], "record.wav", { type: "audio/wav" }));
+              } catch (err) {
+                  console.error("WAV 轉檔失敗:", err);
+                  reject(err);
+              }
+          };
+          reader.readAsArrayBuffer(blob);
+      });
   }
+  
 
   // 向 GAS 索取 10 分鐘效期的安全 Token
   function fetchAzureToken() {
@@ -1673,7 +1696,7 @@
                 const speechConfig = SpeechSDK.SpeechConfig.fromAuthorizationToken(azureAuthToken, azureRegionCode);
                 speechConfig.speechRecognitionLanguage = "en-US";
                 
-                // 🚀 神奇之處：直接把實體 WAV 餵給 Azure！它不會再等安靜時間了！
+                // 🚀 直接把實體 WAV 餵給 Azure
                 const audioConfig = SpeechSDK.AudioConfig.fromWavFileInput(wavFile);
                 const pronConfig = new SpeechSDK.PronunciationAssessmentConfig(
                     targetWord, SpeechSDK.PronunciationAssessmentGradingSystem.HundredMark,
@@ -1705,6 +1728,11 @@
                                 document.getElementById('prev-btn').disabled = currentIndex === 0;
                                 document.getElementById('next-btn').disabled = false;
                                 document.getElementById('back-summary-btn').disabled = false;
+                            }).catch(() => {
+                                document.getElementById('status').innerText = "⚠️ AI 寫評語失敗";
+                                document.getElementById('status').style.color = "#e74c3c";
+                                isGrading = false; rb.style.pointerEvents = "auto"; rb.style.opacity = "1";
+                                document.getElementById('next-btn').disabled = false;
                             });
                         } else {
                             document.getElementById('status').innerText = "❌ 發音含糊或無關，請重唸";
@@ -1723,7 +1751,9 @@
                     }
                 );
             } catch(err) {
+                console.error(err);
                 document.getElementById('status').innerText = "🚨 音檔處理失敗，請重試";
+                document.getElementById('status').style.color = "#e74c3c";
                 isGrading = false; rb.style.pointerEvents = "auto"; rb.style.opacity = "1";
             }
         };
@@ -2123,6 +2153,7 @@
                     }
                 );
             } catch(err) {
+                console.error(err);
                 document.getElementById('battle-info').innerText = "🚨 音檔處理失敗";
                 submitBattleScore(ROOM_ID, 0);
             }
