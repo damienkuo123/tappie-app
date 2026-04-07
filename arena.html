@@ -1278,23 +1278,26 @@
   let myTotalWins = 0, opTotalWins = 0;
   let roundSubmitted = false, isChecking = false, opponentWaitTimer = null;
 
-  // 🚀 瑪麗安專屬：WebM 轉 WAV 實體音檔工廠 (更強壯的非同步版)
+  // 🚀 瑪麗安專屬：全域解碼器 (提早暖機，拒絕瀏覽器凍結)
+  let sysAudioCtx = null;
+
+  // 🚀 WebM 轉 WAV 實體音檔工廠 (防死鎖極速版)
   async function createWavFileFromBlob(blob) {
       return new Promise((resolve, reject) => {
           const reader = new FileReader();
+          reader.onerror = () => reject(new Error("音檔讀取失敗"));
           reader.onloadend = async () => {
               try {
-                  if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                  if (audioContext.state === 'suspended') await audioContext.resume();
-                  
+                  // 直接使用已暖機的全域解碼器，絕對不會卡死！
                   const arrayBuffer = reader.result;
-                  const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                  const audioBuffer = await sysAudioCtx.decodeAudioData(arrayBuffer);
                   
                   const numOfChan = 1; 
-                  const sampleRate = 16000; // 🚀 強制轉為 Azure 最愛的 16kHz 取樣率，極大提升辨識率！
+                  const sampleRate = 16000; // 強制轉為 Azure 最愛的 16kHz
                   
                   // 建立離線渲染器來處理重取樣
-                  const offlineCtx = new OfflineAudioContext(numOfChan, audioBuffer.duration * sampleRate, sampleRate);
+                  const duration = Math.max(audioBuffer.duration, 0.1); // 防呆：避免錄音太短導致崩潰
+                  const offlineCtx = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(numOfChan, duration * sampleRate, sampleRate);
                   const source = offlineCtx.createBufferSource();
                   source.buffer = audioBuffer;
                   source.connect(offlineCtx.destination);
