@@ -1420,13 +1420,12 @@
         document.getElementById('progress-container').style.display = 'block';
         document.getElementById('studio').style.display = 'block';
         
-        // 🚀 在這裡重新綁定所有按鈕，確保萬無一失
+        // 🚀 關鍵：先綁定監聽器，再畫出第一題，按鈕才不會失效！
         attachButtonListeners(); 
-        
         renderWord();
       });
   };
-
+  
   function attachButtonListeners() {
     document.getElementById('play-btn').onclick = () => { 
         window.speechSynthesis.cancel(); 
