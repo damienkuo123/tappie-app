@@ -2048,60 +2048,80 @@
               if (result.reason === SpeechSDK.ResultReason.RecognizedSpeech) {
                   const pronResult = SpeechSDK.PronunciationAssessmentResult.fromResult(result);
                   
-                  // ----------------------------------------------------
-                  // ⚖️ 瑪麗安專屬嚴格算分公式 (前端對戰極速版)
-                  // ----------------------------------------------------
-                  let baseScore = (pronResult.accuracyScore * 0.4) + (pronResult.completenessScore * 0.4) + (pronResult.fluencyScore * 0.2);
+                  // ====================================================
+                  // ⚔️ 對戰模式專用：前端極速「指數級高精度切肉機」
+                  // ====================================================
+                  // 1. 抓取微軟 SDK 原生物件的綜合分數
+                  let accScore = pronResult.accuracyScore || 0;
+                  let compScore = pronResult.completenessScore || 0;
+                  let fluScore = pronResult.fluencyScore || 0;
+                  
+                  let baseScore = (accScore * 0.5) + (compScore * 0.3) + (fluScore * 0.2);
                   
                   let missingCount = 0;
                   let brokenCount = 0;
-                  let badPhonemeCount = 0; // 🚀 新增：微觀爛音素計數器
+                  let dynamicPhonemePenalty = 0;
 
-                  // 2. 🕵️ 進行前端光速驗屍，掃描每個單字與音素
-                  pronResult.detailResult.Words.forEach(w => {
-                      let wScore = w.PronunciationAssessment.AccuracyScore;
-                      let errType = w.PronunciationAssessment.ErrorType;
-                      
-                      // 🚨 致命錯誤：完全漏唸該字
-                      if (errType === "Omission" || wScore === 0) {
-                          missingCount++;
-                      } 
-                      // 💥 重傷錯誤：糊在一起的碎碎唸
-                      else if (wScore > 0 && wScore <= 45) {
-                          brokenCount++; 
-                      } 
-                      // 🔍 微觀檢查：就算單字及格，也要檢查裡面有沒有爛掉的音素
-                      else if (w.Phonemes) {
-                          w.Phonemes.forEach(p => {
-                              if (p.PronunciationAssessment.AccuracyScore < 40) {
-                                  badPhonemeCount++; // 抓到一個極低分音素！
+                  // 2. 🕵️ 前端極速驗屍 (對接 detailResult 大寫原生結構)
+                  if (pronResult.detailResult && pronResult.detailResult.Words) {
+                      pronResult.detailResult.Words.forEach(w => {
+                          // 🛡️ 防呆：確保物件存在
+                          let wAssess = w.PronunciationAssessment || {};
+                          let wScore = wAssess.AccuracyScore !== undefined ? wAssess.AccuracyScore : 0;
+                          let errType = wAssess.ErrorType || "";
+                          
+                          // 🚨 致命錯誤：漏字 (Omission 或是空音素)
+                          if (errType === "Omission" || wScore === 0 || !w.Phonemes || w.Phonemes.length === 0) {
+                              missingCount++;
+                          } 
+                          // 💥 嚴重糊字 (< 50)
+                          else if (wScore > 0 && wScore < 50) {
+                              brokenCount++; 
+                          } 
+                          // 🔍 進入音素階梯懲罰
+                          else {
+                              if (w.Phonemes) {
+                                  w.Phonemes.forEach(p => {
+                                      let pAssess = p.PronunciationAssessment || {};
+                                      let pScore = pAssess.AccuracyScore !== undefined ? pAssess.AccuracyScore : 0;
+                                      
+                                      // 🔪 【瑪麗安高精度 5 分區間指數懲罰】
+                                      let baseP = 2.0; 
+                                      if (pScore >= 95) dynamicPhonemePenalty += 0;       
+                                      else if (pScore >= 90) dynamicPhonemePenalty += baseP * 1.0; 
+                                      else if (pScore >= 85) dynamicPhonemePenalty += baseP * 1.3; 
+                                      else if (pScore >= 80) dynamicPhonemePenalty += baseP * 1.5; 
+                                      else if (pScore >= 75) dynamicPhonemePenalty += baseP * 1.7; 
+                                      else if (pScore >= 70) dynamicPhonemePenalty += baseP * 1.9; 
+                                      else if (pScore >= 65) dynamicPhonemePenalty += baseP * 2.1; 
+                                      else if (pScore >= 60) dynamicPhonemePenalty += baseP * 2.3; 
+                                      else dynamicPhonemePenalty += baseP * 3.0; // < 60: 扣 6 分
+                                  });
                               }
-                          });
-                      }
-                  });
+                          }
+                      });
+                  }
 
-                  // 3. 🩸 執行無情扣分：漏字-15，糊字-10，爛音素每個-8分！
-                  let penalty = (missingCount * 15) + (brokenCount * 10) + (badPhonemeCount * 8);
+                  // 3. 🩸 執行無情扣分
+                  let penalty = (missingCount * 15) + (brokenCount * 10) + dynamicPhonemePenalty;
+                  
+                  // 📉 流暢度殺手鐧
+                  if (fluScore < 50) penalty += 15;
+                  else if (fluScore < 75) penalty += 6;
+                  
+                  // 🎯 結算：限制在 0~100 之間
                   let strictScore = Math.max(0, Math.min(100, Math.round(baseScore - penalty)));
                   
-                  // 4. 🎲 瑪麗安專屬防撞分機制 (避免雙方狂拿一樣的分數平手)
+                  // 🎲 戰場專屬：防撞分機制 (避免雙方一直平手)
                   if (strictScore % 5 === 0 && strictScore !== 0 && strictScore !== 100) {
                       strictScore += (Math.random() > 0.5 ? 1 : -1); 
                   }
                   
                   document.getElementById('battle-info').innerText = "✅ 判定完成！";
                   
-                  // 🚀 傳送「絕對嚴格」的分數給資料庫！
+                  // 🚀 將嚴格分數送出！
                   submitBattleScore(ROOM_ID, strictScore);
               } else {
-                  document.getElementById('battle-info').innerText = "❌ 挑戰失敗 (未收音)";
-                  submitBattleScore(ROOM_ID, 0);
-              }
-              recognizer.close();
-          },
-          (err) => {
-              document.getElementById('battle-info').innerText = "🚨 引擎連線錯誤";
-              submitBattleScore(ROOM_ID, 0);
               recognizer.close();
           }
       );
