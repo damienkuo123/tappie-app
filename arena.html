@@ -1666,8 +1666,10 @@
         e.preventDefault(); 
         isRecording = true;
         
+        // 🚀 觸感回歸：立刻觸發縮小動畫
         rb.classList.add('active'); 
         
+        // 🚀 提早喚醒解碼器 (破解 iOS 凍結)
         if (!sysAudioCtx) sysAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
         if (sysAudioCtx.state === 'suspended') sysAudioCtx.resume();
         
@@ -1685,8 +1687,6 @@
         document.getElementById('status').innerText = "🔴 錄音中... (放開按鈕送出)";
         document.getElementById('status').style.color = "#eb3b5a";
         document.getElementById('feedback').innerHTML = ""; 
-        
-        // 鎖定其他按鈕
         document.getElementById('prev-btn').disabled = true;
         document.getElementById('next-btn').disabled = true;
         document.getElementById('back-summary-btn').disabled = true;
@@ -1696,13 +1696,15 @@
         if(!isRecording) return;
         e.preventDefault();
         isRecording = false;
-        
         rb.classList.remove('active'); 
         
         if (!practiceRecorder || practiceRecorder.state !== "recording") {
             document.getElementById('status').innerText = "🚨 錄音異常，請重試";
             document.getElementById('status').style.color = "#e74c3c";
-            renderWord(); // 🚀 直接使用 renderWord() 完美解除所有按鈕鎖定！
+            // 🚀 確保解鎖
+            isGrading = false; 
+            document.getElementById('next-btn').disabled = false;
+            if (currentIndex > 0) document.getElementById('prev-btn').disabled = false;
             return;
         }
 
@@ -1713,21 +1715,23 @@
         document.getElementById('status').style.color = "#f1c40f";
 
         practiceRecorder.onstop = async () => {
-            // 🚀 自動抓取錄音機的格式 (Safari 會給 mp4，Chrome 會給 webm)，不強迫戴面具
-            const mimeType = practiceRecorder.mimeType || 'audio/webm';
-            const rawBlob = new Blob(practiceChunks, { type: mimeType }); 
+            const rawBlob = new Blob(practiceChunks); 
             
+            // 防呆：錄音太短立刻解鎖
             if (practiceChunks.length === 0 || rawBlob.size < 500) {
                 document.getElementById('status').innerText = "🚨 錄音太短，請按住重唸";
                 document.getElementById('status').style.color = "#e74c3c";
-                isGrading = false; rb.style.pointerEvents = "auto"; rb.style.opacity = "1";
-                renderWord(); // 🚀 解鎖按鈕
+                // 🚀 確保解鎖
+                isGrading = false; 
+                rb.style.pointerEvents = "auto"; 
+                rb.style.opacity = "1";
+                document.getElementById('next-btn').disabled = false;
+                if (currentIndex > 0) document.getElementById('prev-btn').disabled = false;
                 return;
             }
             
             try {
                 const wavFile = await createWavFileFromBlob(rawBlob);
-                
                 document.getElementById('status').innerText = "🟢 傳送至微軟聲學引擎...";
                 document.getElementById('status').style.color = "#3498db";
 
@@ -1761,28 +1765,39 @@
                                 document.getElementById('feedback').innerHTML = `得分：${data.score}<br><small>${data.feedback}</small>`;
                                 document.getElementById('status').innerText = "點擊錄音，安靜自動打分";
                                 document.getElementById('status').style.color = "#636e72";
-                                
-                                isGrading = false; rb.style.pointerEvents = "auto"; rb.style.opacity = "1";
-                                renderWord(); // 🚀 完美刷新狀態與解鎖
                             }).catch(() => {
                                 document.getElementById('status').innerText = "⚠️ AI 寫評語失敗";
                                 document.getElementById('status').style.color = "#e74c3c";
-                                isGrading = false; rb.style.pointerEvents = "auto"; rb.style.opacity = "1";
-                                renderWord();
+                            }).finally(() => {
+                                // 🚀 關鍵：無論成功或失敗，必定在 finally 區塊解鎖所有按鈕
+                                isGrading = false; 
+                                rb.style.pointerEvents = "auto"; 
+                                rb.style.opacity = "1";
+                                document.getElementById('prev-btn').disabled = currentIndex === 0;
+                                document.getElementById('next-btn').disabled = false;
+                                document.getElementById('back-summary-btn').disabled = false;
                             });
                         } else {
                             document.getElementById('status').innerText = "❌ 發音含糊或無關，請重唸";
                             document.getElementById('status').style.color = "#e74c3c";
-                            isGrading = false; rb.style.pointerEvents = "auto"; rb.style.opacity = "1";
-                            renderWord();
+                            // 🚀 確保解鎖
+                            isGrading = false; 
+                            rb.style.pointerEvents = "auto"; 
+                            rb.style.opacity = "1";
+                            document.getElementById('next-btn').disabled = false;
+                            if (currentIndex > 0) document.getElementById('prev-btn').disabled = false;
                         }
                         recognizer.close();
                     },
                     (err) => {
                         document.getElementById('status').innerText = "🚨 引擎連線錯誤";
                         document.getElementById('status').style.color = "#e74c3c";
-                        isGrading = false; rb.style.pointerEvents = "auto"; rb.style.opacity = "1";
-                        renderWord();
+                        // 🚀 確保解鎖
+                        isGrading = false; 
+                        rb.style.pointerEvents = "auto"; 
+                        rb.style.opacity = "1";
+                        document.getElementById('next-btn').disabled = false;
+                        if (currentIndex > 0) document.getElementById('prev-btn').disabled = false;
                         recognizer.close();
                     }
                 );
@@ -1790,8 +1805,12 @@
                 console.error(err);
                 document.getElementById('status').innerText = "🚨 音檔處理失敗，請長按重試";
                 document.getElementById('status').style.color = "#e74c3c";
-                isGrading = false; rb.style.pointerEvents = "auto"; rb.style.opacity = "1";
-                renderWord(); // 🚀 就算失敗，也絕對幫你把按鈕解鎖！
+                // 🚀 確保解鎖
+                isGrading = false; 
+                rb.style.pointerEvents = "auto"; 
+                rb.style.opacity = "1";
+                document.getElementById('next-btn').disabled = false;
+                if (currentIndex > 0) document.getElementById('prev-btn').disabled = false;
             }
         };
         practiceRecorder.stop();
@@ -2081,9 +2100,11 @@
         isBattleRecording = true;
         clearInterval(currentLimitTimer); 
 
+        // 🚀 觸感回歸，瞬間啟動
         if (isUltimateMode) battleBtn.classList.add('ult-active');
         else battleBtn.classList.add('active');
 
+        // 🚀 提早喚醒戰場解碼器！
         if (!sysAudioCtx) sysAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
         if (sysAudioCtx.state === 'suspended') sysAudioCtx.resume();
 
@@ -2108,7 +2129,7 @@
         e.preventDefault();
         isBattleRecording = false;
         
-        battleBtn.classList.remove('active', 'ult-active'); 
+        battleBtn.classList.remove('active', 'ult-active'); // 🚀 瞬間解除動畫
         
         if (!battleRecorder || battleRecorder.state !== "recording") return;
         
@@ -2118,9 +2139,9 @@
         document.getElementById('battle-info').style.color = "#f1c40f";
 
         battleRecorder.onstop = async () => {
-            const mimeType = battleRecorder.mimeType || 'audio/webm';
-            const rawBlob = new Blob(battleChunks, { type: mimeType }); 
+            const rawBlob = new Blob(battleChunks); 
             
+            // 🚀 防呆，短按空包彈直接給 0 分，不當機
             if (battleChunks.length === 0 || rawBlob.size < 500) {
                 document.getElementById('battle-info').innerText = "🚨 錄音太短，挑戰失敗";
                 document.getElementById('battle-info').style.color = "#e74c3c";
