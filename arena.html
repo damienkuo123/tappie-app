@@ -1614,9 +1614,9 @@
       
       const speechConfig = SpeechSDK.SpeechConfig.fromAuthorizationToken(azureAuthToken, azureRegionCode);
       speechConfig.speechRecognitionLanguage = "en-US";
-      // 🚀 放寬初始等待時間到 10 秒，避免還沒準備好就被切斷
-      speechConfig.setProperty(SpeechSDK.PropertyId.SpeechServiceConnection_InitialSilenceTimeoutMs, "10000");
-      speechConfig.setProperty(SpeechSDK.PropertyId.SpeechServiceConnection_EndSilenceTimeoutMs, "1500");
+      // 🚀 終極防護：設定超長初始等待 (15秒) 與超長分段容忍 (2秒)！
+      speechConfig.setProperty(SpeechSDK.PropertyId.SpeechServiceConnection_InitialSilenceTimeoutMs, "15000");
+      speechConfig.setProperty(SpeechSDK.PropertyId.Speech_SegmentationSilenceTimeoutMs, "2000");
 
       const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
       const pronConfig = new SpeechSDK.PronunciationAssessmentConfig(
@@ -1628,7 +1628,7 @@
       const recognizer = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig);
       pronConfig.applyTo(recognizer);
 
-      // 🚀 關鍵修復：這才是真正的「麥克風已打開」指示燈！
+      // 🟢 這才是真正的綠燈
       recognizer.sessionStarted = (s, e) => {
           document.getElementById('status').innerText = "🟢 麥克風已開啟，請發音！";
           document.getElementById('status').style.color = "#27ae60";
@@ -1637,44 +1637,31 @@
       let dots = 0;
       recognizer.recognizing = (s, e) => {
           dots = (dots + 1) % 4;
-          // 聽到聲音後的動態回饋
           document.getElementById('status').innerText = "🟢 接收聲波中" + ".".repeat(dots);
       };
 
       recognizer.recognizeOnceAsync(
           (result) => {
-              rb.classList.remove('active'); // 停止呼吸燈
+              rb.classList.remove('active'); 
               
               if (result.reason === SpeechSDK.ResultReason.RecognizedSpeech) {
                   document.getElementById('status').innerText = "呼叫 AI 教練中...";
-                  
-                  // 🚀 2. 視覺封印：讓按鈕變半透明，明確暗示「請勿打擾」
                   rb.style.opacity = "0.5"; 
                   
-                  const pronResult = SpeechSDK.PronunciationAssessmentResult.fromResult(result);
-                  // ❌ 把微軟的快樂總分刪掉，我們不吃這套了！
-                  // const finalScore = Math.round(pronResult.pronunciationScore);
-                  
-                  // 🚀 抓取微軟最底層的一刀未剪 JSON 報告
-                  let rawAzureData = pronResult.detailResult;
-                  
-                  // 存入前端，結算時也會一刀未剪送回 GAS
+                  let rawAzureData = SpeechSDK.PronunciationAssessmentResult.fromResult(result).detailResult;
                   azureReports[currentIndex] = rawAzureData;
 
-                  // 直接把這包原始資料 POST 給後端！
                   fetch(`${GAS_URL}?action=evaluate_speech_azure&word=${encodeURIComponent(targetWord)}`, { 
                       method: 'POST', body: JSON.stringify(rawAzureData) 
                   }).then(res => res.json()).then(data => {
-                      // ✅ 關鍵修復：吃 GAS 算出來的「嚴格切肉機分數 (data.score)」！
                       scores[currentIndex] = data.score; 
                       if(!window.feedbacks) window.feedbacks = [];
                       window.feedbacks[currentIndex] = data.feedback;
                       
-                      // ✅ 畫面上印出的也是嚴格分數！
                       document.getElementById('feedback').innerHTML = `得分：${data.score}<br><small>${data.feedback}</small>`;
                       document.getElementById('status').innerText = "點擊錄音，安靜自動打分";
+                      document.getElementById('status').style.color = "#636e72";
                       
-                      // 🔓 3. 結算完成，全面解除封印！
                       isGrading = false;
                       rb.style.pointerEvents = "auto";
                       rb.style.opacity = "1";
@@ -1684,17 +1671,29 @@
                       document.getElementById('back-summary-btn').disabled = false;
                   }).catch(() => {
                       document.getElementById('status').innerText = "⚠️ AI 寫評語失敗";
-                      
-                      // 🔓 發生錯誤也要解鎖，不然會卡死
                       isGrading = false;
                       rb.style.pointerEvents = "auto";
                       rb.style.opacity = "1";
                       document.getElementById('next-btn').disabled = false;
                   });
 
+              } 
+              // 🚀 終極診斷：告訴你到底是誰的問題！
+              else if (result.reason === SpeechSDK.ResultReason.NoMatch) {
+                  const noMatchDetail = SpeechSDK.NoMatchDetails.fromResult(result);
+                  let reasonStr = "發音太含糊或無關";
+                  if (noMatchDetail.reason === SpeechSDK.NoMatchReason.InitialSilenceTimeout) reasonStr = "太久沒聲音";
+                  else if (noMatchDetail.reason === SpeechSDK.NoMatchReason.EndSilenceTimeout) reasonStr = "收音被異常截斷";
+                  
+                  document.getElementById('status').innerText = `❌ 失敗：${reasonStr}`;
+                  document.getElementById('status').style.color = "#e74c3c";
+                  
+                  isGrading = false;
+                  rb.style.pointerEvents = "auto";
+                  rb.style.opacity = "1";
+                  document.getElementById('next-btn').disabled = false;
               } else {
-                  document.getElementById('status').innerText = "❌ 未辨識到聲音，請重試";
-                  // 🔓 沒聽到聲音，直接解鎖
+                  document.getElementById('status').innerText = "❌ 引擎中斷，請重試";
                   isGrading = false;
                   rb.style.pointerEvents = "auto";
                   rb.style.opacity = "1";
@@ -1705,7 +1704,6 @@
           (err) => {
               rb.classList.remove('active');
               document.getElementById('status').innerText = "🚨 麥克風或連線錯誤";
-              // 🔓 發生錯誤，直接解鎖
               isGrading = false;
               rb.style.pointerEvents = "auto";
               rb.style.opacity = "1";
