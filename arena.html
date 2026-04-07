@@ -52,7 +52,15 @@
       --sunpillar-clr-6: var(--sunpillar-6);
     }
     body { font-family: -apple-system, sans-serif; text-align: center; padding: 20px; background: #eaeff2; margin: 0; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
-    .main-panel { background: white; padding: 25px; border-radius: 28px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); max-width: 400px; margin: 10px auto; border: 1px solid #ddd; }
+    .main-panel { 
+      background: white; padding: 25px; border-radius: 28px; 
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15); max-width: 400px; 
+      margin: 10px auto; border: 1px solid #ddd; 
+      position: relative; z-index: 100; /* 🚀 確保面板在所有東西上面 */
+    }
+    
+    /* 🚀 讓按鈕在被按下去時有明顯的觸感回饋 */
+    .btn:active, .btn-play:active { transform: scale(0.92); opacity: 0.8; }
     #record-btn { background: var(--marian-red); width: 110px; height: 110px; border-radius: 50%; border: 8px solid white; font-size: 45px; box-shadow: 0 6px 15px rgba(214, 48, 49, 0.4); margin: 20px auto; cursor: pointer; display: none; outline: none; }
     #record-btn.active { transform: scale(0.95); background: #333; animation: pulse 1s infinite; }
     @keyframes pulse { 0% { box-shadow: 0 0 0 0px rgba(214, 48, 49, 0.4); } 100% { box-shadow: 0 0 0 20px rgba(214, 48, 49, 0); } }
