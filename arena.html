@@ -2049,15 +2049,15 @@
                   const pronResult = SpeechSDK.PronunciationAssessmentResult.fromResult(result);
                   
                   // ----------------------------------------------------
-                  // ⚖️ 瑪麗安專屬嚴格算分公式 (與 GAS 一般練習 100% 絕對同步！)
+                  // ⚖️ 瑪麗安專屬嚴格算分公式 (前端對戰極速版)
                   // ----------------------------------------------------
-                  // 1. 基礎計分：準確度 40% + 完整度 40% + 流暢度 20%
                   let baseScore = (pronResult.accuracyScore * 0.4) + (pronResult.completenessScore * 0.4) + (pronResult.fluencyScore * 0.2);
                   
                   let missingCount = 0;
                   let brokenCount = 0;
+                  let badPhonemeCount = 0; // 🚀 新增：微觀爛音素計數器
 
-                  // 2. 🕵️ 進行前端光速驗屍，掃描每個單字
+                  // 2. 🕵️ 進行前端光速驗屍，掃描每個單字與音素
                   pronResult.detailResult.Words.forEach(w => {
                       let wScore = w.PronunciationAssessment.AccuracyScore;
                       let errType = w.PronunciationAssessment.ErrorType;
@@ -2069,11 +2069,19 @@
                       // 💥 重傷錯誤：糊在一起的碎碎唸
                       else if (wScore > 0 && wScore <= 45) {
                           brokenCount++; 
+                      } 
+                      // 🔍 微觀檢查：就算單字及格，也要檢查裡面有沒有爛掉的音素
+                      else if (w.Phonemes) {
+                          w.Phonemes.forEach(p => {
+                              if (p.PronunciationAssessment.AccuracyScore < 40) {
+                                  badPhonemeCount++; // 抓到一個極低分音素！
+                              }
+                          });
                       }
                   });
 
-                  // 3. 🩸 執行無情扣分：每漏一個字扣 15 分，每糊一個字扣 10 分
-                  let penalty = (missingCount * 15) + (brokenCount * 10);
+                  // 3. 🩸 執行無情扣分：漏字-15，糊字-10，爛音素每個-8分！
+                  let penalty = (missingCount * 15) + (brokenCount * 10) + (badPhonemeCount * 8);
                   let strictScore = Math.max(0, Math.min(100, Math.round(baseScore - penalty)));
                   
                   // 4. 🎲 瑪麗安專屬防撞分機制 (避免雙方狂拿一樣的分數平手)
