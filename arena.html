@@ -1280,6 +1280,7 @@
 
   // 🚀 瑪麗安專屬：全域解碼器 (提早暖機，拒絕瀏覽器凍結)
   let sysAudioCtx = null;
+  let globalMicStream = null; // 🚀 全域保溫麥克風
 
   // 🚀 WebM 轉 WAV 實體音檔工廠 (防死鎖極速版)
   async function createWavFileFromBlob(blob) {
@@ -1379,9 +1380,8 @@
   const originalOnload = async () => {
     if(MODE === 'review') document.getElementById('title-text').innerText = "📖 自由練習模式";
     try {
-      // 🚀 關鍵修復 1：只做權限確認，確認完立刻關掉，把硬體還給微軟！
-      let tempStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      tempStream.getTracks().forEach(track => track.stop()); 
+      // 🚀 啟動並永久保溫麥克風，不再關閉！
+      globalMicStream = await navigator.mediaDevices.getUserMedia({ audio: true }); 
       
       document.getElementById('info-text').innerText = "麥克風已就緒";
       document.getElementById('start-btn').style.display = 'inline-block';
@@ -1467,9 +1467,8 @@
       document.getElementById('main-card').style.display = 'none';
       document.getElementById('impact-overlay').classList.remove('active');
       try {
-        // 🚀 關鍵修復 2：對戰模式一樣確認完立刻釋放！
-        let tempStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        tempStream.getTracks().forEach(track => track.stop());
+        // 🚀 對戰模式一樣啟動並保溫！
+        globalMicStream = await navigator.mediaDevices.getUserMedia({ audio: true });
         
         fetch(`${GAS_URL}?action=get_lobby_data&id=${STUDENT_ID}`)
           .then(res => res.json())
@@ -1651,47 +1650,46 @@
   const rb = document.getElementById('record-btn');
   let practiceRecorder;
   let practiceChunks = [];
+  let isRecording = false; // 🚀 獨立錄音狀態鎖
 
   if(rb) {
-    const startPracticeRecord = async (e) => {
-        if(isGrading) return;
+    const startPracticeRecord = (e) => { // 🚀 拔掉 async，變成 0 毫秒瞬間觸發！
+        if(isGrading || isRecording) return;
         e.preventDefault(); 
+        isRecording = true;
         
-        // 🚀 觸感回歸：手指一按下，立刻加上縮小動畫！
+        // 🚀 觸感回歸：手指一按下，立刻觸發 CSS 動畫，絕不卡頓！
         rb.classList.add('active'); 
         
-        if (!sysAudioCtx) sysAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        if (sysAudioCtx.state === 'suspended') await sysAudioCtx.resume();
-        
-        try {
-            let tempStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            practiceRecorder = new MediaRecorder(tempStream);
-            practiceChunks = [];
-            practiceRecorder.ondataavailable = ev => { if(ev.data.size > 0) practiceChunks.push(ev.data); };
-            practiceRecorder.start();
-
-            document.getElementById('status').innerText = "🔴 錄音中... (放開按鈕送出)";
-            document.getElementById('status').style.color = "#eb3b5a";
-            document.getElementById('feedback').innerHTML = ""; 
-            
-            document.getElementById('prev-btn').disabled = true;
-            document.getElementById('next-btn').disabled = true;
-            document.getElementById('back-summary-btn').disabled = true;
-        } catch(err) {
-            rb.classList.remove('active'); // 取消動畫
-            alert("無法存取麥克風，請確認權限！");
+        if (!globalMicStream) {
+            alert("麥克風未授權，請重新整理網頁！");
+            isRecording = false; rb.classList.remove('active');
+            return;
         }
+
+        // 瞬間調用已經保溫的麥克風
+        practiceRecorder = new MediaRecorder(globalMicStream);
+        practiceChunks = [];
+        practiceRecorder.ondataavailable = ev => { if(ev.data.size > 0) practiceChunks.push(ev.data); };
+        practiceRecorder.start();
+
+        document.getElementById('status').innerText = "🔴 錄音中... (放開按鈕送出)";
+        document.getElementById('status').style.color = "#eb3b5a";
+        document.getElementById('feedback').innerHTML = ""; 
+        document.getElementById('prev-btn').disabled = true;
+        document.getElementById('next-btn').disabled = true;
+        document.getElementById('back-summary-btn').disabled = true;
     };
 
-    const stopPracticeRecord = async (e) => {
-        if(isGrading) return;
+    const stopPracticeRecord = (e) => {
+        if(!isRecording) return;
         e.preventDefault();
+        isRecording = false;
         
         rb.classList.remove('active'); // 🚀 手指放開，立刻解除按鈕縮小
         
-        // 🚀 致命修復：如果錄音根本沒開起來，必須強制解鎖，不然會卡死！
         if (!practiceRecorder || practiceRecorder.state !== "recording") {
-            document.getElementById('status').innerText = "🚨 錄音未啟動，請重試";
+            document.getElementById('status').innerText = "🚨 錄音異常，請重試";
             document.getElementById('status').style.color = "#e74c3c";
             document.getElementById('next-btn').disabled = false;
             if (currentIndex > 0) document.getElementById('prev-btn').disabled = false;
@@ -1705,13 +1703,13 @@
         document.getElementById('status').style.color = "#f1c40f";
 
         practiceRecorder.onstop = async () => {
-            practiceRecorder.stream.getTracks().forEach(t => t.stop()); 
-
+            // 🚀 絕對不能關閉麥克風硬體 (不呼叫 track.stop)，繼續保溫！
+            
             const webmBlob = new Blob(practiceChunks, { type: 'audio/webm' });
             
-            // 🚀 防呆機制：如果音檔為空，立刻解鎖！
+            // 🚀 防呆機制：如果音檔為空或太短，立刻解鎖下一頁，絕不卡死！
             if (practiceChunks.length === 0 || webmBlob.size < 500) {
-                document.getElementById('status').innerText = "🚨 錄音太短，請長按重試";
+                document.getElementById('status').innerText = "🚨 錄音太短，請按住重唸";
                 document.getElementById('status').style.color = "#e74c3c";
                 isGrading = false; rb.style.pointerEvents = "auto"; rb.style.opacity = "1";
                 document.getElementById('next-btn').disabled = false;
@@ -1785,7 +1783,7 @@
                 );
             } catch(err) {
                 console.error(err);
-                document.getElementById('status').innerText = "🚨 音檔處理失敗，請長按重試";
+                document.getElementById('status').innerText = "🚨 音檔處理失敗，請重試";
                 document.getElementById('status').style.color = "#e74c3c";
                 isGrading = false; rb.style.pointerEvents = "auto"; rb.style.opacity = "1";
                 document.getElementById('next-btn').disabled = false;
@@ -2069,59 +2067,53 @@
   const battleBtn = document.getElementById('battle-record-btn');
   let battleRecorder;
   let battleChunks = [];
+  let isBattleRecording = false;
 
   if(battleBtn) {
-    const startBattleRecord = async (e) => {
-        if (roundSubmitted) return;
+    const startBattleRecord = (e) => { // 🚀 拔掉 async
+        if (roundSubmitted || isBattleRecording) return;
         e.preventDefault();
+        isBattleRecording = true;
         clearInterval(currentLimitTimer); 
 
-        // 🚀 觸感回歸
+        // 🚀 觸感回歸，瞬間啟動
         if (isUltimateMode) battleBtn.classList.add('ult-active');
         else battleBtn.classList.add('active');
 
-        if (!sysAudioCtx) sysAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        if (sysAudioCtx.state === 'suspended') await sysAudioCtx.resume();
-
-        try {
-            let tempStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            battleRecorder = new MediaRecorder(tempStream);
-            battleChunks = [];
-            battleRecorder.ondataavailable = ev => { if (ev.data.size > 0) battleChunks.push(ev.data); };
-            battleRecorder.start();
-            
-            document.getElementById('battle-info').innerText = "🔴 錄音中... (放開按鈕送出)";
-            document.getElementById('battle-info').style.color = "#eb3b5a";
-        } catch (err) {
+        if (!globalMicStream) {
+            alert("麥克風未授權！");
+            isBattleRecording = false;
             battleBtn.classList.remove('active', 'ult-active');
-            alert("無法存取麥克風，請確認權限！");
-        }
-    };
-
-    const stopBattleRecord = async (e) => {
-        if (roundSubmitted) return;
-        e.preventDefault();
-        
-        battleBtn.classList.remove('active', 'ult-active'); // 🚀 手指放開，立刻解除按鈕動畫
-        
-        // 🚀 致命修復：錄音未啟動時強制中斷，但不當作交卷
-        if (!battleRecorder || battleRecorder.state !== "recording") {
-            document.getElementById('battle-info').innerText = "🚨 錄音未啟動，請重壓";
-            document.getElementById('battle-info').style.color = "#e74c3c";
             return;
         }
+
+        battleRecorder = new MediaRecorder(globalMicStream);
+        battleChunks = [];
+        battleRecorder.ondataavailable = ev => { if (ev.data.size > 0) battleChunks.push(ev.data); };
+        battleRecorder.start();
         
-        roundSubmitted = true; // 鎖死交卷
+        document.getElementById('battle-info').innerText = "🔴 錄音中... (放開按鈕送出)";
+        document.getElementById('battle-info').style.color = "#eb3b5a";
+    };
+
+    const stopBattleRecord = (e) => {
+        if (roundSubmitted || !isBattleRecording) return;
+        e.preventDefault();
+        isBattleRecording = false;
+        
+        battleBtn.classList.remove('active', 'ult-active'); // 🚀 瞬間解除動畫
+        
+        if (!battleRecorder || battleRecorder.state !== "recording") return;
+        
+        roundSubmitted = true; 
         battleBtn.style.pointerEvents = "none";
         document.getElementById('battle-info').innerText = "⚙️ 封裝音檔中...";
         document.getElementById('battle-info').style.color = "#f1c40f";
 
         battleRecorder.onstop = async () => {
-            battleRecorder.stream.getTracks().forEach(t => t.stop()); 
-
             const webmBlob = new Blob(battleChunks, { type: 'audio/webm' });
             
-            // 🚀 防呆機制：短按空包彈，直接給 0 分過關，絕不卡死
+            // 🚀 防呆，短按空包彈直接給 0 分，不當機
             if (battleChunks.length === 0 || webmBlob.size < 500) {
                 document.getElementById('battle-info').innerText = "🚨 錄音太短，挑戰失敗";
                 document.getElementById('battle-info').style.color = "#e74c3c";
@@ -3011,76 +3003,96 @@
       focusedCardIndex = -1;
   }
 
-  let gachaStream; // 宣告抽獎專用音訊流
-  
   function bindVoiceLock(index) {
       const btn = document.getElementById(`lock-btn-${index}`);
       const status = document.getElementById(`lock-status-${index}`);
       const cardData = gachaCardsData[index];
 
-      btn.onpointerdown = async (e) => { // 🚀 加上 async
+      btn.onclick = (e) => { 
+          e.stopPropagation(); 
           if (isGachaRecording || cardData.flipped || gachaPicksLeft <= 0) return;
           e.preventDefault();
           
+          if (!globalMicStream) {
+              alert("麥克風未授權！"); return;
+          }
+
           isGachaRecording = true;
           chunks = [];
           btn.classList.add('recording');
-          status.innerText = "聆聽中...";
-          status.style.color = "#eb3b5a";
+          btn.style.pointerEvents = "none";
+          status.innerText = "🟢 聆聽中...";
+          status.style.color = "#26de81";
 
-          try {
-              // 🚀 動態開啟麥克風給抽獎系統
-              gachaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-              mediaRecorder = new MediaRecorder(gachaStream);
-              mediaRecorder.ondataavailable = ev => chunks.push(ev.data);
-              mediaRecorder.start();
-          } catch(err) {
-              alert("無法存取麥克風");
+          mediaRecorder = new MediaRecorder(globalMicStream);
+          mediaRecorder.ondataavailable = ev => { if(ev.data.size > 0) chunks.push(ev.data); };
+          mediaRecorder.start();
+
+          // 🚀 點擊後，自動錄製 2.5 秒並收卷
+          setTimeout(() => {
+              if (mediaRecorder.state === "recording") mediaRecorder.stop();
+          }, 2500);
+
+          mediaRecorder.onstop = async () => {
               isGachaRecording = false;
               btn.classList.remove('recording');
-          }
-      };
 
-      btn.onpointerup = () => {
-          if (!isGachaRecording) return;
-          isGachaRecording = false;
-          btn.classList.remove('recording');
-
-          if (mediaRecorder && mediaRecorder.state === "recording") {
-              mediaRecorder.stop();
-              // 🚀 錄完立刻關掉，不霸佔硬體！
-              if (gachaStream) gachaStream.getTracks().forEach(t => t.stop());
-          }
-
-          status.innerText = "驗證密語中...";
-          status.style.color = "#00d2d3";
-
-          mediaRecorder.onstop = () => {
-              // 🚀 如果完全沒收到音訊檔
-              if (chunks.length === 0) {
-                  status.innerText = "未收到聲音，請再試一次";
+              const webmBlob = new Blob(chunks, { type: 'audio/webm' });
+              if (chunks.length === 0 || webmBlob.size < 500) {
+                  status.innerText = "未收到聲音，請重試";
                   status.style.color = "#e74c3c";
+                  btn.style.pointerEvents = "auto";
                   return;
               }
 
-              const r = new FileReader();
-              r.readAsDataURL(new Blob(chunks, { type: 'audio/webm' }));
-              r.onloadend = () => {
-                  fetch(`${GAS_URL}?action=evaluate_speech&word=${encodeURIComponent(cardData.word)}`, { method: 'POST', body: r.result.split(',')[1] })
-                  .then(res => res.json()).then(data => {
-                      if (data.score >= 50) {
-                          status.innerText = "封印解除！";
-                          status.style.color = "#26de81";
-                          triggerReveal(index); 
-                      } else {
-                          status.innerText = "密語錯誤，請重唸！";
+              status.innerText = "驗證密語中...";
+              status.style.color = "#00d2d3";
+
+              try {
+                  const wavFile = await createWavFileFromBlob(webmBlob);
+                  const speechConfig = SpeechSDK.SpeechConfig.fromAuthorizationToken(azureAuthToken, azureRegionCode);
+                  speechConfig.speechRecognitionLanguage = "en-US";
+                  const audioConfig = SpeechSDK.AudioConfig.fromWavFileInput(wavFile);
+                  const pronConfig = new SpeechSDK.PronunciationAssessmentConfig(
+                      cardData.word, SpeechSDK.PronunciationAssessmentGradingSystem.HundredMark,
+                      SpeechSDK.PronunciationAssessmentGranularity.Phoneme, true
+                  );
+
+                  const recognizer = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig);
+                  pronConfig.applyTo(recognizer);
+
+                  recognizer.recognizeOnceAsync(
+                      (result) => {
+                          btn.style.pointerEvents = "auto";
+                          if (result.reason === SpeechSDK.ResultReason.RecognizedSpeech) {
+                              const pronResult = SpeechSDK.PronunciationAssessmentResult.fromResult(result);
+                              const finalScore = pronResult.accuracyScore || 0;
+                              if (finalScore >= 50) {
+                                  status.innerText = "封印解除！";
+                                  status.style.color = "#26de81";
+                                  triggerReveal(index); 
+                              } else {
+                                  status.innerText = `密語錯誤，請重唸！`;
+                                  status.style.color = "#e74c3c";
+                              }
+                          } else {
+                              status.innerText = "❌ 辨識失敗，請重試";
+                              status.style.color = "#e74c3c";
+                          }
+                          recognizer.close();
+                      },
+                      (err) => {
+                          btn.style.pointerEvents = "auto";
+                          status.innerText = "🚨 連線錯誤";
                           status.style.color = "#e74c3c";
+                          recognizer.close();
                       }
-                  }).catch(() => {
-                      status.innerText = "封印解除！(連線優待)";
-                      triggerReveal(index);
-                  });
-              };
+                  );
+              } catch(err) {
+                  status.innerText = "🚨 處理失敗，請重試";
+                  status.style.color = "#e74c3c";
+                  btn.style.pointerEvents = "auto";
+              }
           };
       };
   }
