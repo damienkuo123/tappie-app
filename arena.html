@@ -1657,18 +1657,15 @@
                   const pronResult = SpeechSDK.PronunciationAssessmentResult.fromResult(result);
                   const finalScore = Math.round(pronResult.pronunciationScore);
                   
-                  let evidenceJSON = { score: finalScore, accuracy: pronResult.accuracyScore, fluency: pronResult.fluencyScore, completeness: pronResult.completenessScore, words: [] };
-                  pronResult.detailResult.Words.forEach(word => {
-                      let wData = { word: word.Word, score: word.PronunciationAssessment.AccuracyScore, phonemes: [] };
-                      word.Phonemes.forEach(p => { wData.phonemes.push({ p: p.Phoneme, score: p.PronunciationAssessment.AccuracyScore }); });
-                      evidenceJSON.words.push(wData);
-                  });
+                  // 🚀 廢除閹割！直接抓取微軟最底層的一刀未剪 JSON 報告！
+                  let rawAzureData = pronResult.detailResult;
                   
-                  // 把微軟的法醫報告存進前端資料夾
-                  azureReports[currentIndex] = evidenceJSON;
+                  // 存入前端，結算時也會一刀未剪送回 GAS
+                  azureReports[currentIndex] = rawAzureData;
 
+                  // 直接把這包原始資料 POST 給後端！
                   fetch(`${GAS_URL}?action=evaluate_speech_azure&word=${encodeURIComponent(targetWord)}`, { 
-                      method: 'POST', body: JSON.stringify(evidenceJSON) 
+                      method: 'POST', body: JSON.stringify(rawAzureData) 
                   }).then(res => res.json()).then(data => {
                       scores[currentIndex] = finalScore;
                       if(!window.feedbacks) window.feedbacks = [];
