@@ -3579,22 +3579,26 @@
      🚀 瑪麗安小幫手核心控制區 (已整合音訊工廠)
      ------------------------------------------------------- */
 
-  // 1. 顯示視窗並啟動播放
+  // ✅ 這是新版，直接抓 GitHub 上的 399 個檔案
   async function showPhonicHelper(word, localKey) {
       const overlay = document.getElementById('phonic-helper-overlay');
       const title = document.getElementById('helper-word-title');
       const instruction = document.getElementById('helper-instruction');
       
+      // 1. 介面更新
       title.innerText = word.toUpperCase();
-      instruction.innerHTML = `注意這個音：<br>
-          <span style="display:block; margin: 10px 0; font-size: 36px; color: var(--marian-red); background: #fff5f5; padding: 10px; border-radius: 10px;">
-              ${localKey.toUpperCase()}
-          </span>
-          <small style="color:#95a5a6">聽聽老師的拼讀示範...</small>`;
-      
+      instruction.innerHTML = `正在呼叫老師...`;
       overlay.style.display = 'flex';
   
-      // 啟動「m...m...mother」播放邏輯
+      // 2. 更新指令說明
+      // 這裡我們直接顯示我們要播的音標 Key
+      instruction.innerHTML = `注意這個音：<br>
+        <span style="display:block; margin: 10px 0; font-size: 36px; color: var(--marian-red); background: #fff5f5; padding: 10px; border-radius: 10px;">
+          ${localKey.toUpperCase()}
+        </span>
+        <small style="color:#95a5a6">聽聽老師怎麼唸這個音...</small>`;
+      
+      // 3. 執行「m...m...mother」播放邏輯
       playModularAudio(localKey, word);
   }
   
