@@ -3616,7 +3616,7 @@
           
           // 🔊 【核心：加裝擴大機】
           const gainNode = audioCtx.createGain();
-          gainNode.gain.value = 5; // 👈 這裡就是「暴力放大」！預設 1.0，我們給 2.5 倍！
+          gainNode.gain.value = 10; // 👈 這裡就是「暴力放大」！預設 1.0，我們給 2.5 倍！
           
           source.connect(gainNode);
           gainNode.connect(audioCtx.destination);
