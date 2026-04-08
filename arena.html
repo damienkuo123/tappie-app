@@ -3592,35 +3592,68 @@
       playModularAudio(localKey, word);
   }
   
-  // 🚀 2+1 播放引擎 (音素x2 + 單字x1)
-  function playModularAudio(localKey, fullWord) {
-      window.speechSynthesis.cancel();
-      
-      // 你的 GitHub 音檔路徑
-      const audioPath = `audio/${localKey}.mp3`;
-      const phonemeAudio = new Audio(audioPath);
-      
-      console.log("正在拼讀:", localKey);
+    // 建立一個全域的音訊上下文（擴大機基座）
+  let audioCtx = null;
   
-      // 第一遍
-      phonemeAudio.play().catch(e => console.error("音檔播放失敗", e));
+  function playModularAudio(localKey, fullWord) {
+      // 確保音訊上下文在點擊後啟動
+      if (!audioCtx) {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
       
-      phonemeAudio.onended = () => {
-          setTimeout(() => {
-              // 第二遍
-              const audio2 = new Audio(audioPath);
-              audio2.play();
-              audio2.onended = () => {
-                  setTimeout(() => {
-                      // 最終唸出完整單字 (系統原生)
-                      const msg = new SpeechSynthesisUtterance(fullWord);
-                      msg.lang = 'en-US';
-                      msg.rate = 0.65;
-                      window.speechSynthesis.speak(msg);
-                  }, 500);
-              };
-          }, 350);
+      window.speechSynthesis.cancel();
+      const audioPath = `audio/${localKey}.mp3`;
+  
+      // 🚀 建立擴大機播放函數
+      const playWithGain = async (src) => {
+          const response = await fetch(src);
+          const arrayBuffer = await response.arrayBuffer();
+          const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+          
+          const source = audioCtx.createBufferSource();
+          source.buffer = audioBuffer;
+          
+          // 🔊 【核心：加裝擴大機】
+          const gainNode = audioCtx.createGain();
+          gainNode.gain.value = 2.5; // 👈 這裡就是「暴力放大」！預設 1.0，我們給 2.5 倍！
+          
+          source.connect(gainNode);
+          gainNode.connect(audioCtx.destination);
+          
+          source.start(0);
+          return new Promise(resolve => {
+              source.onended = resolve;
+          });
       };
+  
+      // 🎬 執行 2+1 播放序列
+      (async () => {
+          try {
+              // 第一聲音素 (超大聲)
+              await playWithGain(audioPath);
+              
+              // 停頓 300ms
+              await new Promise(r => setTimeout(r, 300));
+              
+              // 第二聲音素 (超大聲)
+              await playWithGain(audioPath);
+              
+              // 停頓 600ms 後播單字
+              await new Promise(r => setTimeout(r, 600));
+              
+              // 最終單字 (系統語音，維持正常 1.0 音量)
+              const msg = new SpeechSynthesisUtterance(fullWord);
+              msg.lang = 'en-US';
+              msg.rate = 0.7;
+              msg.volume = 1.0; 
+              window.speechSynthesis.speak(msg);
+              
+          } catch (e) {
+              console.error("播放序列出錯:", e);
+              // 萬一擴大機故障的備案
+              window.speechSynthesis.speak(new SpeechSynthesisUtterance(fullWord));
+          }
+      })();
   }
 
   // 3. 關閉視窗
