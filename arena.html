@@ -7,24 +7,6 @@
   <script src="https://aka.ms/csspeech/jsbrowserpackageraw"></script>
   <style>
     :root {
-
-    /* 🚀 確保變色字體與原本題目完全一致 */
-    .colored-char {
-  font-weight: bold;
-  display: inline-block;
-  transition: color 0.3s ease;
-  font-family: inherit; 
-}
-.colored-char[style*="color: rgb(214, 48, 49)"],
-.colored-char[style*="color: #d63031"] {
-  color: #b33939 !important; /* 飽和度較低的深紅色 */
-}
-    .word-omission { 
-      color: #b2bec3 !important; 
-      text-decoration: line-through; 
-      opacity: 0.5; 
-    }
-
     @keyframes blink-red { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
       /* 🚀 關鍵修復 1：把今日挑戰的專屬顏色加回來！沒有這些，按鈕會全部隱形破圖！ */
       --primary-blue: #0066cc; 
@@ -69,7 +51,40 @@
       --sunpillar-clr-4: var(--sunpillar-4);
       --sunpillar-clr-5: var(--sunpillar-5);
       --sunpillar-clr-6: var(--sunpillar-6);
+    } /* 🚀 補上這個大括號，救回整個網頁 */
+
+    #word-display {
+      color: #0d47a1;
+      margin: 0;
+      text-shadow: 1px 1px 0 #fff;
+      word-break: normal;       /* 🚀 禁止單字斷開 */
+      overflow-wrap: break-word; /* 🚀 超過寬度才換行 */
+      line-height: 1.1;
+      text-align: center;
+      width: 100%;
     }
+
+    /* 🎨 超精緻膠囊播放鈕 */
+    .btn-play-pill {
+      background: #f0f3f5;
+      color: var(--primary-blue);
+      border: 1px solid #d1d8dd;
+      padding: 5px 15px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: bold;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      margin-top: 10px;
+      transition: all 0.2s;
+    }
+    .btn-play-pill:active { transform: scale(0.95); background: #e2e6e9; }
+
+    .colored-char { font-weight: bold; transition: color 0.3s ease; }
+    .word-omission { color: #b2bec3 !important; text-decoration: line-through; opacity: 0.5; }
+    
     body { font-family: -apple-system, sans-serif; text-align: center; padding: 20px; background: #eaeff2; margin: 0; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
     .main-panel { 
       background: white; padding: 25px; border-radius: 28px; 
