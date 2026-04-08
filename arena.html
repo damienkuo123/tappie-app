@@ -3598,11 +3598,11 @@ const subData = (azureWord.Phonemes && azureWord.Phonemes.length > 0)
       
       title.innerText = word.toUpperCase();
       
-      // 視覺提示也改成音節拆解
+      // 🚀 專業 Phonics 帶讀排版
       instruction.innerHTML = `跟我一起唸：<br>
-        <span style="font-size: 24px; color: var(--marian-red); letter-spacing: 2px;">
+        <span style="display:block; margin: 10px 0; font-size: 26px; color: var(--marian-red); background: #fff5f5; padding: 10px; border-radius: 10px;">
           ${syllable}... ${syllable}... <br>
-          <b style="font-size: 34px;">${word}</b>
+          <b style="font-size: 38px; color: #333;">${word}</b>
         </span>`;
       
       overlay.style.display = 'flex';
