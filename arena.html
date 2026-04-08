@@ -7,8 +7,6 @@
   <script src="https://aka.ms/csspeech/jsbrowserpackageraw"></script>
   <style>
     :root {
-    @keyframes blink-red { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
-      /* 🚀 關鍵修復 1：把今日挑戰的專屬顏色加回來！沒有這些，按鈕會全部隱形破圖！ */
       --primary-blue: #0066cc; 
       --marian-yellow: #ff9900; 
       --marian-red: #d63031; 
@@ -53,34 +51,39 @@
       --sunpillar-clr-6: var(--sunpillar-6);
     } /* 🚀 補上這個大括號，救回整個網頁 */
 
+    @keyframes blink-red { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+
     #word-display {
       color: #0d47a1;
-      margin: 0;
+      margin: 10px 0;
       text-shadow: 1px 1px 0 #fff;
-      word-break: normal;       /* 🚀 禁止單字斷開 */
-      overflow-wrap: break-word; /* 🚀 超過寬度才換行 */
+      font-weight: 900;
+      /* 🚀 關鍵換行：不准在單字中間斷開 */
+      word-break: normal;
+      overflow-wrap: break-word;
       line-height: 1.1;
       text-align: center;
       width: 100%;
     }
 
-    /* 🎨 超精緻膠囊播放鈕 */
+    /* 🎨 高級膠囊播放鈕 (Apple 現代風格) */
     .btn-play-pill {
-      background: #f0f3f5;
+      background: #f1f2f6;
       color: var(--primary-blue);
-      border: 1px solid #d1d8dd;
-      padding: 5px 15px;
-      border-radius: 20px;
+      border: 1.5px solid #dfe4ea;
+      padding: 6px 16px;
+      border-radius: 30px;
       font-size: 13px;
-      font-weight: bold;
+      font-weight: 800;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
-      gap: 5px;
-      margin-top: 10px;
+      gap: 6px;
       transition: all 0.2s;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
     }
-    .btn-play-pill:active { transform: scale(0.95); background: #e2e6e9; }
+    .btn-play-pill:active { transform: scale(0.95); background: #e1e2e7; }
+    .btn-play-pill span:first-child { font-size: 16px; }
 
     .colored-char { font-weight: bold; transition: color 0.3s ease; }
     .word-omission { color: #b2bec3 !important; text-decoration: line-through; opacity: 0.5; }
