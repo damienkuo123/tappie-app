@@ -1474,19 +1474,25 @@
   
   function generateColoredHTML(azureData, originalText) {
       if (!azureData || !azureData.Words) return originalText;
-
       const tokens = originalText.split(/(\s+|[.,?!:;]+)/);
       let azureWordIdx = 0;
 
       const finalHtml = tokens.map(token => {
           if (/^(\s+|[.,?!:;]+)$/.test(token)) return token;
-
           const azureWord = azureData.Words[azureWordIdx];
           if (!azureWord) return token;
           azureWordIdx++;
 
           const assess = azureWord.PronunciationAssessment || {};
           const subData = (azureWord.Phonemes && azureWord.Phonemes.length > 0) ? azureWord.Phonemes : (azureWord.Syllables || []);
+
+          // 🚀 核心：找出這組單字中「分數最低」的音素索引
+          let minScore = 100;
+          let minIdx = -1;
+          subData.forEach((s, i) => {
+              let sc = s.PronunciationAssessment.AccuracyScore || 0;
+              if (sc < minScore) { minScore = sc; minIdx = i; }
+          });
 
           if (assess.ErrorType === "Omission") {
               return `<span class="char-help-wrapper"><span class="word-omission">${token}</span><button class="helper-bulb" onclick="showPhonicHelper('${token}', '${token.substring(0,2)}')">💡</button></span>`;
@@ -1498,20 +1504,17 @@
               subData.forEach((sub, idx) => {
                   const sScore = sub.PronunciationAssessment.AccuracyScore || 0;
                   const color = getScoreColor(sScore);
-                  
                   let segmentLen;
-                  if (sub.Grapheme) {
-                      segmentLen = sub.Grapheme.length;
-                  } else {
+                  if (sub.Grapheme) { segmentLen = sub.Grapheme.length; } 
+                  else {
                       const remainingChars = token.length - charPointer;
                       const remainingSegments = subData.length - idx;
                       segmentLen = (idx === subData.length - 1) ? remainingChars : Math.max(1, Math.round(remainingChars / remainingSegments));
                   }
-                  
                   const chunk = token.substr(charPointer, segmentLen);
                   if (chunk) {
-                      // 🚀 關鍵：如果這個音素分數低 (< 60)，單獨給這個 chunk 套上燈泡
-                      if (sScore < 60) {
+                      // 🚀 只在分數最低且低於 70 分的地方放燈泡
+                      if (idx === minIdx && sScore < 70) {
                           const guiLetter = sub.Grapheme || chunk;
                           coloredWord += `<span class="char-help-wrapper"><span class="colored-char" style="color: ${color}">${chunk}</span><button class="helper-bulb" onclick="showPhonicHelper('${token}', '${guiLetter}')">💡</button></span>`;
                       } else {
@@ -1522,10 +1525,8 @@
               });
               return coloredWord;
           }
-
           return `<span class="colored-char" style="color: ${getScoreColor(assess.AccuracyScore || 0)}">${token}</span>`;
       });
-
       return finalHtml.join('');
   }
   
