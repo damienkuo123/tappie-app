@@ -3602,32 +3602,34 @@
       playModularAudio(localKey, word);
   }
   
-  // 2. 執行 2+1 播放模式 (音素 x2 + 本地單字 x1)
+    // 🚀 2+1 播放引擎 (音素x2 + 單字x1)
   function playModularAudio(localKey, fullWord) {
-      window.speechSynthesis.cancel(); // 停止先前的 TTS
+      window.speechSynthesis.cancel();
       
+      // 你的 GitHub 音檔路徑
       const audioPath = `audio/${localKey}.mp3`;
       const phonemeAudio = new Audio(audioPath);
       
-      // 第一次：音素 (例如 m)
-      phonemeAudio.play();
+      console.log("正在拼讀:", localKey);
+  
+      // 第一遍
+      phonemeAudio.play().catch(e => console.error("音檔播放失敗", e));
       
       phonemeAudio.onended = () => {
-          // 停頓 400 毫秒後播第二次
           setTimeout(() => {
-              const phonemeAudio2 = new Audio(audioPath);
-              phonemeAudio2.play();
-              
-              phonemeAudio2.onended = () => {
-                  // 停頓 600 毫秒後，唸出完整單字
+              // 第二遍
+              const audio2 = new Audio(audioPath);
+              audio2.play();
+              audio2.onended = () => {
                   setTimeout(() => {
+                      // 最終唸出完整單字 (系統原生)
                       const msg = new SpeechSynthesisUtterance(fullWord);
                       msg.lang = 'en-US';
-                      msg.rate = 0.7; // 稍微慢一點，展現權威感
+                      msg.rate = 0.65;
                       window.speechSynthesis.speak(msg);
-                  }, 600);
+                  }, 500);
               };
-          }, 400);
+          }, 350);
       };
   }
 
