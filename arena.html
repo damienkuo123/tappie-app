@@ -3623,7 +3623,7 @@
           const source = audioCtx.createBufferSource();
           source.buffer = audioBuffer;
           const gainNode = audioCtx.createGain();
-          gainNode.gain.value = 2.5; 
+          gainNode.gain.value = 10; 
           source.connect(gainNode);
           gainNode.connect(audioCtx.destination);
           source.start(0);
