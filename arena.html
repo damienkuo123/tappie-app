@@ -1485,10 +1485,17 @@
           azureWordIdx++;
   
           const assess = azureWord.PronunciationAssessment || {};
-          const subData = (azureWord.Phonemes && azureWord.Phonemes.length > 0) ? azureWord.Phonemes : (azureWord.Syllables || []);
   
-          let minScore = 100;
-          let minIdx = -1;
+          if (assess.ErrorType === "Omission") {
+              const firstTwo = token.substring(0, 2).toLowerCase();
+              const fallbackKey = AZURE_TO_LOCAL_MAP[firstTwo] || firstTwo;
+              const hasAudio = PHONICS_MAP[fallbackKey] ? true : false;
+              // 🚀 修改：傳入 token 作為顯示字
+              return `<span class="char-help-wrapper word-omission">${token}${hasAudio ? `<button class="helper-bulb" onclick="showPhonicHelper('${token}', '${fallbackKey}', '${token}')">💡</button>` : ''}</span>`;
+          }
+  
+          const subData = (azureWord.Phonemes && azureWord.Phonemes.length > 0) ? azureWord.Phonemes : (azureWord.Syllables || []);
+          let minScore = 100, minIdx = -1;
           subData.forEach((s, i) => {
               let sc = s.PronunciationAssessment.AccuracyScore || 0;
               if (sc < minScore) { minScore = sc; minIdx = i; }
@@ -1500,31 +1507,17 @@
               subData.forEach((sub, idx) => {
                   const sScore = sub.PronunciationAssessment.AccuracyScore || 0;
                   const color = getScoreColor(sScore);
-                  let segmentLen;
-                  
-                  if (sub.Grapheme) { segmentLen = sub.Grapheme.length; } 
-                  else {
-                      const remainingChars = token.length - charPointer;
-                      const remainingSegments = subData.length - idx;
-                      segmentLen = (idx === subData.length - 1) ? remainingChars : Math.max(1, Math.round(remainingChars / remainingSegments));
-                  }
+                  let segmentLen = sub.Grapheme ? sub.Grapheme.length : Math.max(1, Math.round((token.length - charPointer) / (subData.length - idx)));
                   const chunk = token.substr(charPointer, segmentLen);
                   
                   if (chunk) {
-                      // 🚀 核心修改：判斷是否顯示燈泡
-                      // 1. 取得 Azure 的 Phoneme 標籤 (例如 "ih", "jh")
-                      const azurePhoneme = (sub.Phoneme || "").toLowerCase();
-                      // 2. 查表：翻譯成你的檔名 (例如 "i_short")
-                      const localKey = AZURE_TO_LOCAL_MAP[azurePhoneme] || azurePhoneme;
-                      
-                      // 3. 檢查「真的有音檔」且「分數低於 70」
-                      const hasAudioFile = PHONICS_MAP[localKey] ? true : false;
+                      const rawLabel = (sub.Phoneme || sub.Syllable || "").toLowerCase();
+                      const localKey = AZURE_TO_LOCAL_MAP[rawLabel] || rawLabel;
+                      const hasAudio = PHONICS_MAP[localKey] ? true : false;
   
-                      if (idx === minIdx && sScore < 70 && hasAudioFile) {
-                          coloredWord += `<span class="char-help-wrapper">
-                              <span class="colored-char" style="color: ${color}">${chunk}</span>
-                              <button class="helper-bulb" onclick="showPhonicHelper('${token}', '${localKey}')">💡</button>
-                          </span>`;
+                      if (idx === minIdx && sScore < 70 && hasAudio) {
+                          // 🚀 修改：第三個參數傳入 chunk，這樣燈泡打開就會顯示真實字母
+                          coloredWord += `<span class="char-help-wrapper colored-char" style="color: ${color}">${chunk}<button class="helper-bulb" onclick="showPhonicHelper('${token}', '${localKey}', '${chunk}')">💡</button></span>`;
                       } else {
                           coloredWord += `<span class="colored-char" style="color: ${color}">${chunk}</span>`;
                       }
