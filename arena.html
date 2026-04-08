@@ -3601,62 +3601,59 @@
   let audioCtx = null;
   
   function playModularAudio(localKey, fullWord) {
-      // 確保音訊上下文在點擊後啟動
       if (!audioCtx) {
           audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       }
       
+      // 🚀 【核心修復 2】確保語音引擎處於活躍狀態
       window.speechSynthesis.cancel();
+      window.speechSynthesis.resume(); 
+      
       const audioPath = `audio/${localKey}.mp3`;
   
-      // 🚀 建立擴大機播放函數
       const playWithGain = async (src) => {
           const response = await fetch(src);
           const arrayBuffer = await response.arrayBuffer();
           const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-          
           const source = audioCtx.createBufferSource();
           source.buffer = audioBuffer;
-          
-          // 🔊 【核心：加裝擴大機】
           const gainNode = audioCtx.createGain();
-          gainNode.gain.value = 10; // 👈 這裡就是「暴力放大」！預設 1.0，我們給 2.5 倍！
-          
+          gainNode.gain.value = 2.5; 
           source.connect(gainNode);
           gainNode.connect(audioCtx.destination);
-          
           source.start(0);
           return new Promise(resolve => {
               source.onended = resolve;
           });
       };
   
-      // 🎬 執行 2+1 播放序列
       (async () => {
           try {
-              // 第一聲音素 (超大聲)
+              // 第一聲音素
               await playWithGain(audioPath);
-              
-              // 停頓 300ms
               await new Promise(r => setTimeout(r, 300));
               
-              // 第二聲音素 (超大聲)
+              // 第二聲音素
               await playWithGain(audioPath);
               
-              // 停頓 600ms 後播單字
+              // 🚀 【核心修復 3】在準備唸單字前，再次確認引擎沒睡著
               await new Promise(r => setTimeout(r, 600));
-              
-              // 最終單字 (系統語音，維持正常 1.0 音量)
+              window.speechSynthesis.resume(); 
+  
               const msg = new SpeechSynthesisUtterance(fullWord);
               msg.lang = 'en-US';
               msg.rate = 0.7;
               msg.volume = 1.0; 
+              
+              // 執行最終唸單字
               window.speechSynthesis.speak(msg);
               
           } catch (e) {
-              console.error("播放序列出錯:", e);
-              // 萬一擴大機故障的備案
-              window.speechSynthesis.speak(new SpeechSynthesisUtterance(fullWord));
+              console.error("播放序列失敗:", e);
+              // 最終保險備案
+              const fallback = new SpeechSynthesisUtterance(fullWord);
+              fallback.lang = 'en-US';
+              window.speechSynthesis.speak(fallback);
           }
       })();
   }
