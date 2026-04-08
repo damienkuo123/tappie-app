@@ -66,24 +66,38 @@
       width: 100%;
     }
 
-    /* 💡 小幫手按鈕樣式 */
-    .helper-btn {
-      background: #f1c40f;
-      color: #333;
-      border: 2px solid white;
-      border-radius: 12px;
-      padding: 2px 10px;
-      font-size: 12px;
-      font-weight: 800;
-      cursor: pointer;
-      margin-top: 5px;
-      display: inline-block;
-      box-shadow: 0 4px 0 #d4ac0d;
-      animation: helper-bounce 2s infinite;
+    /* 🚀 讓單字容器保持在同一行 */
+    .word-help-wrapper {
+      position: relative;
+      display: inline-block; /* 關鍵：確保單字橫向排列 */
+      margin: 0 5px;
+      vertical-align: top;
     }
-    @keyframes helper-bounce {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-3px); }
+
+    /* 💡 浮動小燈泡：不影響原本文字排版 */
+    .helper-bulb {
+      position: absolute;
+      top: -15px; /* 浮在字上方 */
+      right: -10px;
+      background: #f1c40f;
+      border: 1.5px solid white;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      animation: bulb-pulse 1.5s infinite;
+      z-index: 10;
+    }
+    
+    @keyframes bulb-pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.2); filter: brightness(1.2); }
+      100% { transform: scale(1); }
     }
 
     /* 🎨 高級膠囊播放鈕 (Apple 現代風格) */
