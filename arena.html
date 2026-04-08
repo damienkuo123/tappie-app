@@ -1473,6 +1473,9 @@
           if (!azureWord) return token;
           azureWordIdx++;
 
+          // 🚀 判斷是否需要幫助 (準確度低於 60 分)
+          const needsHelp = (azureWord.PronunciationAssessment.AccuracyScore || 0) < 60;
+
           const assess = azureWord.PronunciationAssessment || {};
           if (assess.ErrorType === "Omission") return `<span class="word-omission">${token}</span>`;
 
@@ -1511,6 +1514,12 @@ const subData = (azureWord.Phonemes && azureWord.Phonemes.length > 0)
                   }
                   charPointer += segmentLen;
               });
+              if (needsHelp) {
+                return `<div style="display: inline-flex; flex-direction: column; align-items: center; vertical-align: top;">
+                          ${coloredWord}
+                          <button class="helper-btn" onclick="showPhonicHelper('${token}')">💡 幫幫我</button>
+                        </div>`;
+              }
               return coloredWord;
           }
 
@@ -3556,6 +3565,42 @@ const subData = (azureWord.Phonemes && azureWord.Phonemes.length > 0)
           card.addEventListener('touchmove', rotateToMouse, {passive: true});
           card.addEventListener('touchend', resetTilt);
       });
+  }
+
+  // 🚀 叫出小幫手說明頁面 + 觸發慢速語音
+  function showPhonicHelper(word) {
+      const overlay = document.getElementById('phonic-helper-overlay');
+      const title = document.getElementById('helper-word-title');
+      const instruction = document.getElementById('helper-instruction');
+      
+      // 1. 設定文字內容
+      title.innerText = word.toUpperCase();
+      const firstChar = word.charAt(0).toUpperCase();
+      instruction.innerHTML = `跟我一起唸：<br><span style="font-size: 30px; color: var(--marian-red);">${firstChar}... ${firstChar}... ${word}</span>`;
+      
+      // 2. 顯示視窗
+      overlay.style.display = 'flex';
+      
+      // 3. 觸發慢速音節拆解語音
+      playPhonicGuide(word);
+  }
+
+  function playPhonicGuide(word) {
+      window.speechSynthesis.cancel();
+      const firstChar = word.charAt(0).toLowerCase();
+      // 模擬老師：發音、發音、單字
+      const msg = new SpeechSynthesisUtterance(`${firstChar}... ${firstChar}... ${word}`);
+      
+      msg.lang = 'en-US';
+      msg.rate = 0.5;  // 🚀 超慢速，讓小朋友聽清楚嘴型
+      msg.pitch = 1.1; // 稍微高音一點，聽起來比較像親切的老師
+      
+      window.speechSynthesis.speak(msg);
+  }
+
+  function closePhonicHelper() {
+      document.getElementById('phonic-helper-overlay').style.display = 'none';
+      window.speechSynthesis.cancel();
   }
 </script>
   <div id="phonic-helper-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh; background: rgba(0,0,0,0.8); z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
