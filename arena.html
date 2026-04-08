@@ -3566,34 +3566,33 @@
       });
   }
 
-  // 🚀 接收單字與第一個音節
-  function showPhonicHelper(word, syllable) {
+  function showPhonicHelper(word, letter) {
       const overlay = document.getElementById('phonic-helper-overlay');
       const title = document.getElementById('helper-word-title');
       const instruction = document.getElementById('helper-instruction');
       
       title.innerText = word.toUpperCase();
       
-      // 🚀 專業 Phonics 帶讀排版
-      instruction.innerHTML = `跟我一起唸：<br>
-        <span style="display:block; margin: 10px 0; font-size: 26px; color: var(--marian-red); background: #fff5f5; padding: 10px; border-radius: 10px;">
-          ${syllable}... ${syllable}... <br>
-          <b style="font-size: 38px; color: #333;">${word}</b>
-        </span>`;
+      // 🚀 顯示正確的字母，而不是 mahdh 這種怪字
+      instruction.innerHTML = `注意這個音：<br>
+        <span style="display:block; margin: 10px 0; font-size: 36px; color: var(--marian-red); background: #fff5f5; padding: 10px; border-radius: 10px;">
+          ${letter.toUpperCase()}
+        </span>
+        <small style="color:#95a5a6">聽聽老師怎麼唸這個字...</small>`;
       
       overlay.style.display = 'flex';
-      playPhonicGuide(word, syllable);
+      playPhonicGuide(word, letter);
   }
 
-  function playPhonicGuide(word, syllable) {
+  function playPhonicGuide(word, letter) {
       window.speechSynthesis.cancel();
       
-      // 🚀 核心優化：利用音節拆解避開「字母名」陷阱
-      // 例如 Mother -> "Moth... Moth... Mother"
-      const msg = new SpeechSynthesisUtterance(`${syllable}, ${syllable}, ${word}`);
+      // 🚀 教學策略：先唸字母名，再「超級慢速」唸出完整單字
+      // 這樣孩子就能在標準的 Mother 發音中，聽清楚那個 "th" 的慢動作
+      const msg = new SpeechSynthesisUtterance(`${letter}...... ${word}`);
       
       msg.lang = 'en-US';
-      msg.rate = 0.5;  // 超慢速模仿老師
+      msg.rate = 0.35; // 🚀 極慢速，這就是你要的「截取段落感」
       msg.pitch = 1.1; 
       
       window.speechSynthesis.speak(msg);
