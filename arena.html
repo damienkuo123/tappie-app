@@ -1477,28 +1477,23 @@
       if (!azureData || !azureData.Words) return originalText;
       const tokens = originalText.split(/(\s+|[.,?!:;]+)/);
       let azureWordIdx = 0;
-
+  
       const finalHtml = tokens.map(token => {
           if (/^(\s+|[.,?!:;]+)$/.test(token)) return token;
           const azureWord = azureData.Words[azureWordIdx];
           if (!azureWord) return token;
           azureWordIdx++;
-
+  
           const assess = azureWord.PronunciationAssessment || {};
           const subData = (azureWord.Phonemes && azureWord.Phonemes.length > 0) ? azureWord.Phonemes : (azureWord.Syllables || []);
-
-          // 🚀 核心：找出這組單字中「分數最低」的音素索引
+  
           let minScore = 100;
           let minIdx = -1;
           subData.forEach((s, i) => {
               let sc = s.PronunciationAssessment.AccuracyScore || 0;
               if (sc < minScore) { minScore = sc; minIdx = i; }
           });
-
-          if (assess.ErrorType === "Omission") {
-              return `<span class="char-help-wrapper"><span class="word-omission">${token}</span><button class="helper-bulb" onclick="showPhonicHelper('${token}', '${token.substring(0,2)}')">💡</button></span>`;
-          }
-
+  
           if (subData.length > 0) {
               let coloredWord = "";
               let charPointer = 0;
@@ -1506,6 +1501,7 @@
                   const sScore = sub.PronunciationAssessment.AccuracyScore || 0;
                   const color = getScoreColor(sScore);
                   let segmentLen;
+                  
                   if (sub.Grapheme) { segmentLen = sub.Grapheme.length; } 
                   else {
                       const remainingChars = token.length - charPointer;
@@ -1513,11 +1509,22 @@
                       segmentLen = (idx === subData.length - 1) ? remainingChars : Math.max(1, Math.round(remainingChars / remainingSegments));
                   }
                   const chunk = token.substr(charPointer, segmentLen);
+                  
                   if (chunk) {
-                      // 🚀 只在分數最低且低於 70 分的地方放燈泡
-                      if (idx === minIdx && sScore < 70) {
-                          const guiLetter = sub.Grapheme || chunk;
-                          coloredWord += `<span class="char-help-wrapper"><span class="colored-char" style="color: ${color}">${chunk}</span><button class="helper-bulb" onclick="showPhonicHelper('${token}', '${guiLetter}')">💡</button></span>`;
+                      // 🚀 核心修改：判斷是否顯示燈泡
+                      // 1. 取得 Azure 的 Phoneme 標籤 (例如 "ih", "jh")
+                      const azurePhoneme = (sub.Phoneme || "").toLowerCase();
+                      // 2. 查表：翻譯成你的檔名 (例如 "i_short")
+                      const localKey = AZURE_TO_LOCAL_MAP[azurePhoneme] || azurePhoneme;
+                      
+                      // 3. 檢查「真的有音檔」且「分數低於 70」
+                      const hasAudioFile = PHONICS_MAP[localKey] ? true : false;
+  
+                      if (idx === minIdx && sScore < 70 && hasAudioFile) {
+                          coloredWord += `<span class="char-help-wrapper">
+                              <span class="colored-char" style="color: ${color}">${chunk}</span>
+                              <button class="helper-bulb" onclick="showPhonicHelper('${token}', '${localKey}')">💡</button>
+                          </span>`;
                       } else {
                           coloredWord += `<span class="colored-char" style="color: ${color}">${chunk}</span>`;
                       }
