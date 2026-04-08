@@ -1990,7 +1990,7 @@
             
             try {
                 const wavFile = await createWavFileFromBlob(rawBlob);
-                document.getElementById('status').innerText = "傳送至聲學引擎...";
+                document.getElementById('status').innerText = "🟢 傳送至聲學引擎...";
                 document.getElementById('status').style.color = "#3498db";
 
                 const targetWord = quizData[currentIndex].en;
