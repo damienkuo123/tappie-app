@@ -3567,41 +3567,64 @@
       });
   }
 
-  function showPhonicHelper(word, letter) {
+  /* -------------------------------------------------------
+     🚀 瑪麗安小幫手核心控制區 (已整合音訊工廠)
+     ------------------------------------------------------- */
+
+  // 1. 顯示視窗與抓取雲端音訊
+  async function showPhonicHelper(word, letter) {
       const overlay = document.getElementById('phonic-helper-overlay');
       const title = document.getElementById('helper-word-title');
       const instruction = document.getElementById('helper-instruction');
       
       title.innerText = word.toUpperCase();
-      
-      // 🚀 顯示正確的字母，而不是 mahdh 這種怪字
-      instruction.innerHTML = `注意這個音：<br>
-        <span style="display:block; margin: 10px 0; font-size: 36px; color: var(--marian-red); background: #fff5f5; padding: 10px; border-radius: 10px;">
-          ${letter.toUpperCase()}
-        </span>
-        <small style="color:#95a5a6">聽聽老師怎麼唸這個字...</small>`;
-      
+      instruction.innerHTML = `正在呼叫老師...`;
       overlay.style.display = 'flex';
-      playPhonicGuide(word, letter);
+
+      try {
+          // 向你的 GAS 請求音素檔案網址
+          const response = await fetch(`${GAS_URL}?action=get_phoneme&letter=${letter}`);
+          const audioUrl = await response.text();
+          
+          instruction.innerHTML = `注意這個音：<br>
+            <span style="display:block; margin: 10px 0; font-size: 36px; color: var(--marian-red); background: #fff5f5; padding: 10px; border-radius: 10px;">
+              ${letter.toUpperCase()}
+            </span>
+            <small style="color:#95a5a6">聽聽老師怎麼唸這個音...</small>`;
+          
+          playModularAudio(audioUrl, word);
+      } catch (e) {
+          instruction.innerHTML = "老師忙碌中，請再試一次！";
+      }
   }
 
-  function playPhonicGuide(word, letter) {
+  // 2. 執行混合播放 (音素音檔 + 本地單字)
+  function playModularAudio(phonemeUrl, fullWord) {
       window.speechSynthesis.cancel();
+      const phonemeAudio = new Audio(phonemeUrl);
       
-      // 🚀 教學策略：先唸字母名，再「超級慢速」唸出完整單字
-      // 這樣孩子就能在標準的 Mother 發音中，聽清楚那個 "th" 的慢動作
-      const msg = new SpeechSynthesisUtterance(`${letter}...... ${word}`);
-      
-      msg.lang = 'en-US';
-      msg.rate = 0.35; // 🚀 極慢速，這就是你要的「截取段落感」
-      msg.pitch = 1.1; 
-      
-      window.speechSynthesis.speak(msg);
+      phonemeAudio.play();
+      phonemeAudio.onended = () => {
+          setTimeout(() => {
+              const audio2 = new Audio(phonemeUrl);
+              audio2.play();
+              audio2.onended = () => {
+                  setTimeout(() => {
+                      // 最終唸出完整單字
+                      const msg = new SpeechSynthesisUtterance(fullWord);
+                      msg.lang = 'en-US';
+                      msg.rate = 0.5;
+                      window.speechSynthesis.speak(msg);
+                  }, 400);
+              };
+          }, 300);
+      };
   }
 
+  // 3. 關閉視窗
   function closePhonicHelper() {
       document.getElementById('phonic-helper-overlay').style.display = 'none';
-      window.speechSynthesis.cancel();
+      window.speechSynthesis.cancel(); // 停止所有正在唸的聲音
   }
 </script>
   <div id="phonic-helper-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh; background: rgba(0,0,0,0.8); z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
