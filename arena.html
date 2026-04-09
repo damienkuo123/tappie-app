@@ -1473,87 +1473,115 @@
       return `hsl(${hue}, 90%, 35%)`; // 亮度 35% 確保文字清晰
   }
   
-  // 🚀 瑪麗安偵探：鄰居感應切肉引擎 (依據紅字鄰居自動遞減搜尋)
   function generateColoredHTML(azureData, originalText) {
       if (!azureData || !azureData.Words) return originalText;
       const tokens = originalText.split(/(\s+|[.,?!:;]+)/);
       let azureWordIdx = 0;
   
       return tokens.map(token => {
+          // 1. 處理空白與標點
           if (/^(\s+|[.,?!:;]+)$/.test(token)) return token;
           const azureWord = azureData.Words[azureWordIdx++];
           if (!azureWord) return token;
   
+          const assess = azureWord.PronunciationAssessment || {};
+  
+          // 🚀 【設定補回 1】：處理沒唸到的字 (Omission)，顯示淺灰色帶刪除線 (絕對不刪減)
+          if (assess.ErrorType === "Omission") {
+              const firstTwo = token.substring(0, 2).toLowerCase();
+              const fallbackKey = AZURE_TO_LOCAL_MAP[firstTwo] || firstTwo;
+              const hasAudio = PHONICS_MAP[fallbackKey] ? true : false;
+              return `<span class="char-help-wrapper word-omission">${token}${hasAudio ? `<button class="helper-bulb" onclick="showPhonicHelper('${token}', '${fallbackKey}', '${token}')">💡</button>` : ''}</span>`;
+          }
+  
           const subData = (azureWord.Phonemes && azureWord.Phonemes.length > 0) ? azureWord.Phonemes : (azureWord.Syllables || []);
           
-          // 1. 找出最差的那個音 (minIdx) 作為燈泡發放點
+          // 2. 找出這個單字中得分最低的音素索引 (作為燈泡發放點)
           let minScore = 100, minIdx = -1;
           subData.forEach((s, i) => {
               let sc = s.PronunciationAssessment.AccuracyScore || 0;
               if (sc < minScore) { minScore = sc; minIdx = i; }
           });
   
-          // 2. 準備渲染 HTML
-          let coloredWord = "", charPointer = 0;
-          
-          subData.forEach((sub, idx) => {
-              const sScore = sub.PronunciationAssessment.AccuracyScore || 0;
-              const color = getScoreColor(sScore);
-              const chunk = sub.Grapheme || token.substr(charPointer, Math.max(1, Math.round((token.length - charPointer) / (subData.length - idx))));
+          if (subData.length > 0) {
+              let coloredWord = "", charPointer = 0;
               
-              if (idx === minIdx && sScore < 70) {
-                  // 🚀 【核心邏輯】：向左右掃描所有「不合格」的鄰居
-                  let startPhoneme = idx, endPhoneme = idx;
-                  while (startPhoneme > 0 && subData[startPhoneme - 1].PronunciationAssessment.AccuracyScore < 75) startPhoneme--;
-                  while (endPhoneme < subData.length - 1 && subData[endPhoneme + 1].PronunciationAssessment.AccuracyScore < 75) endPhoneme++;
+              subData.forEach((sub, idx) => {
+                  const sScore = sub.PronunciationAssessment.AccuracyScore || 0;
+                  const color = getScoreColor(sScore);
+                  
+                  // 算出當前區塊的字母內容
+                  let segmentLen = sub.Grapheme ? sub.Grapheme.length : Math.max(1, Math.round((token.length - charPointer) / (subData.length - idx)));
+                  const chunk = token.substr(charPointer, segmentLen);
+                  
+                  if (chunk) {
+                      // 🚀 【設定補回 2】：燈泡邏輯 (僅在最差的音素顯示)
+                      if (idx === minIdx && sScore < 70) {
+                          
+                          // 🧠 核心：尋找紅字鄰居 (分數 < 75 為鄰居)
+                          let startP = idx, endP = idx;
+                          while (startP > 0 && subData[startP - 1].PronunciationAssessment.AccuracyScore < 75) startP--;
+                          while (endP < subData.length - 1 && subData[endP + 1].PronunciationAssessment.AccuracyScore < 75) endP++;
   
-                  // 將這群紅字鄰居組合成一個搜尋字串 (例如 "am", "ther")
-                  let neighborStr = "";
-                  let tempPointer = 0;
-                  // 算出 startPhoneme 對應在單字中的起始點
-                  for(let p=0; p<startPhoneme; p++) {
-                      tempPointer += (subData[p].Grapheme ? subData[p].Grapheme.length : 1);
-                  }
-                  // 組合字串
-                  for(let p=startPhoneme; p<=endPhoneme; p++) {
-                      neighborStr += (subData[p].Grapheme || token.substr(tempPointer, 1));
-                  }
-                  neighborStr = neighborStr.toLowerCase();
-  
-                  // 🚀 【遞減搜尋法】：am -> a -> 沒找到才用音標
-                  let finalLocalKey = "";
-                  let foundInMap = false;
-  
-                  // A. 優先嘗試「有聲/無聲 TH」的特殊處理
-                  if (neighborStr.includes("th")) {
-                      finalLocalKey = (sub.Phoneme.toLowerCase() === "dh") ? "th_voiced" : "th_unvoiced";
-                      foundInMap = true;
-                  } else {
-                      // B. 進行遞減搜尋 (例如: ther -> the -> th)
-                      for (let len = neighborStr.length; len >= 1; len--) {
-                          let testStr = neighborStr.substring(0, len);
-                          if (PHONICS_MAP[testStr]) {
-                              finalLocalKey = testStr;
-                              foundInMap = true;
-                              break;
+                          // 組合紅字區塊的完整字母串 (例如 "am", "action" 裡的 "tion")
+                          let neighborStr = "";
+                          let tempPtr = 0;
+                          for(let p=0; p<startP; p++) tempPtr += (subData[p].Grapheme ? subData[p].Grapheme.length : 1);
+                          for(let p=startP; p<=endP; p++) {
+                              neighborStr += (subData[p].Grapheme || token.substr(tempPtr, 1));
+                              tempPtr += (subData[p].Grapheme ? subData[p].Grapheme.length : 1);
                           }
+                          const searchKey = neighborStr.toLowerCase();
+  
+                          // 🚀 【全方位滑動窗口搜尋邏輯】
+                          let localKey = "";
+                          let found = false;
+  
+                          // A. 特殊 TH 判定 (優先權最高)
+                          if (searchKey.includes("th")) {
+                              const rawPh = (sub.Phoneme || "").toLowerCase();
+                              localKey = (rawPh === "dh") ? "th_voiced" : "th_unvoiced";
+                              found = true;
+                          } else {
+                              // B. 🚀 改良版：全字串滑動搜尋 (由長到短，檢查所有可能的連續子串)
+                              // 例如 neighborStr 是 "tion"，會先找 "tion"，再找 "tio"、"ion"，再找 "ti"、"io"、"on"
+                              for (let len = searchKey.length; len >= 1; len--) {
+                                  for (let start = 0; start <= searchKey.length - len; start++) {
+                                      let test = searchKey.substr(start, len);
+                                      if (PHONICS_MAP[test]) {
+                                          localKey = test;
+                                          found = true;
+                                          break;
+                                      }
+                                  }
+                                  if (found) break;
+                              }
+                          }
+  
+                          // C. 最終備援：若鄰居搜尋失敗，走 Azure 標籤翻譯機
+                          if (!found) {
+                              const rawPh = (sub.Phoneme || "").toLowerCase();
+                              localKey = AZURE_TO_LOCAL_MAP[rawPh] || rawPh;
+                          }
+  
+                          const hasFinalAudio = PHONICS_MAP[localKey] ? true : false;
+                          
+                          // 🚀 關鍵修正：將搜尋到的 localKey 傳遞給指令顯示，解決「唸 am 顯 a」的問題
+                          const displayLabel = found ? localKey.toUpperCase() : chunk.toUpperCase();
+  
+                          coloredWord += `<span class="char-help-wrapper colored-char" style="color: ${color}">${chunk}${hasFinalAudio ? `<button class="helper-bulb" onclick="showPhonicHelper('${token}', '${localKey}', '${displayLabel}')">💡</button>` : ''}</span>`;
+                      } else {
+                          // 一般變色顯示 (無燈泡)
+                          coloredWord += `<span class="colored-char" style="color: ${color}">${chunk}</span>`;
                       }
                   }
-  
-                  // C. 如果遞減搜尋還是全滅，才用 Azure 的翻譯機保險
-                  if (!foundInMap) {
-                      const rawPhoneme = (sub.Phoneme || "").toLowerCase();
-                      finalLocalKey = AZURE_TO_LOCAL_MAP[rawPhoneme] || rawPhoneme;
-                  }
-  
-                  const hasAudio = PHONICS_MAP[finalLocalKey] ? true : false;
-                  coloredWord += `<span class="char-help-wrapper colored-char" style="color: ${color}">${chunk}${hasAudio ? `<button class="helper-bulb" onclick="showPhonicHelper('${token}', '${finalLocalKey}', '${chunk}')">💡</button>` : ''}</span>`;
-              } else {
-                  coloredWord += `<span class="colored-char" style="color: ${color}">${chunk}</span>`;
-              }
-              charPointer += chunk.length;
-          });
-          return coloredWord;
+                  charPointer += segmentLen;
+              });
+              return coloredWord;
+          }
+          
+          // 保險回傳：整字變色
+          return `<span class="colored-char" style="color: ${getScoreColor(assess.AccuracyScore || 0)}">${token}</span>`;
       }).join('');
   }
   
