@@ -1473,7 +1473,7 @@
       return `hsl(${hue}, 90%, 35%)`; // 亮度 35% 確保文字清晰
   }
   
-  // 🚀 瑪麗安偵探：高階雷達切肉引擎 (解決 am, tion, ack 等音組問題)
+  // 🚀 瑪麗安偵探：鄰居感應切肉引擎 (依據紅字鄰居自動遞減搜尋)
   function generateColoredHTML(azureData, originalText) {
       if (!azureData || !azureData.Words) return originalText;
       const tokens = originalText.split(/(\s+|[.,?!:;]+)/);
@@ -1484,76 +1484,76 @@
           const azureWord = azureData.Words[azureWordIdx++];
           if (!azureWord) return token;
   
-          const assess = azureWord.PronunciationAssessment || {};
           const subData = (azureWord.Phonemes && azureWord.Phonemes.length > 0) ? azureWord.Phonemes : (azureWord.Syllables || []);
           
+          // 1. 找出最差的那個音 (minIdx) 作為燈泡發放點
           let minScore = 100, minIdx = -1;
           subData.forEach((s, i) => {
               let sc = s.PronunciationAssessment.AccuracyScore || 0;
               if (sc < minScore) { minScore = sc; minIdx = i; }
           });
   
-          if (subData.length > 0) {
-              let coloredWord = "", charPointer = 0;
-              subData.forEach((sub, idx) => {
-                  const sScore = sub.PronunciationAssessment.AccuracyScore || 0;
-                  const color = getScoreColor(sScore);
-                  
-                  // 🧠 【雷達切肉邏輯】優先比對 399 地圖裡的長音組
-                  let segmentLen = 1; 
-                  if (sub.Grapheme) {
-                      segmentLen = sub.Grapheme.length;
+          // 2. 準備渲染 HTML
+          let coloredWord = "", charPointer = 0;
+          
+          subData.forEach((sub, idx) => {
+              const sScore = sub.PronunciationAssessment.AccuracyScore || 0;
+              const color = getScoreColor(sScore);
+              const chunk = sub.Grapheme || token.substr(charPointer, Math.max(1, Math.round((token.length - charPointer) / (subData.length - idx))));
+              
+              if (idx === minIdx && sScore < 70) {
+                  // 🚀 【核心邏輯】：向左右掃描所有「不合格」的鄰居
+                  let startPhoneme = idx, endPhoneme = idx;
+                  while (startPhoneme > 0 && subData[startPhoneme - 1].PronunciationAssessment.AccuracyScore < 75) startPhoneme--;
+                  while (endPhoneme < subData.length - 1 && subData[endPhoneme + 1].PronunciationAssessment.AccuracyScore < 75) endPhoneme++;
+  
+                  // 將這群紅字鄰居組合成一個搜尋字串 (例如 "am", "ther")
+                  let neighborStr = "";
+                  let tempPointer = 0;
+                  // 算出 startPhoneme 對應在單字中的起始點
+                  for(let p=0; p<startPhoneme; p++) {
+                      tempPointer += (subData[p].Grapheme ? subData[p].Grapheme.length : 1);
+                  }
+                  // 組合字串
+                  for(let p=startPhoneme; p<=endPhoneme; p++) {
+                      neighborStr += (subData[p].Grapheme || token.substr(tempPointer, 1));
+                  }
+                  neighborStr = neighborStr.toLowerCase();
+  
+                  // 🚀 【遞減搜尋法】：am -> a -> 沒找到才用音標
+                  let finalLocalKey = "";
+                  let foundInMap = false;
+  
+                  // A. 優先嘗試「有聲/無聲 TH」的特殊處理
+                  if (neighborStr.includes("th")) {
+                      finalLocalKey = (sub.Phoneme.toLowerCase() === "dh") ? "th_voiced" : "th_unvoiced";
+                      foundInMap = true;
                   } else {
-                      // 探測前方 4 到 2 個字母，看地圖裡有沒有現成的音組音檔
-                      let foundMatch = false;
-                      for (let l = 4; l >= 2; l--) {
-                          let potential = token.substr(charPointer, l).toLowerCase();
-                          // 🚀 如果地圖裡有 "am" 或 "tion"，就直接整塊切走！
-                          if (PHONICS_MAP[potential]) {
-                              segmentLen = l;
-                              foundMatch = true;
+                      // B. 進行遞減搜尋 (例如: ther -> the -> th)
+                      for (let len = neighborStr.length; len >= 1; len--) {
+                          let testStr = neighborStr.substring(0, len);
+                          if (PHONICS_MAP[testStr]) {
+                              finalLocalKey = testStr;
+                              foundInMap = true;
                               break;
                           }
                       }
-                      // 如果都沒對到，且是特殊的 TH，強行切 2 個字
-                      if (!foundMatch) {
-                          const pair = token.substr(charPointer, 2).toLowerCase();
-                          if (['th', 'sh', 'ch', 'ph', 'wh', 'ck'].includes(pair)) segmentLen = 2;
-                          else segmentLen = Math.max(1, Math.round((token.length - charPointer) / (subData.length - idx)));
-                      }
                   }
   
-                  const chunk = token.substr(charPointer, segmentLen);
-                  if (chunk) {
-                      const chunkLower = chunk.toLowerCase();
+                  // C. 如果遞減搜尋還是全滅，才用 Azure 的翻譯機保險
+                  if (!foundInMap) {
                       const rawPhoneme = (sub.Phoneme || "").toLowerCase();
-                      const translatedKey = AZURE_TO_LOCAL_MAP[rawPhoneme] || rawPhoneme;
-                      
-                      // 🚀 核心決定：這顆燈泡到底要播哪個檔名？
-                      let localKey = translatedKey;
-                      
-                      // A. 如果是 TH，判定有聲/無聲
-                      if (chunkLower === "th") {
-                          localKey = (rawPhoneme === "dh") ? "th_voiced" : "th_unvoiced";
-                      } 
-                      // B. 如果切下來的字母塊(例如 am)在地圖裡有檔案，優先用它！
-                      else if (PHONICS_MAP[chunkLower]) {
-                          localKey = chunkLower;
-                      }
-  
-                      const hasAudio = PHONICS_MAP[localKey] ? true : false;
-  
-                      if (idx === minIdx && sScore < 70 && hasAudio) {
-                          coloredWord += `<span class="char-help-wrapper colored-char" style="color: ${color}">${chunk}<button class="helper-bulb" onclick="showPhonicHelper('${token}', '${localKey}', '${chunk}')">💡</button></span>`;
-                      } else {
-                          coloredWord += `<span class="colored-char" style="color: ${color}">${chunk}</span>`;
-                      }
+                      finalLocalKey = AZURE_TO_LOCAL_MAP[rawPhoneme] || rawPhoneme;
                   }
-                  charPointer += segmentLen; // 移動指針到下一塊肉
-              });
-              return coloredWord;
-          }
-          return `<span class="colored-char" style="color: ${getScoreColor(assess.AccuracyScore || 0)}">${token}</span>`;
+  
+                  const hasAudio = PHONICS_MAP[finalLocalKey] ? true : false;
+                  coloredWord += `<span class="char-help-wrapper colored-char" style="color: ${color}">${chunk}${hasAudio ? `<button class="helper-bulb" onclick="showPhonicHelper('${token}', '${finalLocalKey}', '${chunk}')">💡</button>` : ''}</span>`;
+              } else {
+                  coloredWord += `<span class="colored-char" style="color: ${color}">${chunk}</span>`;
+              }
+              charPointer += chunk.length;
+          });
+          return coloredWord;
       }).join('');
   }
   
