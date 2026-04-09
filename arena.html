@@ -1659,10 +1659,14 @@
   
   function attachButtonListeners() {
     document.getElementById('play-btn').onclick = () => { 
-        window.speechSynthesis.cancel(); 
-        const msg = new SpeechSynthesisUtterance(quizData[currentIndex].en); 
-        msg.lang = 'en-US'; window.speechSynthesis.speak(msg); 
+        const btn = document.getElementById('play-btn');
+        btn.style.transform = "scale(0.9)";
+        setTimeout(() => btn.style.transform = "scale(1)", 150);
+        
+        // 🚀 呼叫雲端快取發音，放大 1.8 倍！
+        speakWordCloudCached(quizData[currentIndex].en, 1.8, null, null); 
     };
+    
     document.getElementById('prev-btn').onclick = () => { if(currentIndex > 0){ currentIndex--; renderWord(); } };
     document.getElementById('next-btn').onclick = () => { if (currentIndex < quizData.length - 1) { currentIndex++; renderWord(); } else { showSummary(); } };
     document.getElementById('back-summary-btn').onclick = () => { isReReading = false; showSummary(); };
