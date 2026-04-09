@@ -1479,14 +1479,13 @@
       let azureWordIdx = 0;
   
       return tokens.map(token => {
-          // 1. 處理空白與標點
           if (/^(\s+|[.,?!:;]+)$/.test(token)) return token;
           const azureWord = azureData.Words[azureWordIdx++];
           if (!azureWord) return token;
   
           const assess = azureWord.PronunciationAssessment || {};
   
-          // 🚀 【設定補回 1】：處理沒唸到的字 (Omission)，顯示淺灰色帶刪除線 (絕對不刪減)
+          // 🚀 【保留設定：漏讀灰色】
           if (assess.ErrorType === "Omission") {
               const firstTwo = token.substring(0, 2).toLowerCase();
               const fallbackKey = AZURE_TO_LOCAL_MAP[firstTwo] || firstTwo;
@@ -1496,7 +1495,6 @@
   
           const subData = (azureWord.Phonemes && azureWord.Phonemes.length > 0) ? azureWord.Phonemes : (azureWord.Syllables || []);
           
-          // 2. 找出這個單字中得分最低的音素索引 (作為燈泡發放點)
           let minScore = 100, minIdx = -1;
           subData.forEach((s, i) => {
               let sc = s.PronunciationAssessment.AccuracyScore || 0;
@@ -1509,69 +1507,60 @@
               subData.forEach((sub, idx) => {
                   const sScore = sub.PronunciationAssessment.AccuracyScore || 0;
                   const color = getScoreColor(sScore);
-                  
-                  // 算出當前區塊的字母內容
                   let segmentLen = sub.Grapheme ? sub.Grapheme.length : Math.max(1, Math.round((token.length - charPointer) / (subData.length - idx)));
                   const chunk = token.substr(charPointer, segmentLen);
                   
                   if (chunk) {
-                      // 🚀 【設定補回 2】：燈泡邏輯 (僅在最差的音素顯示)
                       if (idx === minIdx && sScore < 70) {
-                          
-                          // 🧠 核心：尋找紅字鄰居 (分數 < 75 為鄰居)
+                          // 🚀 【鄰居感應引擎啟動】
                           let startP = idx, endP = idx;
                           while (startP > 0 && subData[startP - 1].PronunciationAssessment.AccuracyScore < 75) startP--;
                           while (endP < subData.length - 1 && subData[endP + 1].PronunciationAssessment.AccuracyScore < 75) endP++;
   
-                          // 組合紅字區塊的完整字母串 (例如 "am", "action" 裡的 "tion")
-                          let neighborStr = "";
+                          let fullNeighborStr = "";
                           let tempPtr = 0;
-                          for(let p=0; p<startP; p++) tempPtr += (subData[p].Grapheme ? subData[p].Grapheme.length : 1);
-                          for(let p=startP; p<=endP; p++) {
-                              neighborStr += (subData[p].Grapheme || token.substr(tempPtr, 1));
-                              tempPtr += (subData[p].Grapheme ? subData[p].Grapheme.length : 1);
+                          for(let i=0; i<subData.length; i++) {
+                              let len = (subData[i].Grapheme ? subData[i].Grapheme.length : 1);
+                              if (i >= startP && i <= endP) fullNeighborStr += token.substr(tempPtr, len);
+                              tempPtr += len;
                           }
-                          const searchKey = neighborStr.toLowerCase();
+                          const searchKey = fullNeighborStr.toLowerCase();
   
-                          // 🚀 【全方位滑動窗口搜尋邏輯】
                           let localKey = "";
-                          let found = false;
+                          let foundByLetter = false;
   
-                          // A. 特殊 TH 判定 (優先權最高)
-                          if (searchKey.includes("th")) {
-                              const rawPh = (sub.Phoneme || "").toLowerCase();
-                              localKey = (rawPh === "dh") ? "th_voiced" : "th_unvoiced";
-                              found = true;
-                          } else {
-                              // B. 🚀 改良版：全字串滑動搜尋 (由長到短，檢查所有可能的連續子串)
-                              // 例如 neighborStr 是 "tion"，會先找 "tion"，再找 "tio"、"ion"，再找 "ti"、"io"、"on"
-                              for (let len = searchKey.length; len >= 1; len--) {
-                                  for (let start = 0; start <= searchKey.length - len; start++) {
-                                      let test = searchKey.substr(start, len);
-                                      if (PHONICS_MAP[test]) {
-                                          localKey = test;
-                                          found = true;
-                                          break;
-                                      }
+                          // 🔍 第一步：找「字母組合套餐」 (解決 am, tion, boy 的 oy 等)
+                          // 我們由長到短滑動搜尋
+                          for (let len = searchKey.length; len >= 2; len--) {
+                              for (let s = 0; s <= searchKey.length - len; s++) {
+                                  let test = searchKey.substr(s, len);
+                                  if (PHONICS_MAP[test]) {
+                                      localKey = test;
+                                      foundByLetter = true;
+                                      break;
                                   }
-                                  if (found) break;
+                              }
+                              if (foundByLetter) break;
+                          }
+  
+                          // 🔍 第二步：如果字母組合沒中，改用「Azure 聲音標籤」 (解決 o_long vs o_short)
+                          if (!foundByLetter) {
+                              const rawPh = (sub.Phoneme || "").toLowerCase();
+                              // 🚀 這裡會去查地圖：aa -> o_short, ow -> o_long
+                              localKey = AZURE_TO_LOCAL_MAP[rawPh] || rawPh;
+                              
+                              // A. 特殊 TH 判定
+                              if (chunk.toLowerCase() === "th") {
+                                  localKey = (rawPh === "dh") ? "th_voiced" : "th_unvoiced";
                               }
                           }
   
-                          // C. 最終備援：若鄰居搜尋失敗，走 Azure 標籤翻譯機
-                          if (!found) {
-                              const rawPh = (sub.Phoneme || "").toLowerCase();
-                              localKey = AZURE_TO_LOCAL_MAP[rawPh] || rawPh;
-                          }
-  
                           const hasFinalAudio = PHONICS_MAP[localKey] ? true : false;
-                          
-                          // 🚀 關鍵修正：將搜尋到的 localKey 傳遞給指令顯示，解決「唸 am 顯 a」的問題
-                          const displayLabel = found ? localKey.toUpperCase() : chunk.toUpperCase();
+                          // 🚀 關鍵：顯示在燈泡上的文字，要與搜尋結果一致
+                          const displayLabel = (foundByLetter || localKey.includes('_')) ? localKey.toUpperCase() : chunk.toUpperCase();
   
                           coloredWord += `<span class="char-help-wrapper colored-char" style="color: ${color}">${chunk}${hasFinalAudio ? `<button class="helper-bulb" onclick="showPhonicHelper('${token}', '${localKey}', '${displayLabel}')">💡</button>` : ''}</span>`;
                       } else {
-                          // 一般變色顯示 (無燈泡)
                           coloredWord += `<span class="colored-char" style="color: ${color}">${chunk}</span>`;
                       }
                   }
@@ -1579,8 +1568,6 @@
               });
               return coloredWord;
           }
-          
-          // 保險回傳：整字變色
           return `<span class="colored-char" style="color: ${getScoreColor(assess.AccuracyScore || 0)}">${token}</span>`;
       }).join('');
   }
