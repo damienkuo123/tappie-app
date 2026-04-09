@@ -1458,10 +1458,13 @@
     }
 
     function playEventWord(text) {
-        window.speechSynthesis.cancel();
-        const msg = new SpeechSynthesisUtterance(text);
-        msg.lang = 'en-US';
-        window.speechSynthesis.speak(msg);
+        // 🚀 使用按鈕點擊動態縮放特效 (視覺回饋)
+        const btn = event.currentTarget;
+        btn.style.transform = "scale(0.85)";
+        setTimeout(() => btn.style.transform = "scale(1)", 150);
+
+        // 🚀 呼叫雲端快取發音，並將音量硬推放大 1.8 倍！
+        speakWordCloudCached(text, 1.8);
     }
 
     function startEvent(eventClassCode, eventAvatarId) {
