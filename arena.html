@@ -3629,7 +3629,7 @@
           const source = audioCtx.createBufferSource();
           source.buffer = audioBuffer;
           const gainNode = audioCtx.createGain();
-          gainNode.gain.setValueAtTime(5.0, audioCtx.currentTime);
+          gainNode.gain.setValueAtTime(2.0, audioCtx.currentTime);
           source.connect(gainNode);
           gainNode.connect(audioCtx.destination);
           source.start(0);
@@ -3642,13 +3642,13 @@
           try {
               // 第一聲音素
               await playWithGain(audioPath);
-              await new Promise(r => setTimeout(r, 300));
+              await new Promise(r => setTimeout(r, 400));
               
               // 第二聲音素
               await playWithGain(audioPath);
               
               // 🚀 【核心修復 3】在準備唸單字前，再次確認引擎沒睡著
-              await new Promise(r => setTimeout(r, 600));
+              await new Promise(r => setTimeout(r, 800));
               window.speechSynthesis.resume(); 
   
               const msg = new SpeechSynthesisUtterance(fullWord);
