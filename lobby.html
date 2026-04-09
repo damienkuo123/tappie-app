@@ -821,20 +821,17 @@
     }
 
     async function speakWordCloudCached(word, gainValue) {
-        // 這裡的 audioCtx 已經在點擊瞬間被解鎖了，直接安心使用
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         if (audioCtx.state === 'suspended') await audioCtx.resume();
-        window.speechSynthesis.cancel(); 
-
+        
         const cacheKey = word.toLowerCase();
 
-        // 快取命中：免費且零延遲
+        // 🌟 快取命中：免費且零延遲
         if (audioBufferCache.has(cacheKey)) {
-            await playAudioBuffer(audioBufferCache.get(cacheKey), gainValue);
+            playAudioBuffer(audioBufferCache.get(cacheKey), gainValue);
             return;
         }
 
-        // 呼叫 Azure
         return new Promise((resolve) => {
             if (!azureAuthToken || typeof SpeechSDK === 'undefined') {
                 fallbackLocalTTS(word, resolve);
@@ -851,15 +848,17 @@
                 const safeXmlWord = word.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
                 const ssml = `<speak version='1.0' xml:lang='en-US'><voice name='en-US-JennyNeural'><prosody rate='-10%'>${safeXmlWord}</prosody></voice></speak>`;
 
-                synthesizer.speakSsmlAsync(ssml, async (result) => {
+                synthesizer.speakSsmlAsync(ssml, (result) => {
                     synthesizer.close();
                     if (result.audioData) {
-                        try {
-                            const audioBuffer = await audioCtx.decodeAudioData(result.audioData);
+                        // 🚀 蘋果相容性修復：使用 callback 寫法，保證舊版 iOS Safari 也不會死機
+                        audioCtx.decodeAudioData(result.audioData, (audioBuffer) => {
                             audioBufferCache.set(cacheKey, audioBuffer);
-                            await playAudioBuffer(audioBuffer, gainValue);
+                            playAudioBuffer(audioBuffer, gainValue);
                             resolve();
-                        } catch (e) { fallbackLocalTTS(word, resolve); }
+                        }, (err) => {
+                            fallbackLocalTTS(word, resolve);
+                        });
                     } else { fallbackLocalTTS(word, resolve); }
                 }, () => { synthesizer.close(); fallbackLocalTTS(word, resolve); });
             } catch (e) { fallbackLocalTTS(word, resolve); }
@@ -867,12 +866,15 @@
     }
 
     function fallbackLocalTTS(word, resolve) {
-        const fallback = new SpeechSynthesisUtterance(word);
-        fallback.lang = 'en-US';
-        fallback.onend = () => { if(resolve) resolve(); };
-        // 🚀 加上 onerror 防護：就算設備發不出聲音，程式也不會永遠卡死在這裡
-        fallback.onerror = () => { if(resolve) resolve(); }; 
-        window.speechSynthesis.speak(fallback);
+        // 🚀 蘋果防卡死修復：延遲 50ms 再呼叫原生語音，避免 iOS 佇列崩潰
+        window.speechSynthesis.cancel();
+        setTimeout(() => {
+            const fallback = new SpeechSynthesisUtterance(word);
+            fallback.lang = 'en-US';
+            fallback.onend = () => { if(resolve) resolve(); };
+            fallback.onerror = () => { if(resolve) resolve(); }; 
+            window.speechSynthesis.speak(fallback);
+        }, 50);
     }
 
     let characterAssets = {}; 
@@ -1474,19 +1476,17 @@
             setTimeout(() => btn.style.transform = "scale(1)", 150);
         }
 
-        // 🚀 2. 同步硬解鎖 Web Audio 引擎 (白牌平板與蘋果的命門！)
+        // 2. 溫馨提醒：每次按下去，都會浮現提示，避免家長以為壞掉
+        showToast("🔊 請確認手機側邊沒有開啟靜音喔！");
+
+        // 3. 同步硬解鎖 Web Audio 引擎
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         if (audioCtx.state === 'suspended') audioCtx.resume();
 
-        // 🚀 3. 同步硬解鎖原生 TTS (萬一微軟沒連上時，確保設備自己會唸)
-        window.speechSynthesis.cancel();
-        window.speechSynthesis.speak(new SpeechSynthesisUtterance(""));
-
-        // 🚀 4. 清理字串：把我們為了 HTML 防護罩加的反斜線拔掉，以免微軟發音當機
+        // 4. 清理字串，發送至雲端擴大機
         const cleanText = text.replace(/\\/g, '');
-
-        // 5. 發送至雲端擴大機
         speakWordCloudCached(cleanText, 1.8);
+    }
     }
 
     function startEvent(eventClassCode, eventAvatarId) {
