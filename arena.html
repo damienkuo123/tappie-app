@@ -1479,14 +1479,13 @@
       let azureWordIdx = 0;
   
       return tokens.map(token => {
-          // --- [保留設定 1：標點處理] ---
           if (/^(\s+|[.,?!:;]+)$/.test(token)) return token;
           const azureWord = azureData.Words[azureWordIdx++];
           if (!azureWord) return token;
   
           const assess = azureWord.PronunciationAssessment || {};
   
-          // --- [保留設定 2：漏讀灰色 Omission] ---
+          // 🚀 【保留設定：漏讀灰色】(絕對不簡化)
           if (assess.ErrorType === "Omission") {
               const firstTwo = token.substring(0, 2).toLowerCase();
               const fallbackKey = AZURE_TO_LOCAL_MAP[firstTwo] || firstTwo;
@@ -1496,7 +1495,7 @@
   
           const subData = (azureWord.Phonemes && azureWord.Phonemes.length > 0) ? azureWord.Phonemes : (azureWord.Syllables || []);
           
-          // --- [保留設定 3：找出最差音素作為燈泡點] ---
+          // 找出這個單字中得分最低的音素索引
           let minScore = 100, minIdx = -1;
           subData.forEach((s, i) => {
               let sc = s.PronunciationAssessment.AccuracyScore || 0;
@@ -1509,49 +1508,46 @@
               subData.forEach((sub, idx) => {
                   const sScore = sub.PronunciationAssessment.AccuracyScore || 0;
                   const color = getScoreColor(sScore);
-                  
-                  // 🚀 精準指針：算出這塊肉真正的長度
                   let segmentLen = sub.Grapheme ? sub.Grapheme.length : Math.max(1, Math.round((token.length - charPointer) / (subData.length - idx)));
                   const chunk = token.substr(charPointer, segmentLen);
                   
                   if (chunk) {
                       if (idx === minIdx && sScore < 70) {
-                          // 🚀 【核心查找邏輯升級】：紅字簇感應
+                          // 🚀 【鄰居感應引擎啟動】
                           let startP = idx, endP = idx;
-                          // 找出相連的紅字鄰居
                           while (startP > 0 && subData[startP - 1].PronunciationAssessment.AccuracyScore < 75) startP--;
                           while (endP < subData.length - 1 && subData[endP + 1].PronunciationAssessment.AccuracyScore < 75) endP++;
   
-                          // 🔍 抽絲剝繭 1：從 subData 組合出這串紅字「真正的字母串」
-                          let clusterStr = "";
-                          let clusterPtr = 0;
-                          for(let i=0; i < subData.length; i++) {
-                              let gLen = subData[i].Grapheme ? subData[i].Grapheme.length : 1;
-                              if (i >= startP && i <= endP) {
-                                  clusterStr += token.substr(clusterPtr, gLen);
-                              }
-                              clusterPtr += gLen;
+                          /**
+                           * 🧠 【精準區塊抓取】
+                           * 不再靠 tempPtr 盲猜，而是遍歷 subData 算出紅字鄰居在 token 裡的確切物理範圍
+                           */
+                          let rangeStart = 0;
+                          for(let i=0; i<startP; i++) {
+                              rangeStart += (subData[i].Grapheme ? subData[i].Grapheme.length : 1);
                           }
-                          const searchTarget = clusterStr.toLowerCase();
+                          let rangeEnd = rangeStart;
+                          for(let i=startP; i<=endP; i++) {
+                              rangeEnd += (subData[i].Grapheme ? subData[i].Grapheme.length : 1);
+                          }
+                          
+                          // 這是我們抓到的「紅字全字串」(例如 fine, bo, am)
+                          const searchKey = token.substring(rangeStart, rangeEnd).toLowerCase();
   
-                          // 🔍 抽絲剝繭 2：滑動視窗 (Sliding Window) 搜尋
                           let localKey = "";
                           let foundInMap = false;
   
-                          // 第一步：檢查是否有 TH 特殊判定
-                          if (searchTarget.includes("th")) {
+                          // 🔍 第一步：特殊 TH 判定 (優先權最高)
+                          if (searchKey.includes("th")) {
                               const rawPh = (sub.Phoneme || "").toLowerCase();
                               localKey = (rawPh === "dh") ? "th_voiced" : "th_unvoiced";
                               foundInMap = true;
-                          } 
-                          
-                          // 第二步：由長到短，全字串掃描 (解決 boy -> b, fine -> ine, am -> am)
-                          if (!foundInMap) {
-                              // len 從最長開始找，保證「最長匹配」
-                              for (let len = searchTarget.length; len >= 1; len--) { 
-                                  // s 為起始位移，保證「中間夾著也能找到」
-                                  for (let s = 0; s <= searchTarget.length - len; s++) {
-                                      let testSubStr = searchTarget.substr(s, len);
+                          } else {
+                              // 🔍 第二步：【全維度滑動掃描】由長到短，搜尋地圖裡有的組合
+                              // 例如 searchKey 是 "fine"，會依序找：fine -> ine -> fin -> in...
+                              for (let len = searchKey.length; len >= 1; len--) {
+                                  for (let s = 0; s <= searchKey.length - len; s++) {
+                                      let testSubStr = searchKey.substr(s, len);
                                       if (PHONICS_MAP[testSubStr]) {
                                           localKey = testSubStr;
                                           foundInMap = true;
@@ -1562,7 +1558,7 @@
                               }
                           }
   
-                          // 第三步：若鄰居組合全滅，才走 Azure 翻譯機備援
+                          // 🔍 第三步：若鄰居全數落空，走翻譯機備援
                           if (!foundInMap) {
                               const rawPh = (sub.Phoneme || "").toLowerCase();
                               localKey = AZURE_TO_LOCAL_MAP[rawPh] || rawPh;
@@ -1570,13 +1566,11 @@
   
                           const hasFinalAudio = PHONICS_MAP[localKey] ? true : false;
                           
-                          // 🚀 關鍵修復：解決「顯示 am 唸 a」。
-                          // 燈泡教唸的文字 displayLabel 必須與搜尋到的 localKey 同步
+                          // 🚀 關鍵修復：displayLabel 必須是搜尋到的 localKey，燈泡顯示才不會錯位
                           const displayLabel = foundInMap ? localKey.toUpperCase() : chunk.toUpperCase();
   
                           coloredWord += `<span class="char-help-wrapper colored-char" style="color: ${color}">${chunk}${hasFinalAudio ? `<button class="helper-bulb" onclick="showPhonicHelper('${token}', '${localKey}', '${displayLabel}')">💡</button>` : ''}</span>`;
                       } else {
-                          // 非燈泡點，維持原樣變色
                           coloredWord += `<span class="colored-char" style="color: ${color}">${chunk}</span>`;
                       }
                   }
