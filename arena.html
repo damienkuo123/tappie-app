@@ -3768,6 +3768,114 @@
       document.getElementById('phonic-helper-overlay').style.display = 'none';
       window.speechSynthesis.cancel(); // 停止所有正在唸的聲音
   }
+
+  /* =======================================================
+   🚀 瑪麗安專屬：企業級語音引擎 (記憶體快取 + 擴大機)
+   ======================================================= */
+  let audioCtx = null;
+  const audioBufferCache = new Map(); // 🧠 核心：全域記憶體，存過就不再花錢！
+  
+  function playAudioBuffer(buffer, gainValue, targetEl, activeColor) {
+      const source = audioCtx.createBufferSource();
+      source.buffer = buffer;
+      
+      const gainNode = audioCtx.createGain();
+      gainNode.gain.setValueAtTime(gainValue, audioCtx.currentTime); 
+      
+      source.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+      
+      if (targetEl) {
+          targetEl.style.color = activeColor;
+          targetEl.style.transform = "scale(1.15)";
+      }
+  
+      source.start(0);
+  
+      return new Promise(resolve => {
+          source.onended = () => {
+              if (targetEl) {
+                  targetEl.style.color = "#dfe6e9";
+                  targetEl.style.transform = "scale(1)";
+              }
+              resolve();
+          };
+      });
+  }
+  
+  // 雲端單字發音引擎：有快取用快取，沒快取才花錢問 Azure
+  async function speakWordCloudCached(word, gainValue, targetEl, activeColor) {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') await audioCtx.resume();
+      window.speechSynthesis.cancel(); // 關閉本地語音防干擾
+  
+      const cacheKey = word.toLowerCase();
+  
+      // 🌟 1. 【防冤大頭機制】：如果在記憶體找到了，直接播
+      if (audioBufferCache.has(cacheKey)) {
+          await playAudioBuffer(audioBufferCache.get(cacheKey), gainValue, targetEl, activeColor);
+          return;
+      }
+  
+      // 🌟 2. 【去 Azure 拿聲音】：只有第一次會進來
+      return new Promise((resolve, reject) => {
+          if (!azureAuthToken || typeof SpeechSDK === 'undefined') {
+              fallbackLocalTTS(word, targetEl, activeColor, resolve);
+              return;
+          }
+  
+          try {
+              const speechConfig = SpeechSDK.SpeechConfig.fromAuthorizationToken(azureAuthToken, azureRegionCode);
+              speechConfig.speechSynthesisVoiceName = "en-US-JennyNeural"; 
+              speechConfig.speechSynthesisOutputFormat = SpeechSDK.SpeechSynthesisOutputFormat.Riff24Khz16BitMonoPcm;
+  
+              const synthesizer = new SpeechSDK.SpeechSynthesizer(speechConfig, null); 
+              const ssml = `<speak version='1.0' xml:lang='en-US'><voice name='en-US-JennyNeural'><prosody rate='-10%'>${word}</prosody></voice></speak>`;
+  
+              synthesizer.speakSsmlAsync(ssml, async (result) => {
+                  synthesizer.close();
+                  if (result.audioData) {
+                      try {
+                          const audioBuffer = await audioCtx.decodeAudioData(result.audioData);
+                          audioBufferCache.set(cacheKey, audioBuffer); // 🧠 存入快取
+                          await playAudioBuffer(audioBuffer, gainValue, targetEl, activeColor);
+                          resolve();
+                      } catch (e) { fallbackLocalTTS(word, targetEl, activeColor, resolve); }
+                  } else {
+                      fallbackLocalTTS(word, targetEl, activeColor, resolve);
+                  }
+              }, (error) => {
+                  synthesizer.close();
+                  fallbackLocalTTS(word, targetEl, activeColor, resolve);
+              });
+          } catch (e) { fallbackLocalTTS(word, targetEl, activeColor, resolve); }
+      });
+  }
+  
+  function fallbackLocalTTS(word, targetEl, activeColor, resolve) {
+      if (targetEl) { targetEl.style.color = activeColor; targetEl.style.transform = "scale(1.15)"; }
+      const fallback = new SpeechSynthesisUtterance(word);
+      fallback.lang = 'en-US';
+      fallback.onend = () => {
+          if (targetEl) { targetEl.style.color = "#dfe6e9"; targetEl.style.transform = "scale(1)"; }
+          resolve();
+      };
+      window.speechSynthesis.speak(fallback);
+  }
+  
+  // 💡 播放音標 (GitHub MP3 專用)
+  async function playPhonicLocal(localKey, gainValue, targetEl, activeColor) {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') await audioCtx.resume();
+      
+      try {
+          const response = await fetch(`audio/${localKey}.mp3`);
+          if (!response.ok) throw new Error("Audio 404");
+          const arrayBuffer = await response.arrayBuffer();
+          const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+          await playAudioBuffer(audioBuffer, gainValue, targetEl, activeColor);
+      } catch(e) { console.warn("音標播放失敗"); }
+  }
 </script>
   <div id="phonic-helper-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh; background: rgba(0,0,0,0.8); z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
   <div class="helper-card" style="background: white; width: 85%; max-width: 340px; border-radius: 25px; padding: 30px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5); position: relative;">
