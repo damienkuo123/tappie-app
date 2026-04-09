@@ -1490,7 +1490,8 @@
               const firstTwo = token.substring(0, 2).toLowerCase();
               const fallbackKey = AZURE_TO_LOCAL_MAP[firstTwo] || firstTwo;
               const hasAudio = PHONICS_MAP[fallbackKey] ? true : false;
-              return `<span class="char-help-wrapper word-omission">${token}${hasAudio ? `<button class="helper-bulb" onclick="showPhonicHelper('${token}', '${fallbackKey}', '${token}')">💡</button>` : ''}</span>`;
+              const safeToken = token.replace(/'/g, "\\'"); // 幫撇號加上防護罩
+              return `<span class="char-help-wrapper word-omission">${token}${hasAudio ? `<button class="helper-bulb" onclick="showPhonicHelper('${safeToken}', '${fallbackKey}', '${safeToken}')">💡</button>` : ''}</span>`;
           }
   
           const subData = (azureWord.Phonemes && azureWord.Phonemes.length > 0) ? azureWord.Phonemes : (azureWord.Syllables || []);
@@ -1584,7 +1585,9 @@
                           // 🚀 把顯示文字指向乾淨的 displayStr，再也不會跑出檔名了！
                           const displayLabel = displayStr.toUpperCase();
   
-                          coloredWord += `<span class="char-help-wrapper colored-char" style="color: ${color}">${chunk}${hasFinalAudio ? `<button class="helper-bulb" onclick="showPhonicHelper('${token}', '${localKey}', '${displayLabel}')">💡</button>` : ''}</span>`;
+                          const safeToken = token.replace(/'/g, "\\'");
+                          const safeDisplay = displayLabel.replace(/'/g, "\\'");
+                          coloredWord += `<span class="char-help-wrapper colored-char" style="color: ${color}">${chunk}${hasFinalAudio ? `<button class="helper-bulb" onclick="showPhonicHelper('${safeToken}', '${localKey}', '${safeDisplay}')">💡</button>` : ''}</span>`;
                       } else {
                           coloredWord += `<span class="colored-char" style="color: ${color}">${chunk}</span>`;
                       }
