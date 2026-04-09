@@ -1508,22 +1508,48 @@
               subData.forEach((sub, idx) => {
                   const sScore = sub.PronunciationAssessment.AccuracyScore || 0;
                   const color = getScoreColor(sScore);
-                  let segmentLen = sub.Grapheme ? sub.Grapheme.length : Math.max(1, Math.round((token.length - charPointer) / (subData.length - idx)));
+
+                  // 🧠 1. 智慧切肉邏輯：偵測複合字 (Digraphs)
+                  let segmentLen = sub.Grapheme ? sub.Grapheme.length : 1;
+                  if (!sub.Grapheme) {
+                      const pair = token.substr(charPointer, 2).toLowerCase();
+                      // 增加更多常見複合字偵測
+                      if (['th', 'sh', 'ch', 'ph', 'wh', 'ck', 'ng', 'qu', 'ee', 'oo'].includes(pair)) {
+                          segmentLen = 2;
+                      } else {
+                          segmentLen = Math.max(1, Math.round((token.length - charPointer) / (subData.length - idx)));
+                      }
+                  }
+                  
                   const chunk = token.substr(charPointer, segmentLen);
                   
                   if (chunk) {
                       const chunkLower = chunk.toLowerCase();
-                      const rawLabel = (sub.Phoneme || sub.Syllable || "").toLowerCase();
-                      const translatedKey = AZURE_TO_LOCAL_MAP[rawLabel] || rawLabel;
-  
-                      // 🚀 【關鍵修正】：優先權判定
-                      // 如果點擊的字母塊 (例如 "in") 在地圖裡有檔案，就優先用它！
-                      // 否則才用 Azure 翻譯出來的音標 (例如 "i_short")。
-                      let localKey = PHONICS_MAP[chunkLower] ? chunkLower : translatedKey;
+                      const rawPhoneme = (sub.Phoneme || "").toLowerCase();
+                      const translatedKey = AZURE_TO_LOCAL_MAP[rawPhoneme] || rawPhoneme;
+                      
+                      // 🚀 2. 核心對位引擎：決定 localKey
+                      let localKey = translatedKey;
+                  
+                      // A. 如果是 "TH"，根據 Azure 標籤決定有聲或無聲
+                      if (chunkLower === "th") {
+                          localKey = (rawPhoneme === "dh") ? "th_voiced" : "th_unvoiced";
+                      } 
+                      // B. 如果地圖裡直接有這個字母塊 (例如 "un", "tion", "ck")，優先用字母塊
+                      else if (PHONICS_MAP[chunkLower]) {
+                          localKey = chunkLower;
+                      }
+                      // C. 如果學生點的是單個母音 e, a, i, o, u，地圖裡沒對應，就走 AZURE_TO_LOCAL_MAP 的翻譯
+                      // 這一步已經在翻譯地圖裡做好了
+                  
+                      // 🕵️ 3. 檢查 GitHub 倉庫到底有沒有這個檔案
                       const hasAudio = PHONICS_MAP[localKey] ? true : false;
-  
+                  
                       if (idx === minIdx && sScore < 70 && hasAudio) {
-                          coloredWord += `<span class="char-help-wrapper colored-char" style="color: ${color}">${chunk}<button class="helper-bulb" onclick="showPhonicHelper('${token}', '${localKey}', '${chunk}')">💡</button></span>`;
+                          coloredWord += `<span class="char-help-wrapper colored-char" style="color: ${color}">
+                              ${chunk}
+                              <button class="helper-bulb" onclick="showPhonicHelper('${token}', '${localKey}', '${chunk}')">💡</button>
+                          </span>`;
                       } else {
                           coloredWord += `<span class="colored-char" style="color: ${color}">${chunk}</span>`;
                       }
