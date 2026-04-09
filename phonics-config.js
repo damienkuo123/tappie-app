@@ -1,23 +1,98 @@
-// 🏆 瑪麗安偵探 - 終極音訊配置表 (2026-04-09 校準版)
+// 🏆 瑪麗安偵探 - 終極音訊配置表 (2026-04-09 校準滿血版)
 
-// [1] PHONICS_MAP: 這裡是你的 399 個 GitHub 檔案身分證
-// 程式會先檢查這裡，如果點擊的字母(如 un)在這裡面，就直接播放
+// [1] PHONICS_MAP: 399 個 GitHub 檔案身分證 (一個都沒漏！)
 const PHONICS_MAP = {
-    "th_voiced": "th_voiced", 
-    "th_unvoiced": "th_unvoiced",
-    "schwa": "schwa",
-    // 這裡我幫你補上 399 清單中的核心成員，確保燈泡能亮
-    "a_long": "a_long", "a_short": "a_short",
-    "e_long": "e_long", "e_short": "e_short",
-    "i_long": "i_long", "i_short": "i_short",
-    "o_long": "o_long", "o_short": "o_short",
-    "u_long": "u_long", "u_short": "u_short",
-    "un": "un", "in": "in", "er": "er", "sh": "sh", "ch": "ch", "ck": "ck",
-    // ... (其他的 300 多個因為 key 跟 value 一樣，程式會自動處理，不一定要全寫出來)
+    "a_long": "a_long", "a_short": "a_short", "ab": "ab", "able": "able",
+    "ace": "ace", "ack": "ack", "ad": "ad", "ade": "ade", "aft": "aft",
+    "ag": "ag", "age": "age", "age_long": "age_long", "ai": "ai",
+    "ai_r": "ai_r", "aigh": "aigh", "air": "air", "ake": "ake",
+    "al_end": "al_end", "ale": "ale", "alk_end": "alk_end", "all_end": "all_end",
+    "alt_end": "alt_end", "am": "am", "ame": "ame", "amp": "amp",
+    "an": "an", "ance": "ance", "anch": "anch", "ane": "ane",
+    "ang": "ang", "ank": "ank", "ant": "ant", "anti": "anti",
+    "ap": "ap", "ape": "ape", "aqu": "aqu", "ar": "ar", "are": "are",
+    "ase": "ase", "ash": "ash", "ast": "ast", "at": "at", "atch": "atch",
+    "ate": "ate", "ative": "ative", "au": "au", "aud": "aud",
+    "augh": "augh", "augh_end": "augh_end", "auto": "auto", "ave": "ave",
+    "aw": "aw", "ax": "ax", "ay": "ay", "aze": "aze", "b": "b",
+    "bene": "bene", "bi_pre": "bi_pre", "bio": "bio", "bl": "bl",
+    "br": "br", "bt": "bt", "c_hard": "c_hard", "c_soft": "c_soft",
+    "ch": "ch", "chron": "chron", "cial": "cial", "cient": "cient",
+    "cious": "cious", "ck": "ck", "cl": "cl", "com": "com", "con": "con",
+    "cr": "cr", "ct": "ct", "cycl": "cycl", "d": "d", "de": "de",
+    "dge": "dge", "dict": "dict", "dis": "dis", "dr": "dr", "dw": "dw",
+    "e_long": "e_long", "e_short": "e_short", "ea": "ea", "ea_long_a": "ea_long_a",
+    "ea_short": "ea_short", "ear_r": "ear_r", "ear_short": "ear_short", "eb": "eb",
+    "eck": "eck", "ed": "ed", "ed_d": "ed_d", "ed_id": "ed_id", "ed_t": "ed_t",
+    "ee": "ee", "eer": "eer", "eg": "eg", "ei": "ei", "ei_long_e": "ei_long_e",
+    "eigh": "eigh", "eigh_end": "eigh_end", "el_end": "el_end", "ell": "ell",
+    "elm": "elm", "elp": "elp", "elt": "elt", "em": "em", "en": "en",
+    "ence": "ence", "ench": "ench", "end": "end", "ent": "ent", "ep": "ep",
+    "er": "er", "esh": "esh", "est": "est", "est_end": "est_end", "et": "et",
+    "ew": "ew", "ex": "ex", "extra": "extra", "ey": "ey", "ey_long": "ey_long",
+    "ey_short": "ey_short", "f": "f", "fl": "fl", "fore": "fore", "form": "form",
+    "fr": "fr", "ft": "ft", "ft_silent": "ft_silent", "full": "full",
+    "g_hard": "g_hard", "g_soft": "g_soft", "geo": "geo", "gh_f": "gh_f",
+    "gl": "gl", "gn": "gn", "gr": "gr", "gram": "gram", "graph": "graph",
+    "gu": "gu", "h": "h", "hood": "hood", "hydr": "hydr", "i_long": "i_long",
+    "i_short": "i_short", "ib": "ib", "ible": "ible", "ic_end": "ic_end",
+    "ice": "ice", "ick": "ick", "id": "id", "id_end": "id_end", "ide": "ide",
+    "ie": "ie", "ie_long_e": "ie_long_e", "ie_long_i": "ie_long_i", "ife": "ife",
+    "ify": "ify", "ig": "ig", "igh": "igh", "ight_end": "ight_end", "ike": "ike",
+    "il_end": "il_end", "ile": "ile", "ill": "ill", "im": "im", "im_pre": "im_pre",
+    "ime": "ime", "imp": "imp", "in": "in", "in_pre": "in_pre", "inch": "inch",
+    "ine": "ine", "ing": "ing", "ing_end": "ing_end", "ink": "ink", "inter": "inter",
+    "ip": "ip", "ipe": "ipe", "ir": "ir", "ire": "ire", "ire_long": "ire_long",
+    "ish": "ish", "ish_end": "ish_end", "ism": "ism", "ist": "ist",
+    "ist_end": "ist_end", "it": "it", "itch": "itch", "ite": "ite", "ity": "ity",
+    "ive": "ive", "ive_end": "ive_end", "ix": "ix", "ize": "ize",
+    "ize_long": "ize_long", "j": "j", "ject": "ject", "k": "k", "kh": "kh",
+    "kn": "kn", "l": "l", "ld": "ld", "le": "le", "less": "less", "lf": "lf",
+    "lk": "lk", "logy": "logy", "lp": "lp", "lt": "lt", "lth": "lth", "m": "m",
+    "macro": "macro", "mal": "mal", "mb": "mb", "ment": "ment",
+    "ment_short": "ment_short", "meter": "meter", "micro": "micro", "mid": "mid",
+    "mis": "mis", "mn": "mn", "mono": "mono", "mp": "mp", "mpt": "mpt",
+    "multi": "multi", "n": "n", "nch": "nch", "nct": "nct", "nd": "nd",
+    "ness": "ness", "ng": "ng", "nk": "nk", "non": "non", "nt": "nt",
+    "o_long": "o_long", "o_short": "o_short", "oa": "oa", "ob": "ob",
+    "obe": "obe", "ock": "ock", "od": "od", "ode": "ode", "oe": "oe",
+    "oe_long_o": "oe_long_o", "og": "og", "oi": "oi", "oke": "oke",
+    "ol_end": "ol_end", "ole": "ole", "oll": "oll", "om": "om", "ome": "ome",
+    "omp": "omp", "on": "on", "ond": "ond", "one": "one", "ong": "ong",
+    "onk": "onk", "oo_long": "oo_long", "oo_short": "oo_short", "oor": "oor",
+    "op": "op", "ope": "ope", "or": "or", "ore": "ore", "ose": "ose",
+    "osh": "osh", "ot": "ot", "otch": "otch", "ote": "ote", "ou": "ou",
+    "ough_f": "ough_f", "ough_long_o": "ough_long_o", "ough_o": "ough_o",
+    "ough_u": "ough_u", "ought_end": "ought_end", "ound_end": "ound_end",
+    "our_r": "our_r", "ous": "ous", "ous_end": "ous_end", "ove_long": "ove_long",
+    "over": "over", "ow_long": "ow_long", "ow_ou": "ow_ou", "ox": "ox",
+    "oy": "oy", "p": "p", "ph": "ph", "phon": "phon", "photo": "photo",
+    "pl": "pl", "poly": "poly", "port": "port", "post": "post", "pr": "pr",
+    "pre": "pre", "pro": "pro", "ps": "ps", "pt": "pt", "qu": "qu", "r": "r",
+    "re": "re", "rh": "rh", "s": "s", "s_z": "s_z", "sc": "sc",
+    "sc_hard": "sc_hard", "sc_soft": "sc_soft", "schwa": "schwa", "scr": "scr",
+    "scrib": "scrib", "script": "script", "semi": "semi", "sh": "sh",
+    "ship": "ship", "shr": "shr", "sion": "sion", "sk": "sk", "sk_end": "sk_end",
+    "sl": "sl", "sm": "sm", "sn": "sn", "sp": "sp", "sp_end": "sp_end",
+    "spec": "spec", "spl": "spl", "spr": "spr", "squ": "squ", "st": "st",
+    "st_end": "st_end", "str": "str", "struct": "struct", "sub": "sub",
+    "super": "super", "sw": "sw", "t": "t", "tch": "tch", "tele": "tele",
+    "temp": "temp", "terr": "terr", "th_unvoiced": "th_unvoiced",
+    "th_voiced": "th_voiced", "tial": "tial", "tion": "tion", "tious": "tious",
+    "tive": "tive", "tr": "tr", "tract": "tract", "trans": "trans",
+    "tri_pre": "tri_pre", "ture": "ture", "tw": "tw", "u_long": "u_long",
+    "u_short": "u_short", "ub": "ub", "ube_long": "ube_long", "uck": "uck",
+    "ud": "ud", "ue": "ue", "uff": "uff", "ug": "ug", "ui": "ui",
+    "ul_end": "ul_end", "ule": "ule", "ull_short": "ull_short", "um": "um",
+    "ume": "ume", "ump": "ump", "un": "un", "un_pre": "un_pre", "unch": "unch",
+    "under": "under", "une": "une", "ung": "ung", "uni": "uni", "unk": "unk",
+    "up": "up", "ur": "ur", "ure": "ure", "ush": "ush", "ust": "ust", "ut": "ut",
+    "ute": "ute", "ux": "ux", "v": "v", "vid": "vid", "vis": "vis", "w": "w",
+    "wh": "wh", "wr": "wr", "x": "x", "y": "y", "y_as_e": "y_as_e", "z": "z"
 };
 
-// [2] AZURE_TO_LOCAL_MAP: 這是最重要的「翻譯機」
-// 負責把 Azure 傳來的標籤(如 dh) 翻譯成你 GitHub 的檔名(如 th_voiced)
+// [2] AZURE_TO_LOCAL_MAP: 最重要的「翻譯機」
+// 當地圖沒找到長組合時，就會退回這裡用標籤翻譯
 const AZURE_TO_LOCAL_MAP = {
     // 🌍 TH 專區 (解決 father 問題)
     "dh": "th_voiced",    
@@ -32,12 +107,15 @@ const AZURE_TO_LOCAL_MAP = {
     "ah": "u_short",   "uw": "u_long",
     "uh": "oo_short",  "er": "er",
     
-    // 🌍 字母點擊備援 (當學生點擊單個 E 或 A 時的保險)
+    // 🌍 單字退回備援區 (當學生點單個字母時的保險)
+    // 注意：你的 399 清單裡沒有 a, e, i, o, u，所以必須在這裡強制導向 short 音
     "a": "a_short",
     "e": "e_short",
     "i": "i_short",
     "o": "o_short",
     "u": "u_short",
+    "c": "c_hard",
+    "g": "g_hard",
     
     // 🌍 子音專區
     "jh": "g_soft",    "ch": "ch",       "sh": "sh",
