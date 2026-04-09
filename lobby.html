@@ -1439,13 +1439,16 @@
             listEl.innerHTML = "<div style='text-align:center; color:#bdc3c7; padding: 20px;'>暫無題庫資料</div>";
         } else {
             currentEventWords.forEach(word => {
+                // 🚀 加上單引號防護罩，避免 don't 這種字把按鈕搞壞
+                const safeWord = word.en.replace(/'/g, "\\'"); 
+                
                 listEl.innerHTML += `
                     <div class="vocab-row">
                         <div>
                             <div class="vocab-en">${word.en}</div>
                             <div class="vocab-zh">${word.zh}</div>
                         </div>
-                        <button class="vocab-play" onclick="playEventWord(this, '${word.en}')">🔊</button>
+                        <button class="vocab-play" onclick="playEventWord(this, '${safeWord}')">🔊</button>
                     </div>
                 `;
             });
@@ -1458,9 +1461,11 @@
     }
 
     function playEventWord(btn, text) {
-        // 🚀 使用按鈕點擊動態縮放特效 (視覺回饋)
-        btn.style.transform = "scale(0.85)";
-        setTimeout(() => btn.style.transform = "scale(1)", 150);
+        // 🚀 防呆機制：確保 btn 存在才做動畫
+        if (btn) {
+            btn.style.transform = "scale(0.85)";
+            setTimeout(() => btn.style.transform = "scale(1)", 150);
+        }
 
         // 🚀 呼叫雲端快取發音，並將音量硬推放大 1.8 倍！
         speakWordCloudCached(text, 1.8);
