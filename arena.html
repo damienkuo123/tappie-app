@@ -1473,7 +1473,6 @@
       return `hsl(${hue}, 90%, 35%)`; // 亮度 35% 確保文字清晰
   }
   
-  // 🚀 1. 音訊對位引擎：負責畫圖、找鄰居、定燈泡
   function generateColoredHTML(azureData, originalText) {
       if (!azureData || !azureData.Words) return originalText;
       const tokens = originalText.split(/(\s+|[.,?!:;]+)/);
@@ -1486,7 +1485,6 @@
   
           const assess = azureWord.PronunciationAssessment || {};
   
-          // 🚀 【保留設定 1】：處理沒唸到的字 (Omission)，淺灰色帶刪除線
           if (assess.ErrorType === "Omission") {
               const firstTwo = token.substring(0, 2).toLowerCase();
               const fallbackKey = AZURE_TO_LOCAL_MAP[firstTwo] || firstTwo;
@@ -1496,7 +1494,11 @@
   
           const subData = (azureWord.Phonemes && azureWord.Phonemes.length > 0) ? azureWord.Phonemes : (azureWord.Syllables || []);
           
-          // 🚀 【保留設定 2】：找出得分最低的音素索引 (minIdx)
+          // 🚨 【偵錯日誌 1】：印出 Azure 給的原始架構
+          console.log(`\n==================================`);
+          console.log(`🔍 [偵測單字]: ${token} (長度: ${token.length})`);
+          console.log(`📊 [Azure 切割音素數量]: ${subData.length}`);
+  
           let minScore = 100, minIdx = -1;
           subData.forEach((s, i) => {
               let sc = s.PronunciationAssessment.AccuracyScore || 0;
@@ -1510,56 +1512,44 @@
                   const sScore = sub.PronunciationAssessment.AccuracyScore || 0;
                   const color = getScoreColor(sScore);
                   
-                  // 準確計算該音素對應的字母長度 (Grapheme 是關鍵)
                   let segmentLen = sub.Grapheme ? sub.Grapheme.length : Math.max(1, Math.round((token.length - charPointer) / (subData.length - idx)));
                   const chunk = token.substr(charPointer, segmentLen);
                   
+                  // 🚨 【偵錯日誌 2】：印出每一刀切下來的肉
+                  console.log(`🔪 索引[${idx}]: 切下字母 '${chunk}' | Azure標籤='${sub.Phoneme}' | Grapheme='${sub.Grapheme}' | 分數=${sScore}`);
+  
                   if (chunk) {
                       if (idx === minIdx && sScore < 70) {
-                          // 🚀 【全方位鄰居感應引擎啟動】
-                          // 1. 抓取連續紅字鄰居的 subData 索引範圍
+                          
                           let startP = idx, endP = idx;
                           while (startP > 0 && subData[startP - 1].PronunciationAssessment.AccuracyScore < 75) startP--;
                           while (endP < subData.length - 1 && subData[endP + 1].PronunciationAssessment.AccuracyScore < 75) endP++;
   
-                          // 2. 透過 Grapheme 精準回推這些鄰居在原本 token 裡的字母
-                          let fullNeighborStr = "";
-                          let visualPointer = 0;
-                          for(let i = 0; i < subData.length; i++) {
-                              let gLen = subData[i].Grapheme ? subData[i].Grapheme.length : 1;
-                              if (i >= startP && i <= endP) {
-                                  fullNeighborStr += token.substr(visualPointer, gLen);
-                              }
-                              visualPointer += gLen;
-                          }
+                          let rangeStart = 0;
+                          for(let i=0; i<startP; i++) rangeStart += (subData[i].Grapheme ? subData[i].Grapheme.length : 1);
                           
-                          /** 🚀 處理 fine -> ine 的關鍵修正
-                           * 如果紅字區塊一直延伸到最後一個音素，
-                           * 偵探會自動把 token 剩下的所有字母都抓進來（解決靜音 E 的位移問題）。
-                           */
-                          if (endP === subData.length - 1 && visualPointer < token.length) {
-                              fullNeighborStr += token.substr(visualPointer);
-                          }
+                          let rangeEnd = rangeStart;
+                          for(let i=startP; i<=endP; i++) rangeEnd += (subData[i].Grapheme ? subData[i].Grapheme.length : 1);
+                          
+                          const searchKey = token.substring(rangeStart, rangeEnd).toLowerCase();
+                          
+                          // 🚨 【偵錯日誌 3】：印出紅字鄰居組合結果
+                          console.log(`🤝 [尋找紅字鄰居]: 範圍從索引 ${startP} 到 ${endP}`);
+                          console.log(`🎯 [準備丟去地圖搜尋的字串 (searchKey)]: '${searchKey}'`);
   
-                          const searchKey = fullNeighborStr.toLowerCase();
-  
-                          // 3. 【滑動窗口遞減搜尋】由長到短，全方位搜尋
                           let localKey = "";
                           let foundInMap = false;
   
-                          // 第一步：TH 特殊判定
                           if (searchKey.includes("th")) {
                               const rawPh = (sub.Phoneme || "").toLowerCase();
                               localKey = (rawPh === "dh") ? "th_voiced" : "th_unvoiced";
                               foundInMap = true;
                           } else {
-                              // 第二步：從最長組合開始，往內縮減搜尋 (例如: fine -> ine -> in)
-                              // 修正：檢查所有子字串，不只由後往前
                               for (let len = searchKey.length; len >= 1; len--) {
                                   for (let s = 0; s <= searchKey.length - len; s++) {
-                                      let testSub = searchKey.substr(s, len);
-                                      if (PHONICS_MAP[testSub]) {
-                                          localKey = testSub;
+                                      let testSubStr = searchKey.substr(s, len);
+                                      if (PHONICS_MAP[testSubStr]) {
+                                          localKey = testSubStr;
                                           foundInMap = true;
                                           break;
                                       }
@@ -1568,7 +1558,6 @@
                               }
                           }
   
-                          // 第三步：若全滅，走 Azure 翻譯機備援
                           if (!foundInMap) {
                               const rawPh = (sub.Phoneme || "").toLowerCase();
                               localKey = AZURE_TO_LOCAL_MAP[rawPh] || rawPh;
@@ -1576,6 +1565,9 @@
   
                           const hasFinalAudio = PHONICS_MAP[localKey] ? true : false;
                           const displayLabel = foundInMap ? localKey.toUpperCase() : chunk.toUpperCase();
+                          
+                          // 🚨 【偵錯日誌 4】：最終宣判
+                          console.log(`✅ [最終對位結果]: localKey='${localKey}' | 燈泡顯示='${displayLabel}' | 是否有音檔=${hasFinalAudio}`);
   
                           coloredWord += `<span class="char-help-wrapper colored-char" style="color: ${color}">${chunk}${hasFinalAudio ? `<button class="helper-bulb" onclick="showPhonicHelper('${token}', '${localKey}', '${displayLabel}')">💡</button>` : ''}</span>`;
                       } else {
@@ -1584,6 +1576,7 @@
                   }
                   charPointer += segmentLen;
               });
+              console.log(`==================================\n`);
               return coloredWord;
           }
           return `<span class="colored-char" style="color: ${getScoreColor(assess.AccuracyScore || 0)}">${token}</span>`;
