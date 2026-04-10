@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
   <title>瑪麗安口說挑戰室</title>
   <script src="https://aka.ms/csspeech/jsbrowserpackageraw"></script>
+  <script src="phonics-config.js"></script>
   <style>
     :root {
       --primary-blue: #0066cc; 
@@ -64,6 +65,40 @@
       line-height: 1.1;
       text-align: center;
       width: 100%;
+    }
+
+    /* 🚀 讓紅字部分變成定位基準 */
+    .char-help-wrapper {
+      position: relative;
+      display: inline-block;
+    }
+
+    /* 💡 縮小版燈泡：精準浮在紅字正上方 */
+    .helper-bulb {
+      position: absolute;
+      top: -10px; 
+      left: 50%;
+      transform: translateX(-50%);
+      background: #f1c40f;
+      border: 1px solid white;
+      border-radius: 50%;
+      width: 16px;
+      height: 16px;
+      font-size: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+      animation: bulb-pulse 1.5s infinite;
+      z-index: 60;
+      padding: 0;
+    }
+    
+    @keyframes bulb-pulse {
+      0% { transform: translateX(-50%) scale(1); }
+      50% { transform: translateX(-50%) scale(1.2); }
+      100% { transform: translateX(-50%) scale(1); }
     }
 
     /* 🎨 高級膠囊播放鈕 (Apple 現代風格) */
@@ -1067,6 +1102,30 @@
       line-height: 1.1;
       text-align: center;
       width: 100%;
+
+      /* ===================================================
+         🚀 新增：6. 小燈泡導讀視窗 (Phonic Helper) 放大
+         =================================================== */
+      /* 蓋掉 HTML 裡的 inline style，讓平板與電腦版視窗更大氣 */
+      .helper-card { max-width: 500px !important; padding: 45px !important; border-radius: 35px !important; }
+      #helper-avatar-box { width: 130px !important; height: 130px !important; font-size: 65px !important; margin-bottom: 25px !important; }
+      #helper-word-title { font-size: 36px !important; }
+      
+      /* 讓雙按鈕更好點擊 */
+      #btn-replay-helper, .helper-card .btn { 
+          font-size: 22px !important; 
+          padding: 18px !important; 
+          border-radius: 20px !important; 
+      }
+
+      /* ===================================================
+         🚀 新增：7. 戰場兩側計分 UI 防貼邊
+         =================================================== */
+      /* 在大螢幕上，讓左右計分柱往內縮，不要死死貼著螢幕邊緣 */
+      .vertical-score-track { left: 4vw; padding: 30px 18px; }
+      .vertical-round-track { right: 4vw; padding: 30px 12px; }
+      #round-num { font-size: 20px !important; letter-spacing: 6px; }
+      .round-dot { width: 24px; height: 24px; }
     }
 
     /* 🚀 橫式播放按鈕 (膠囊型) */
@@ -1440,65 +1499,129 @@
   
   function generateColoredHTML(azureData, originalText) {
       if (!azureData || !azureData.Words) return originalText;
-
-      // 1. 切分原始題目（保留空格與標點）
       const tokens = originalText.split(/(\s+|[.,?!:;]+)/);
       let azureWordIdx = 0;
-
-      const finalHtml = tokens.map(token => {
-          // 標點與空格直接回傳
-          if (/^(\s+|[.,?!:;]+)$/.test(token)) return token;
-
-          const azureWord = azureData.Words[azureWordIdx];
+  
+      return tokens.map(token => {
+          if (!/[a-zA-Z0-9]/.test(token)) return token;
+          const azureWord = azureData.Words[azureWordIdx++];
           if (!azureWord) return token;
-          azureWordIdx++;
-
+  
           const assess = azureWord.PronunciationAssessment || {};
-          if (assess.ErrorType === "Omission") return `<span class="word-omission">${token}</span>`;
-
-          // 🚀 核心：抓取音節(Syllables)或音素(Phonemes)作為變色基準
-          // 🚀 優先使用 Phonemes (音素)，這才是達成 Elsa Speak 粒粒分明效果的關鍵
-const subData = (azureWord.Phonemes && azureWord.Phonemes.length > 0) 
-                ? azureWord.Phonemes 
-                : (azureWord.Syllables || []);
+  
+          // 🚀 【保留設定：漏讀灰色】(絕對不簡化)
+          if (assess.ErrorType === "Omission") {
+              const firstTwo = token.substring(0, 2).toLowerCase();
+              const fallbackKey = AZURE_TO_LOCAL_MAP[firstTwo] || firstTwo;
+              const hasAudio = PHONICS_MAP[fallbackKey] ? true : false;
+              const safeToken = token.replace(/'/g, "\\'"); // 幫撇號加上防護罩
+              return `<span class="char-help-wrapper word-omission">${token}${hasAudio ? `<button class="helper-bulb" onclick="showPhonicHelper('${safeToken}', '${fallbackKey}', '${safeToken}')">💡</button>` : ''}</span>`;
+          }
+  
+          const subData = (azureWord.Phonemes && azureWord.Phonemes.length > 0) ? azureWord.Phonemes : (azureWord.Syllables || []);
           
+          let minScore = 100, minIdx = -1;
+          subData.forEach((s, i) => {
+              let sc = s.PronunciationAssessment.AccuracyScore || 0;
+              if (sc < minScore) { minScore = sc; minIdx = i; }
+          });
+  
           if (subData.length > 0) {
-              let coloredWord = "";
-              let charPointer = 0;
+              let coloredWord = "", charPointer = 0;
               
+              // 🚀 關鍵修復：預先精準分配每個音素該拿幾個字母，徹底解決錯位！
+              let chunkLengths = [];
+              let tempPointer = 0;
+              subData.forEach((s, i) => {
+                  let sLen = s.Grapheme ? s.Grapheme.length : Math.max(1, Math.round((token.length - tempPointer) / (subData.length - i)));
+                  chunkLengths.push(sLen);
+                  tempPointer += sLen;
+              });
+
               subData.forEach((sub, idx) => {
                   const sScore = sub.PronunciationAssessment.AccuracyScore || 0;
                   const color = getScoreColor(sScore);
                   
-                  // 🧠 終極分配法：
-                  let segmentLen;
-                  // 如果微軟有給對應字母就用，沒有就用比例切
-                  if (sub.Grapheme) {
-                      segmentLen = sub.Grapheme.length;
-                  } else {
-                      // 比例計算：剩餘長度 / 剩餘片段數
-                      const remainingChars = token.length - charPointer;
-                      const remainingSegments = subData.length - idx;
-                      segmentLen = (idx === subData.length - 1) 
-                          ? remainingChars 
-                          : Math.max(1, Math.round(remainingChars / remainingSegments));
-                  }
-
+                  // 直接使用剛剛分配好的精準長度
+                  let segmentLen = chunkLengths[idx];
                   const chunk = token.substr(charPointer, segmentLen);
-                  // 只有當 chunk 真的有字時才包 span
+                  
                   if (chunk) {
-                      coloredWord += `<span class="colored-char" style="color: ${color}">${chunk}</span>`;
+                      if (idx === minIdx && sScore < 70) {
+                          
+                          let startP = idx, endP = idx;
+                          while (startP > 0 && subData[startP - 1].PronunciationAssessment.AccuracyScore < 75) startP--;
+                          while (endP < subData.length - 1 && subData[endP + 1].PronunciationAssessment.AccuracyScore < 75) endP++;
+
+                          // 🧠 精準物理範圍抓取 (用分配好的長度去加總)
+                          let rangeStart = 0;
+                          for(let i=0; i<startP; i++) {
+                              rangeStart += chunkLengths[i];
+                          }
+                          
+                          let rangeEnd = rangeStart;
+                          for(let i=startP; i<=endP; i++) {
+                              rangeEnd += chunkLengths[i];
+                          }
+                          
+                          // 🌟 【神之補丁】：如果紅字區塊包含最後一個聲音，強制吞掉所有剩下的不發音字母！
+                          if (endP === subData.length - 1) {
+                              rangeEnd = token.length;
+                          }
+                          
+                          const searchKey = token.substring(rangeStart, rangeEnd).toLowerCase();
+  
+                          let localKey = "";
+                          let foundInMap = false;
+                          let displayStr = ""; // 🌟 新增：專門用來記錄要「顯示」的乾淨字母
+  
+                          // 第一步：特殊 TH 判定
+                          if (searchKey.includes("th")) {
+                              const rawPh = (sub.Phoneme || "").toLowerCase();
+                              localKey = (rawPh === "dh") ? "th_voiced" : "th_unvoiced";
+                              displayStr = "th"; // 👈 畫面顯示字母就是 th
+                              foundInMap = true;
+                          } else {
+                              // 第二步：由長到短，全方位滑動搜尋 (例如 fine -> ine -> in)
+                              for (let len = searchKey.length; len >= 1; len--) {
+                                  for (let s = 0; s <= searchKey.length - len; s++) {
+                                      let testSubStr = searchKey.substr(s, len);
+                                      if (PHONICS_MAP[testSubStr]) {
+                                          localKey = testSubStr;
+                                          displayStr = testSubStr; // 👈 畫面顯示字母就是找到的組合 (例如 ine)
+                                          foundInMap = true;
+                                          break;
+                                      }
+                                  }
+                                  if (foundInMap) break;
+                              }
+                          }
+  
+                          // 第三步：Azure 翻譯機備援
+                          if (!foundInMap) {
+                              const rawPh = (sub.Phoneme || "").toLowerCase();
+                              localKey = AZURE_TO_LOCAL_MAP[rawPh] || rawPh;
+                              displayStr = chunk; // 👈 找不到就退回顯示切下的原本字母
+                          }
+  
+                          const hasFinalAudio = PHONICS_MAP[localKey] ? true : false;
+                          
+                          // 🚀 把顯示文字指向乾淨的 displayStr，再也不會跑出檔名了！
+                          const displayLabel = displayStr.toUpperCase();
+  
+                          const safeToken = token.replace(/'/g, "\\'");
+                          const safeDisplay = displayLabel.replace(/'/g, "\\'");
+                          coloredWord += `<span class="char-help-wrapper colored-char" style="color: ${color}">${chunk}${hasFinalAudio ? `<button class="helper-bulb" onclick="showPhonicHelper('${safeToken}', '${localKey}', '${safeDisplay}')">💡</button>` : ''}</span>`;
+                      } else {
+                          coloredWord += `<span class="colored-char" style="color: ${color}">${chunk}</span>`;
+                      }
                   }
                   charPointer += segmentLen;
               });
               return coloredWord;
           }
-
-          // 備援：若無子數據則整詞變色
           return `<span class="colored-char" style="color: ${getScoreColor(assess.AccuracyScore || 0)}">${token}</span>`;
-      });
-
-      return finalHtml.join('');
+      }).join('');
   }
   
   // 向 GAS 索取 10 分鐘效期的安全 Token
@@ -1576,10 +1699,14 @@ const subData = (azureWord.Phonemes && azureWord.Phonemes.length > 0)
   
   function attachButtonListeners() {
     document.getElementById('play-btn').onclick = () => { 
-        window.speechSynthesis.cancel(); 
-        const msg = new SpeechSynthesisUtterance(quizData[currentIndex].en); 
-        msg.lang = 'en-US'; window.speechSynthesis.speak(msg); 
+        const btn = document.getElementById('play-btn');
+        btn.style.transform = "scale(0.9)";
+        setTimeout(() => btn.style.transform = "scale(1)", 150);
+        
+        // 🚀 呼叫雲端快取發音，放大 1.8 倍！
+        speakWordCloudCached(quizData[currentIndex].en, 1.8, null, null); 
     };
+    
     document.getElementById('prev-btn').onclick = () => { if(currentIndex > 0){ currentIndex--; renderWord(); } };
     document.getElementById('next-btn').onclick = () => { if (currentIndex < quizData.length - 1) { currentIndex++; renderWord(); } else { showSummary(); } };
     document.getElementById('back-summary-btn').onclick = () => { isReReading = false; showSummary(); };
@@ -1917,7 +2044,7 @@ const subData = (azureWord.Phonemes && azureWord.Phonemes.length > 0)
         practiceRecorder.ondataavailable = ev => { if(ev.data.size > 0) practiceChunks.push(ev.data); };
         practiceRecorder.start();
 
-        document.getElementById('status').innerText = "🔴 錄音中... (放開按鈕送出)";
+        document.getElementById('status').innerText = "🔴 錄音中...";
         document.getElementById('status').style.color = "#eb3b5a";
         document.getElementById('feedback').innerHTML = ""; 
         document.getElementById('prev-btn').disabled = true;
@@ -1959,7 +2086,7 @@ const subData = (azureWord.Phonemes && azureWord.Phonemes.length > 0)
             
             try {
                 const wavFile = await createWavFileFromBlob(rawBlob);
-                document.getElementById('status').innerText = "🟢 傳送至微軟聲學引擎...";
+                document.getElementById('status').innerText = "🟢 傳送至聲學引擎...";
                 document.getElementById('status').style.color = "#3498db";
 
                 const targetWord = quizData[currentIndex].en;
@@ -1978,7 +2105,7 @@ const subData = (azureWord.Phonemes && azureWord.Phonemes.length > 0)
                 recognizer.recognizeOnceAsync(
                     (result) => {
                         if (result.reason === SpeechSDK.ResultReason.RecognizedSpeech) {
-                            document.getElementById('status').innerText = "呼叫 AI 教練中...";
+                            document.getElementById('status').innerText = "呼叫導師評論中...";
                             let rawAzureData = SpeechSDK.PronunciationAssessmentResult.fromResult(result).detailResult;
                             azureReports[currentIndex] = rawAzureData;
 
@@ -1993,7 +2120,7 @@ const subData = (azureWord.Phonemes && azureWord.Phonemes.length > 0)
                                 // 🚀 關鍵：一鍵恢復所有按鈕觸發與樣式！
                                 renderWord();
                             }).catch(() => {
-                                document.getElementById('status').innerText = "⚠️ AI 寫評語失敗";
+                                document.getElementById('status').innerText = "⚠️ 導師寫評語失敗";
                                 document.getElementById('status').style.color = "#e74c3c";
                                 renderWord();
                             });
@@ -3537,6 +3664,203 @@ const subData = (azureWord.Phonemes && azureWord.Phonemes.length > 0)
           card.addEventListener('touchend', resetTilt);
       });
   }
+
+
+  /* -------------------------------------------------------
+   🚀 瑪麗安小幫手核心控制區
+   ------------------------------------------------------- */
+  async function showPhonicHelper(word, localKey, displayLabel) {
+      const warmup = new SpeechSynthesisUtterance("");
+      window.speechSynthesis.speak(warmup);
+      window.speechSynthesis.cancel(); 
+  
+      const overlay = document.getElementById('phonic-helper-overlay');
+      const title = document.getElementById('helper-word-title');
+      const instruction = document.getElementById('helper-instruction');
+      const replayBtn = document.getElementById('btn-replay-helper'); // 🚀 抓取重聽按鈕
+  
+      const chunkText = displayLabel.toLowerCase();
+      const fullText = word.toLowerCase();
+  
+      title.innerText = "引導發音示範"; 
+      title.style.fontSize = "22px";
+  
+      if (!document.getElementById('ring-anim-style')) {
+          const style = document.createElement('style');
+          style.id = 'ring-anim-style';
+          style.innerHTML = `@keyframes ringbell { 0%, 100% { transform: rotate(0); } 10%, 30%, 50% { transform: rotate(-15deg); } 20%, 40% { transform: rotate(15deg); } 60% { transform: rotate(0); } }`;
+          document.head.appendChild(style);
+      }
+  
+      instruction.innerHTML = `
+          <div style="margin: 20px 0; font-size: 38px; font-weight: 900; color: #dfe6e9; letter-spacing: 2px; word-break: break-word; line-height: 1.3;">
+              <span id="k-1" style="transition: all 0.15s; display: inline-block;">${chunkText}<span style="color:#b2bec3; font-size: 24px;">...</span> </span>
+              <span id="k-2" style="transition: all 0.15s; display: inline-block;">${chunkText}<span style="color:#b2bec3; font-size: 24px;">...</span> </span>
+              <span id="k-3" style="transition: all 0.15s; display: inline-block; margin-top: 10px;">${fullText}</span>
+          </div>
+          <div style="font-size: 14px; color: #d63031; background: #fff5f5; padding: 12px 15px; border-radius: 12px; display: inline-flex; align-items: center; gap: 10px; border: 2px dashed #ffcccc;">
+              <span style="font-size: 24px; animation: ringbell 2s infinite;">🔔</span>
+              <span style="font-weight: bold; text-align: left; line-height: 1.4;">聽不到聲音嗎？<br>請確認手機是否關閉<span style="text-decoration: underline;">靜音開關</span>，並調高音量喔！</span>
+          </div>
+      `;
+  
+      // 🚀 綁定重聽按鈕點擊事件
+      replayBtn.onclick = () => {
+          // 給一點點擊縮放的回饋感
+          replayBtn.style.transform = "scale(0.92)";
+          setTimeout(() => replayBtn.style.transform = "scale(1)", 150);
+          // 呼叫播放引擎再唸一次
+          playModularAudio(localKey, word);
+      };
+  
+      overlay.style.display = 'flex';
+      playModularAudio(localKey, word); // 第一次打開自動唸
+  }
+  
+    // 💡 KTV 導讀序列引擎 (小燈泡專用)
+  function playModularAudio(localKey, fullWord) {
+      const k1 = document.getElementById('k-1');
+      const k2 = document.getElementById('k-2');
+      const k3 = document.getElementById('k-3');
+  
+      (async () => {
+          // 1. 本地音標 (GitHub MP3，2.0倍放大)
+          await playPhonicLocal(localKey, 2.0, k1, "var(--marian-yellow)");
+          await new Promise(r => setTimeout(r, 200)); 
+          await playPhonicLocal(localKey, 2.0, k2, "var(--marian-yellow)");
+          await new Promise(r => setTimeout(r, 400)); 
+          
+          // 2. 雲端單字 (Azure API + 快取，1.8倍放大)
+          await speakWordCloudCached(fullWord, 1.8, k3, "var(--primary-blue)");
+      })();
+  }
+  // 3. 關閉視窗
+  function closePhonicHelper() {
+      document.getElementById('phonic-helper-overlay').style.display = 'none';
+      window.speechSynthesis.cancel(); // 停止所有正在唸的聲音
+  }
+
+  /* =======================================================
+   🚀 瑪麗安專屬：企業級語音引擎 (記憶體快取 + 擴大機)
+   ======================================================= */
+  let audioCtx = null;
+  const audioBufferCache = new Map(); // 🧠 核心：全域記憶體，存過就不再花錢！
+  
+  function playAudioBuffer(buffer, gainValue, targetEl, activeColor) {
+      const source = audioCtx.createBufferSource();
+      source.buffer = buffer;
+      
+      const gainNode = audioCtx.createGain();
+      gainNode.gain.setValueAtTime(gainValue, audioCtx.currentTime); 
+      
+      source.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+      
+      if (targetEl) {
+          targetEl.style.color = activeColor;
+          targetEl.style.transform = "scale(1.15)";
+      }
+  
+      source.start(0);
+  
+      return new Promise(resolve => {
+          source.onended = () => {
+              if (targetEl) {
+                  targetEl.style.color = "#dfe6e9";
+                  targetEl.style.transform = "scale(1)";
+              }
+              resolve();
+          };
+      });
+  }
+  
+  // 雲端單字發音引擎：有快取用快取，沒快取才花錢問 Azure
+  async function speakWordCloudCached(word, gainValue, targetEl, activeColor) {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') await audioCtx.resume();
+      window.speechSynthesis.cancel(); // 關閉本地語音防干擾
+  
+      const cacheKey = word.toLowerCase();
+  
+      // 🌟 1. 【防冤大頭機制】：如果在記憶體找到了，直接播
+      if (audioBufferCache.has(cacheKey)) {
+          await playAudioBuffer(audioBufferCache.get(cacheKey), gainValue, targetEl, activeColor);
+          return;
+      }
+  
+      // 🌟 2. 【去 Azure 拿聲音】：只有第一次會進來
+      return new Promise((resolve, reject) => {
+          if (!azureAuthToken || typeof SpeechSDK === 'undefined') {
+              fallbackLocalTTS(word, targetEl, activeColor, resolve);
+              return;
+          }
+  
+          try {
+              const speechConfig = SpeechSDK.SpeechConfig.fromAuthorizationToken(azureAuthToken, azureRegionCode);
+              speechConfig.speechSynthesisVoiceName = "en-US-JennyNeural"; 
+              speechConfig.speechSynthesisOutputFormat = SpeechSDK.SpeechSynthesisOutputFormat.Riff24Khz16BitMonoPcm;
+  
+              const synthesizer = new SpeechSDK.SpeechSynthesizer(speechConfig, null); 
+              const ssml = `<speak version='1.0' xml:lang='en-US'><voice name='en-US-JennyNeural'><prosody rate='-10%'>${word}</prosody></voice></speak>`;
+  
+              synthesizer.speakSsmlAsync(ssml, async (result) => {
+                  synthesizer.close();
+                  if (result.audioData) {
+                      try {
+                          const audioBuffer = await audioCtx.decodeAudioData(result.audioData);
+                          audioBufferCache.set(cacheKey, audioBuffer); // 🧠 存入快取
+                          await playAudioBuffer(audioBuffer, gainValue, targetEl, activeColor);
+                          resolve();
+                      } catch (e) { fallbackLocalTTS(word, targetEl, activeColor, resolve); }
+                  } else {
+                      fallbackLocalTTS(word, targetEl, activeColor, resolve);
+                  }
+              }, (error) => {
+                  synthesizer.close();
+                  fallbackLocalTTS(word, targetEl, activeColor, resolve);
+              });
+          } catch (e) { fallbackLocalTTS(word, targetEl, activeColor, resolve); }
+      });
+  }
+  
+  function fallbackLocalTTS(word, targetEl, activeColor, resolve) {
+      if (targetEl) { targetEl.style.color = activeColor; targetEl.style.transform = "scale(1.15)"; }
+      const fallback = new SpeechSynthesisUtterance(word);
+      fallback.lang = 'en-US';
+      fallback.onend = () => {
+          if (targetEl) { targetEl.style.color = "#dfe6e9"; targetEl.style.transform = "scale(1)"; }
+          resolve();
+      };
+      window.speechSynthesis.speak(fallback);
+  }
+  
+  // 💡 播放音標 (GitHub MP3 專用)
+  async function playPhonicLocal(localKey, gainValue, targetEl, activeColor) {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') await audioCtx.resume();
+      
+      try {
+          const response = await fetch(`audio/${localKey}.mp3`);
+          if (!response.ok) throw new Error("Audio 404");
+          const arrayBuffer = await response.arrayBuffer();
+          const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+          await playAudioBuffer(audioBuffer, gainValue, targetEl, activeColor);
+      } catch(e) { console.warn("音標播放失敗"); }
+  }
 </script>
+  <div id="phonic-helper-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh; background: rgba(0,0,0,0.8); z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
+  <div class="helper-card" style="background: white; width: 85%; max-width: 340px; border-radius: 25px; padding: 30px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5); position: relative;">
+    <div id="helper-avatar-box" style="width: 100px; height: 100px; background: #eaeff2; border-radius: 50%; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; font-size: 50px; border: 4px solid var(--gold);">
+      👩‍🏫 
+    </div>
+    <h2 id="helper-word-title" style="color: var(--primary-blue); margin: 0; font-size: 28px;">Word</h2>
+    <div id="helper-instruction" style="color: #636e72; font-size: 18px; margin: 15px 0; font-weight: bold; line-height: 1.5;"></div>
+    
+    <div style="display: flex; gap: 12px; margin-top: 25px;">
+      <button class="btn" id="btn-replay-helper" style="background: #0984e3; flex: 1; border-radius: 16px; padding: 14px; font-size: 18px; margin: 0; box-shadow: 0 4px 15px rgba(9, 132, 227, 0.3);">🔄 重聽</button>
+      <button class="btn" style="background: var(--marian-green); flex: 1; border-radius: 16px; padding: 14px; font-size: 18px; margin: 0; box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);" onclick="closePhonicHelper()">我知道了</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
