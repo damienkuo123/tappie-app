@@ -187,7 +187,7 @@
     .lb-panel { max-height: 0; overflow: hidden; transition: max-height 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s; opacity: 0; margin-top: 0; background: transparent; border: none; }
     .lb-panel.open { max-height: 800px; opacity: 1; padding: 20px 0 0 0; margin-bottom: 0; }
     
-    .lb-row { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid rgba(0,0,0,0.04); font-size: 15px; transition: 0.2s; background: rgba(255,255,255,0.4); border-radius: 16px; margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.8); box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
+    .lb-row { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; font-size: 15px; transition: 0.3s; background: rgba(255,255,255,0.55); backdrop-filter: blur(25px) saturate(150%); -webkit-backdrop-filter: blur(25px) saturate(150%); border-radius: 20px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.9); box-shadow: 0 8px 20px rgba(0,0,0,0.04), inset 0 1px 1px rgba(255,255,255,1); }
     .lb-rank { font-weight: 900; width: 35px; text-align: center; font-size: 18px; color: var(--text-sub); }
     .lb-name { flex: 1; text-align: left; padding-left: 15px; font-weight: 900; color: var(--text-main); letter-spacing: 1px; }
     .lb-score { font-weight: 900; color: var(--marian-red); font-size: 16px; }
@@ -312,14 +312,19 @@
       <div class="glass-panel leaderboard" style="padding: 20px 25px;">
         <button id="lb-toggle-btn" class="btn-glory" onclick="toggleLB()">🏆 查看單元榮譽榜</button>
         <div id="lb-panel" class="lb-panel">
-          <h2 style="color:var(--primary-blue); font-size: 18px; margin: 15px 0 15px 0; text-align:center; font-weight:900; letter-spacing:2px;">
+          <h2 style="color:var(--primary-blue); font-size: 18px; margin: 15px 0 20px 0; text-align:center; font-weight:900; letter-spacing:2px;">
             <span id="lb-unit-name"></span> 排行榜
           </h2>
-          <div style="background: rgba(241,196,15,0.1); border: 1px dashed var(--gold); color: #d35400; padding: 10px; border-radius: 12px; font-size: 13px; font-weight: bold; margin-bottom: 15px; letter-spacing: 1px;">
-            🎁 結算加碼：🥇 +30點 | 🥈 +20點 | 🥉 +10點
-          </div>
+          
           <div id="lb-container"></div>
-          <div style="font-size:12px; color:var(--text-sub); text-align: center; margin-top:20px; font-weight:900; letter-spacing:1px;">⏳ 結算日：<span class="end-date-display">-</span></div>
+          
+          <div style="margin-top: 15px; padding: 12px 15px; background: rgba(255,255,255,0.35); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-radius: 16px; border: 1px solid rgba(255,255,255,0.6); display: flex; justify-content: center; gap: 20px; font-size: 13px; font-weight: 900; color: var(--text-sub); box-shadow: inset 0 1px 2px rgba(255,255,255,0.8);">
+            <span>🥇 +30<span style="font-size:10px; margin-left:2px;">PTS</span></span>
+            <span>🥈 +20<span style="font-size:10px; margin-left:2px;">PTS</span></span>
+            <span>🥉 +10<span style="font-size:10px; margin-left:2px;">PTS</span></span>
+          </div>
+
+          <div style="font-size:12px; color:var(--text-sub); text-align: center; margin-top:15px; font-weight:900; letter-spacing:1px;">⏳ 結算日：<span class="end-date-display">-</span></div>
         </div>
       </div>
       
@@ -641,14 +646,17 @@
             let isMe = lb.uid === STUDENT_ID;
             let rankCrown = index === 0 ? "🥇" : (index === 1 ? "🥈" : (index === 2 ? "🥉" : `${index+1}`));
             
-            // 🚀 判斷前三名，給予額外的點數標籤 UI
+            // 🚀 重新設計的質感標籤 (金、銀、銅專屬漸層與微反光)
             let bonusTag = "";
-            if (index === 0) bonusTag = `<span style="font-size:11px; color:var(--marian-red); background:rgba(231,76,60,0.1); padding:2px 6px; border-radius:6px; margin-left:8px; border: 1px solid rgba(231,76,60,0.3);">+30 PTS</span>`;
-            else if (index === 1) bonusTag = `<span style="font-size:11px; color:#e67e22; background:rgba(230,126,34,0.1); padding:2px 6px; border-radius:6px; margin-left:8px; border: 1px solid rgba(230,126,34,0.3);">+20 PTS</span>`;
-            else if (index === 2) bonusTag = `<span style="font-size:11px; color:var(--marian-green); background:rgba(46,204,113,0.1); padding:2px 6px; border-radius:6px; margin-left:8px; border: 1px solid rgba(46,204,113,0.3);">+10 PTS</span>`;
+            if (index === 0) bonusTag = `<span style="font-size:11px; color:#d35400; background:linear-gradient(135deg, #ffeaa7, #f1c40f); padding:3px 8px; border-radius:8px; margin-left:10px; box-shadow: 0 4px 10px rgba(241,196,15,0.3); border:1px solid rgba(255,255,255,0.8);">+30</span>`;
+            else if (index === 1) bonusTag = `<span style="font-size:11px; color:#576574; background:linear-gradient(135deg, #f5f6fa, #dcdde1); padding:3px 8px; border-radius:8px; margin-left:10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border:1px solid rgba(255,255,255,0.8);">+20</span>`;
+            else if (index === 2) bonusTag = `<span style="font-size:11px; color:#b71540; background:linear-gradient(135deg, #ffda79, #e17055); padding:3px 8px; border-radius:8px; margin-left:10px; box-shadow: 0 4px 10px rgba(225,112,85,0.2); border:1px solid rgba(255,255,255,0.8);">+10</span>`;
+
+            // 🚀 本人列的高級突顯：保留黃色漸層光暈，並加入白色內陰影
+            let rowStyle = isMe ? 'background:linear-gradient(135deg, rgba(241,196,15,0.2), rgba(243,156,18,0.1)); border:1px solid rgba(241,196,15,0.6); box-shadow: 0 8px 20px rgba(241,196,15,0.15), inset 0 1px 2px rgba(255,255,255,0.9);' : '';
 
             return `
-              <div class="lb-row" style="${isMe ? 'background:rgba(241,196,15,0.15); border:1px solid rgba(241,196,15,0.5); box-shadow: 0 4px 15px rgba(241,196,15,0.1);' : ''}">
+              <div class="lb-row" style="${rowStyle}">
                 <span class="lb-rank">${rankCrown}</span>
                 <span class="lb-name">${lb.name}${bonusTag}</span>
                 <span class="lb-score">${lb.score} 分</span>
