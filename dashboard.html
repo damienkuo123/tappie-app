@@ -312,15 +312,18 @@
       <div class="glass-panel leaderboard" style="padding: 20px 25px;">
         <button id="lb-toggle-btn" class="btn-glory" onclick="toggleLB()">🏆 查看單元榮譽榜</button>
         <div id="lb-panel" class="lb-panel">
-          <h2 style="color:var(--primary-blue); font-size: 18px; margin: 15px 0 20px 0; text-align:center; font-weight:900; letter-spacing:2px;">
+          <h2 style="color:var(--primary-blue); font-size: 18px; margin: 15px 0 15px 0; text-align:center; font-weight:900; letter-spacing:2px;">
             <span id="lb-unit-name"></span> 排行榜
           </h2>
+          <div style="background: rgba(241,196,15,0.1); border: 1px dashed var(--gold); color: #d35400; padding: 10px; border-radius: 12px; font-size: 13px; font-weight: bold; margin-bottom: 15px; letter-spacing: 1px;">
+            🎁 結算加碼：🥇 +30點 | 🥈 +20點 | 🥉 +10點
+          </div>
           <div id="lb-container"></div>
           <div style="font-size:12px; color:var(--text-sub); text-align: center; margin-top:20px; font-weight:900; letter-spacing:1px;">⏳ 結算日：<span class="end-date-display">-</span></div>
         </div>
       </div>
       
-      <div style="width: 92%; max-width: 420px; margin-bottom: 22px;">
+      <div style="width: 92%; max-width: 420px; margin-top: 15px; margin-bottom: 25px;">
         <div class="action-card-lobby" onclick="goToLobby()">
           <div class="icon-wrapper" style="color: #0066cc;">⚔️</div>
           <div class="text-block">
@@ -637,10 +640,17 @@
           let lbHtml = data.leaderboard.map((lb, index) => {
             let isMe = lb.uid === STUDENT_ID;
             let rankCrown = index === 0 ? "🥇" : (index === 1 ? "🥈" : (index === 2 ? "🥉" : `${index+1}`));
+            
+            // 🚀 判斷前三名，給予額外的點數標籤 UI
+            let bonusTag = "";
+            if (index === 0) bonusTag = `<span style="font-size:11px; color:var(--marian-red); background:rgba(231,76,60,0.1); padding:2px 6px; border-radius:6px; margin-left:8px; border: 1px solid rgba(231,76,60,0.3);">+30 PTS</span>`;
+            else if (index === 1) bonusTag = `<span style="font-size:11px; color:#e67e22; background:rgba(230,126,34,0.1); padding:2px 6px; border-radius:6px; margin-left:8px; border: 1px solid rgba(230,126,34,0.3);">+20 PTS</span>`;
+            else if (index === 2) bonusTag = `<span style="font-size:11px; color:var(--marian-green); background:rgba(46,204,113,0.1); padding:2px 6px; border-radius:6px; margin-left:8px; border: 1px solid rgba(46,204,113,0.3);">+10 PTS</span>`;
+
             return `
               <div class="lb-row" style="${isMe ? 'background:rgba(241,196,15,0.15); border:1px solid rgba(241,196,15,0.5); box-shadow: 0 4px 15px rgba(241,196,15,0.1);' : ''}">
                 <span class="lb-rank">${rankCrown}</span>
-                <span class="lb-name">${lb.name}</span>
+                <span class="lb-name">${lb.name}${bonusTag}</span>
                 <span class="lb-score">${lb.score} 分</span>
               </div>
             `;
