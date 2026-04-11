@@ -120,6 +120,9 @@
     .action-arrow { color: white; font-size: 16px; font-weight: 900; background: linear-gradient(135deg, var(--primary-blue), #1e3799); width: 44px; height: 44px; border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 8px 20px rgba(0,102,204,0.3); transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1); border: 2px solid rgba(255,255,255,0.5); }
     .action-card-lobby:hover .action-arrow { transform: translateX(8px); box-shadow: 0 12px 25px rgba(0,102,204,0.4); }
 
+    /* 獨立的對戰大廳外框樣式 */
+    .lobby-container { width: 92%; max-width: 420px; margin-top: 15px; margin-bottom: 25px; box-sizing: border-box; }
+
     /* 🚀 核心修復：按鈕加上 box-sizing: border-box 避免溢出 */
     .btn { 
       padding: 18px; margin: 0; font-size: 18px; font-weight: 900; border-radius: 20px; border: none; color: white; cursor: pointer; display: block; text-decoration: none; width: 100%; transition: 0.3s; text-align: center; letter-spacing: 3px; position: relative; overflow: hidden;
@@ -221,7 +224,7 @@
        ======================================================= */
     @media (min-width: 768px) {
       /* 在平板上，將最大寬度從 420px 解放至 680px，讓畫面更舒展 */
-      .glass-panel, .action-stack {
+      .glass-panel, .action-stack, .lobby-container {
         max-width: 680px;
       }
       
@@ -328,7 +331,7 @@
         </div>
       </div>
       
-      <div style="width: 92%; max-width: 420px; margin-top: 15px; margin-bottom: 25px;">
+      <div class="lobby-container">
         <div class="action-card-lobby" onclick="goToLobby()">
           <div class="icon-wrapper" style="color: #0066cc;">⚔️</div>
           <div class="text-block">
