@@ -1102,6 +1102,7 @@
       line-height: 1.1;
       text-align: center;
       width: 100%;
+      }
 
       /* ===================================================
          🚀 新增：6. 小燈泡導讀視窗 (Phonic Helper) 放大
@@ -2282,9 +2283,10 @@
                       this.classList.add('wrong');
                   }
               };
-              optionsContainer.appendChild(btn);
-          });
-      }
+            optionsContainer.appendChild(btn);
+        });
+    }
+  } // 👈 補上這個大括號！
 
   // 🛠️ 輔助函數：從單字中隨機挑一個英文字母挖空
   function extractMissingTarget(word) {
