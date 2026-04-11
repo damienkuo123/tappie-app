@@ -1288,23 +1288,31 @@
        🏀 瑪麗安街機：動態全螢幕投籃引擎 (Gravity & Physics)
        ======================================================= */
     
-    /* 🚀 動態撐滿螢幕的卡片狀態 */
+    /* 🚀 修復 1：放棄 100vh，改用 fixed + top/bottom，完美避開 Safari 黑線！ */
     .main-panel.arcade-active {
-      height: calc(100dvh - max(40px, env(safe-area-inset-bottom) + 20px));
-      max-width: 550px; display: flex; flex-direction: column;
-      transition: height 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      position: fixed;
+      top: max(15px, env(safe-area-inset-top));
+      bottom: max(15px, env(safe-area-inset-bottom));
+      left: 10px; right: 10px;
+      width: auto; height: auto;
+      max-width: 550px;
+      margin: 0 auto;
+      box-sizing: border-box;
+      z-index: 9999;
+      display: flex; flex-direction: column;
     }
-    .main-panel.arcade-active #studio { flex: 1; display: flex; flex-direction: column; }
+    .main-panel.arcade-active #studio { flex: 1; display: flex; flex-direction: column; height: 100%; }
     
     #arcade-zone {
       flex: 1; display: flex; flex-direction: column; align-items: center; 
       width: 100%; position: relative; animation: fadeIn 0.4s ease-out; touch-action: none;
+      min-height: 0; /* 確保 Flex 壓縮正常 */
     }
 
     /* 頂部籃框區 (3 個) */
     #arcade-targets {
       display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; 
-      width: 100%; z-index: 10; margin-bottom: auto; /* 靠上對齊 */
+      width: 100%; z-index: 10; margin-bottom: 5px;
     }
     
     /* 🏀 精緻版 3D 籃框 */
@@ -1326,36 +1334,34 @@
     .hoop-wrapper.swish .hoop-backboard { border-color: #2ecc71; box-shadow: 0 0 20px rgba(46,204,113,0.3); color: #27ae60; }
     .hoop-wrapper.wrong .hoop-backboard { border-color: #e74c3c; color: #e74c3c; background: #fff5f5; animation: shake-error 0.3s; }
 
-    /* 🚀 中央圖片題卡 (高度智慧壓縮，絕不擋路) */
+    /* 中央圖片題卡 */
     #arcade-question-card {
       background: white; border-radius: 20px; padding: 8px; 
       box-shadow: 0 10px 25px rgba(0,0,0,0.08); border: 1px solid #f1f5f9;
       display: flex; justify-content: center; align-items: center; 
       width: auto; max-width: 220px; 
-      height: 20vh; max-height: 180px; aspect-ratio: 1; /* 限制最大高度為螢幕 20% */
-      z-index: 10; position: relative; margin: 15px 0;
+      height: 20vh; max-height: 180px; aspect-ratio: 1; 
+      z-index: 10; position: relative; margin: 10px 0;
     }
     #arcade-img { width: 100%; height: 100%; object-fit: cover; border-radius: 12px; display: none; }
     #arcade-zh { font-size: clamp(24px, 8vw, 36px); font-weight: 900; color: #334155; display: none; }
 
-    /* =======================================================
-       發球台 (觸控區) - 加上虛線邊界，明確區隔上下按鈕
-       ======================================================= */
+    /* 🚀 修復 2：極大化的發球台 (觸控區)，用虛線隔開 */
     #arcade-pad {
-      flex: 1; width: 100%; min-height: 120px; position: relative; 
+      flex: 1; width: 100%; min-height: 180px; /* 變高了！ */
+      position: relative; margin-top: auto; margin-bottom: 10px;
       display: flex; justify-content: center; align-items: flex-end;
-      /* 🚀 新增：頂部與底部的虛線界線，並加上微透明底色 */
-      border-top: 2px dashed #cbd5e1;
-      border-bottom: 2px dashed #cbd5e1;
-      background: rgba(241, 245, 249, 0.5);
-      margin-bottom: 15px; /* 🚀 確保與下方的上一題/下一題按鈕拉開距離 */
+      border-top: 2px dashed #cbd5e1; border-bottom: 2px dashed #cbd5e1;
+      background: rgba(241, 245, 249, 0.5); padding-bottom: 20px;
     }
-    .pad-hint { 
-      position: absolute; top: 10px; width: 100%; text-align: center; 
-      color: #94a3b8; font-size: 14px; font-weight: bold; letter-spacing: 4px; 
-      animation: pulse-opacity 1.5s infinite; 
-    }
+    .pad-hint { position: absolute; top: 10px; width: 100%; text-align: center; color: #94a3b8; font-size: 14px; font-weight: bold; letter-spacing: 4px; animation: pulse-opacity 1.5s infinite; }
     @keyframes pulse-opacity { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
+
+    /* 🚀 修復 3：讓底部按鈕列自動推到最下方 */
+    .nav-btn-container {
+      margin-top: auto; /* 將按鈕推到最底 */
+      display: flex; justify-content: center; width: 100%; padding-top: 10px;
+    }
 
     /* 真實旋轉的巨大化籃球 */
     #arcade-ball-wrapper {
@@ -1444,7 +1450,7 @@
       <div id="feedback" style="font-size: 26px; font-weight: 800; color: var(--marian-green); margin-top: 10px;"></div>
     </div>
 
-    <div style="margin-top: 30px; display:flex; justify-content:center;">
+    <div class="nav-btn-container">
       <button class="btn btn-nav" id="prev-btn">◀ 上一題</button>
       <button class="btn btn-nav" id="next-btn">下一題 ▶</button>
       <button class="btn btn-nav" id="back-summary-btn" style="display:none; background:var(--marian-green); border-bottom:4px solid #1e8449;">返回結算頁</button>
@@ -2280,24 +2286,35 @@
       let originY = baseRect.top;
       let currentDx = 0, currentDy = 0;
 
+      // 清除舊的監聽器
       if(window.arcadeDragObj) {
-          document.removeEventListener('pointermove', window.arcadeDragObj.move);
-          document.removeEventListener('pointerup', window.arcadeDragObj.up);
+          document.removeEventListener('touchmove', window.arcadeDragObj.move);
+          document.removeEventListener('mousemove', window.arcadeDragObj.move);
+          document.removeEventListener('touchend', window.arcadeDragObj.up);
+          document.removeEventListener('mouseup', window.arcadeDragObj.up);
       }
 
-      ballWrapper.onpointerdown = (e) => {
+      // 🚀 修復 Safari 拖拉死鎖：統一獲取座標函數
+      const getX = (e) => e.touches ? e.touches[0].clientX : e.clientX;
+      const getY = (e) => e.touches ? e.touches[0].clientY : e.clientY;
+
+      const downHandler = (e) => {
           isDragging = true;
-          startX = e.clientX - currentDx; 
-          startY = e.clientY - currentDy;
+          startX = getX(e) - currentDx; 
+          startY = getY(e) - currentDy;
           ballWrapper.style.transition = 'none';
-          e.preventDefault();
+          // ⚠️ 絕對不能在這裡加上 e.preventDefault()，否則 Safari 會卡死！
       };
+
+      // 綁定 Mouse 與 Touch 雙事件，確保全裝置相容
+      ballWrapper.addEventListener('touchstart', downHandler, {passive: true});
+      ballWrapper.addEventListener('mousedown', downHandler);
 
       window.arcadeDragObj = {
           move: function(e) {
               if (!isDragging) return;
-              currentDx = e.clientX - startX;
-              currentDy = e.clientY - startY;
+              currentDx = getX(e) - startX;
+              currentDy = getY(e) - startY;
               
               if (currentDy > 30) currentDy = 30; 
               if (currentDx > 70) currentDx = 70;
@@ -2305,12 +2322,12 @@
               
               ballWrapper.style.transform = `translate(${currentDx}px, ${currentDy}px) scale(0.9)`;
               
-              // 🎯 動態瞄準反饋 (放寬命中區間到 70%)
+              // 🎯 動態瞄準反饋
               hoops.forEach(h => {
                   h.classList.remove('target-locked');
                   let hRect = h.getBoundingClientRect();
                   let center = hRect.left + hRect.width / 2;
-                  if (Math.abs(e.clientX - center) < hRect.width * 0.7 && currentDy < -20) {
+                  if (Math.abs(getX(e) - center) < hRect.width * 0.7 && currentDy < -20) {
                       h.classList.add('target-locked');
                   }
               });
@@ -2319,6 +2336,7 @@
               if (!isDragging) return;
               isDragging = false;
               
+              // 🚀 沒往上推夠多：放棄投籃
               if (currentDy > -20) {
                   ballWrapper.style.transition = 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)';
                   ballWrapper.style.transform = 'translate(0px, 0px) scale(1)';
@@ -2327,13 +2345,16 @@
                   return;
               }
               
+              // 取得放開瞬間的 X 座標 (TouchEnd 需要特製寫法)
+              let releaseX = e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
+
               let targetHoop = null;
               let hitType = 'airball'; 
               
               hoops.forEach(h => {
                   let hRect = h.getBoundingClientRect();
                   let center = hRect.left + hRect.width / 2;
-                  if (Math.abs(e.clientX - center) < hRect.width * 0.7) {
+                  if (Math.abs(releaseX - center) < hRect.width * 0.7) {
                       targetHoop = h;
                       hitType = (h.dataset.ans === current.en) ? 'swish' : 'brick';
                   }
@@ -2352,7 +2373,7 @@
                   if (hitType === 'swish') {
                       endX = (targetRect.left + targetRect.width/2) - (originX + 45); 
                   } else {
-                      endX = (targetRect.left + targetRect.width/2) - (originX + 45) + (e.clientX > targetRect.left + targetRect.width/2 ? 35 : -35);
+                      endX = (targetRect.left + targetRect.width/2) - (originX + 45) + (releaseX > targetRect.left + targetRect.width/2 ? 35 : -35);
                   }
               }
               
@@ -2387,6 +2408,8 @@
                               
                               document.getElementById('arcade-zone').style.opacity = '0';
                               setTimeout(() => {
+                                  // 🚀 關閉卡片撐開狀態
+                                  document.getElementById('main-card').classList.remove('arcade-active');
                                   document.getElementById('arcade-zone').style.display = 'none';
                                   document.getElementById('arcade-zone').style.opacity = '1';
                                   warmupPassed[currentIndex] = true; 
@@ -2404,7 +2427,6 @@
                               ballInner.style.transform = `rotate(${currentDx * 2}deg)`; 
                               ballWrapper.style.transform = `translate(${currentDx}px, ${currentDy}px) scale(${scale})`;
                               
-                              // 當球掉出螢幕底部時，重生
                               if (currentDy < window.innerHeight) { 
                                   requestAnimationFrame(bounceLoop); 
                               } else {
@@ -2420,8 +2442,10 @@
           }
       };
 
-      document.addEventListener('pointermove', window.arcadeDragObj.move);
-      document.addEventListener('pointerup', window.arcadeDragObj.up);
+      document.addEventListener('touchmove', window.arcadeDragObj.move, {passive: false});
+      document.addEventListener('mousemove', window.arcadeDragObj.move);
+      document.addEventListener('touchend', window.arcadeDragObj.up);
+      document.addEventListener('mouseup', window.arcadeDragObj.up);
   }
 
   // 🛠️ 輔助函數：改為只抓 2 個錯的單字
