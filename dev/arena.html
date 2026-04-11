@@ -2150,153 +2150,200 @@
     if (progContainer) progContainer.style.display = 'block';
 
     document.getElementById('idx-display').innerText = currentIndex + 1;
-    
-    // 更新進度條
     if (quizData.length > 0) {
-        const progressPercent = ((currentIndex + 1) / quizData.length) * 100;
-        document.getElementById('progress-fill').style.width = progressPercent + "%";
+        document.getElementById('progress-fill').style.width = (((currentIndex + 1) / quizData.length) * 100) + "%";
     }
 
-    // 🎯 核心分流：這題暖身過了沒？
+    // 🎯 分流判斷
     if (warmupPassed[currentIndex]) {
-        // ✅ 已暖身：直接進入開口決戰 (Production Phase)
-        document.getElementById('warmup-zone').style.display = 'none';
+        document.getElementById('arcade-zone').style.display = 'none';
         document.getElementById('production-zone').style.display = 'block';
         setupProductionZone(current);
     } else {
-        // 🚧 未暖身：啟動破冰任務 (Warm-up Phase)
-        document.getElementById('warmup-zone').style.display = 'flex';
+        document.getElementById('arcade-zone').style.display = 'flex';
         document.getElementById('production-zone').style.display = 'none';
-        setupWarmupZone(current);
+        setupArcadeZone(current);
     }
 
-    // 按鈕邏輯更新
     const prevBtn = document.getElementById('prev-btn');
     const nextBtn = document.getElementById('next-btn');
     const backBtn = document.getElementById('back-summary-btn');
 
     if (isReReading) {
-      prevBtn.style.display = 'none';
-      nextBtn.style.display = 'none';
-      backBtn.style.display = 'inline-block';
+      prevBtn.style.display = 'none'; nextBtn.style.display = 'none'; backBtn.style.display = 'inline-block';
       backBtn.disabled = false;
     } else {
-      backBtn.style.display = 'none';
-      prevBtn.style.display = 'inline-block';
-      prevBtn.disabled = (currentIndex === 0);
-      nextBtn.style.display = 'inline-block';
-      nextBtn.disabled = false;
+      backBtn.style.display = 'none'; prevBtn.style.display = 'inline-block';
+      prevBtn.disabled = (currentIndex === 0); nextBtn.style.display = 'inline-block'; nextBtn.disabled = false;
       nextBtn.innerText = currentIndex === quizData.length - 1 ? "查看結算" : "下一題 ▶";
     }
   }
 
-  // 🎮 建立暖身小遊戲 (雙模式隨機輪盤)
-  function setupWarmupZone(current) {
-      const imgEl = document.getElementById('warmup-img');
-      const zhEl = document.getElementById('warmup-zh');
-      const skeletonContainer = document.getElementById('warmup-word-skeleton');
-      const optionsContainer = document.getElementById('warmup-options');
-      
-      // 每次進入前先清空容器，並移除列表排版
-      skeletonContainer.innerHTML = '';
-      optionsContainer.innerHTML = '';
-      optionsContainer.className = ''; // 🚀 清空 class
+  // 🏀 投籃物理引擎
+  function setupArcadeZone(current) {
+      const imgEl = document.getElementById('arcade-img');
+      const zhEl = document.getElementById('arcade-zh');
+      const targetsContainer = document.getElementById('arcade-targets');
+      const ball = document.getElementById('arcade-ball');
+      const pad = document.getElementById('arcade-pad');
 
-      // 🛡️ 視覺區：有圖顯示圖，沒圖顯示中文
+      // 1. 設置題目顯示 (有圖秀圖，沒圖秀中文)
       if (current.img && current.img.trim() !== "") {
           imgEl.src = current.img.includes('sz=') ? current.img.replace(/sz=w\d+/, 'sz=w400') : current.img;
-          imgEl.style.display = 'block';
-          zhEl.style.display = 'none';
+          imgEl.style.display = 'block'; zhEl.style.display = 'none';
       } else {
-          imgEl.style.display = 'none';
-          zhEl.innerText = current.zh || "看字發音";
-          zhEl.style.display = 'block';
+          imgEl.style.display = 'none'; zhEl.innerText = current.zh || "看字發音"; zhEl.style.display = 'block';
       }
 
-      // 🎲 隨機決定暖身模式 (0: 四選一, 1: 填空拼字)
-      const warmupMode = (current.en.length < 2 || Math.random() < 0.5) ? 0 : 1;
+      // 2. 生成四個籃框 (包含正確答案與3個干擾項)
+      targetsContainer.innerHTML = '';
+      let distractors = getWordDistractors(current.en, 3);
+      let finalOptions = [current.en, ...distractors].sort(() => Math.random() - 0.5);
 
-      if (warmupMode === 0) {
-          // ==========================================
-          // 🎲 模式 A：四選一 (看圖/中選英)
-          // ==========================================
-          skeletonContainer.style.display = 'none'; // 隱藏骨架
-          optionsContainer.classList.add('list-mode'); // 🚀 加上專屬垂直列表排版
+      let hoops = [];
+      finalOptions.forEach(opt => {
+          let hoop = document.createElement('div');
+          hoop.className = 'arcade-hoop';
+          hoop.innerText = opt;
+          hoop.dataset.ans = opt;
+          targetsContainer.appendChild(hoop);
+          hoops.push(hoop);
+      });
 
-          // 取得 3 個干擾選項，湊滿 4 個
-          let distractors = getWordDistractors(current.en, 3);
-          let finalOptions = [current.en, ...distractors].sort(() => Math.random() - 0.5);
+      // 3. 重置籃球狀態
+      ball.style.transform = 'translate(0px, 0px)';
+      ball.classList.remove('ball-flying');
+      ball.style.display = 'flex';
+      
+      let isDragging = false;
+      let startX = 0, startY = 0;
+      
+      // 🚀 關鍵防護：先移除舊的監聽器，避免累積觸發
+      if(window.arcadeDragObj) {
+          document.removeEventListener('pointermove', window.arcadeDragObj.move);
+          document.removeEventListener('pointerup', window.arcadeDragObj.up);
+      }
 
-          finalOptions.forEach(opt => {
-              let btn = document.createElement('button');
-              btn.className = 'btn-choice-list'; // 🚀 使用新的質感列表樣式
-              btn.innerText = opt;
+      // 4. 綁定極速拖拉放邏輯
+      ball.onpointerdown = (e) => {
+          isDragging = true;
+          startX = e.clientX; startY = e.clientY;
+          ball.style.transition = 'none';
+          ball.style.zIndex = '100';
+          e.preventDefault(); // 防止干擾
+      };
+
+      window.arcadeDragObj = {
+          move: function(e) {
+              if (!isDragging) return;
+              let dx = e.clientX - startX;
+              let dy = e.clientY - startY;
               
-              btn.onclick = function() {
-                  if (opt === current.en) {
-                      // ✅ 答對了！
-                      this.classList.add('correct');
-                      try { const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3'); audio.volume=0.5; audio.play(); } catch(e){}
-                      setTimeout(() => {
-                          warmupPassed[currentIndex] = true;
-                          renderWord(); 
-                      }, 600);
-                  } else {
-                      // ❌ 答錯了
-                      this.classList.remove('wrong');
-                      void this.offsetWidth; 
-                      this.classList.add('wrong');
-                  }
-              };
-              optionsContainer.appendChild(btn);
-          });
-
-      } else {
-          // ==========================================
-          // 🎲 模式 B：填空拼字 (Tap-to-Fill)
-          // ==========================================
-          skeletonContainer.style.display = 'flex'; 
-          // 這裡不加 list-mode，維持 flex-wrap 並排
-
-          const wordStr = current.en.toUpperCase();
-          let targetCharObj = extractMissingTarget(wordStr); 
-          
-          for (let i = 0; i < wordStr.length; i++) {
-              let char = wordStr[i];
-              if (char === ' ' || char === '-') {
-                  skeletonContainer.innerHTML += `<span style="width: 15px;"></span>`;
-              } else if (i === targetCharObj.index) {
-                  // 🚀 拔掉底線符號，讓 CSS 繪製出的 3D 凹槽完美呈現空無一物的質感
-                  skeletonContainer.innerHTML += `<span class="skeleton-char" id="skel-target"></span>`;
-              } else {
-                  skeletonContainer.innerHTML += `<span class="skeleton-char filled">${char}</span>`;
+              // 限制球不能往下或左右拖太遠 (約束在發射台上)
+              if (dy > 20) dy = 20; 
+              ball.style.transform = `translate(${dx}px, ${dy}px)`;
+              
+              // 🎯 磁吸瞄準：找出目前手指 X 軸最靠近的籃框
+              let closestHoop = null; let minDiff = Infinity;
+              hoops.forEach(h => {
+                  h.classList.remove('target-locked');
+                  let hRect = h.getBoundingClientRect();
+                  let hCenter = hRect.left + hRect.width / 2;
+                  let diff = Math.abs(e.clientX - hCenter);
+                  if (diff < minDiff) { minDiff = diff; closestHoop = h; }
+              });
+              // 只有當「往上推」超過 15px 時，才亮起鎖定光芒
+              if (dy < -15 && closestHoop) closestHoop.classList.add('target-locked');
+          },
+          up: function(e) {
+              if (!isDragging) return;
+              isDragging = false;
+              let dy = e.clientY - startY;
+              
+              // 如果沒有明顯的「往上推」動作，視為放棄投籃，將球歸位
+              if (dy > -20) {
+                  ball.style.transition = 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                  ball.style.transform = 'translate(0px, 0px)';
+                  hoops.forEach(h => h.classList.remove('target-locked'));
+                  return;
               }
-          }
+              
+              // 鎖定目標籃框
+              let targetHoop = document.querySelector('.arcade-hoop.target-locked');
+              if (!targetHoop) {
+                  // 防呆：如果推太快沒亮燈，強制鎖定 X 軸最接近的框
+                  let minDiff = Infinity;
+                  hoops.forEach(h => {
+                      let hRect = h.getBoundingClientRect();
+                      let diff = Math.abs(e.clientX - (hRect.left + hRect.width / 2));
+                      if (diff < minDiff) { minDiff = diff; targetHoop = h; }
+                  });
+              }
 
-          let options = generateDistractors(targetCharObj.char);
-          options.forEach(opt => {
-              let btn = document.createElement('button');
-              btn.className = 'btn-tap-fill'; // 🚀 維持原本的方塊樣式
-              btn.innerText = opt;
-              btn.onclick = function() {
-                  if (opt === targetCharObj.char) {
-                      this.classList.add('correct');
-                      document.getElementById('skel-target').innerText = opt;
-                      document.getElementById('skel-target').classList.add('filled');
-                      try { const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3'); audio.volume=0.5; audio.play(); } catch(e){}
-                      setTimeout(() => {
-                          warmupPassed[currentIndex] = true;
-                          renderWord(); 
-                      }, 600);
+              if (!targetHoop) return;
+
+              // 🚀 發動飛行特效！
+              ball.classList.add('ball-flying');
+              let ballRect = ball.getBoundingClientRect();
+              let targetRect = targetHoop.getBoundingClientRect();
+              
+              // 計算相對位移
+              let flyDx = (targetRect.left + targetRect.width/2) - (ballRect.left + ballRect.width/2);
+              let flyDy = (targetRect.top + targetRect.height/2) - (ballRect.top + ballRect.height/2);
+              
+              // 獲取球目前的 dx/dy 以確保飛行順暢
+              let currentTransform = ball.style.transform;
+              let match = currentTransform.match(/translate\((.*?)px,\s*(.*?)px\)/);
+              let baseDx = match ? parseFloat(match[1]) : 0;
+              let baseDy = match ? parseFloat(match[2]) : 0;
+
+              // 球縮小並飛入框內
+              ball.style.transform = `translate(${baseDx + flyDx}px, ${baseDy + flyDy}px) scale(0.3)`;
+              try { const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3'); audio.volume=0.3; audio.play(); } catch(err){}
+
+              // 碰撞判定 (400ms 後)
+              setTimeout(() => {
+                  ball.style.display = 'none'; // 球入網消失
+                  targetHoop.classList.remove('target-locked');
+                  
+                  if (targetHoop.dataset.ans === current.en) {
+                      // ✅ 空心入網
+                      targetHoop.classList.add('correct');
+                      setTimeout(() => { warmupPassed[currentIndex] = true; renderWord(); }, 600);
                   } else {
-                      this.classList.remove('wrong');
-                      void this.offsetWidth; 
-                      this.classList.add('wrong');
+                      // ❌ 投錯了 (打鐵彈出)
+                      targetHoop.classList.add('wrong');
+                      setTimeout(() => {
+                          targetHoop.classList.remove('wrong');
+                          ball.style.display = 'flex';
+                          ball.style.transition = 'none';
+                          ball.style.transform = 'translate(0px, 0px) scale(1)';
+                      }, 500);
                   }
-              };
-              optionsContainer.appendChild(btn);
-          });
+              }, 400); 
+          }
+      };
+
+      document.addEventListener('pointermove', window.arcadeDragObj.move);
+      document.addEventListener('pointerup', window.arcadeDragObj.up);
+  }
+
+  // 輔助函數：抓取錯誤單字
+  function getWordDistractors(correctWord, count) {
+      let distractors = [];
+      let available = quizData.filter(q => q.en !== correctWord).map(q => q.en);
+      const FALLBACK = ["Apple", "Banana", "Cat", "Dog", "Elephant", "Fish", "Grape", "Horse", "Ice", "Juice"];
+      while(distractors.length < count) {
+          if (available.length > 0) {
+              let rIdx = Math.floor(Math.random() * available.length);
+              distractors.push(available[rIdx]);
+              available.splice(rIdx, 1);
+          } else {
+              let fWord = FALLBACK[Math.floor(Math.random() * FALLBACK.length)];
+              if (!distractors.includes(fWord) && fWord !== correctWord) distractors.push(fWord);
+          }
       }
+      return distractors;
   }
 
   // 🛠️ 輔助函數：從單字中隨機挑一個英文字母挖空
