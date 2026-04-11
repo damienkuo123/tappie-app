@@ -2212,7 +2212,7 @@
     }
   }
 
-  // 🏀 真實物理重力引擎 (Arcade Physics Engine)
+  // 🏀 瑪麗安街機：硬核物理投籃引擎 (Gravity, Airball, Brick)
   function setupArcadeZone(current) {
       const imgEl = document.getElementById('arcade-img');
       const zhEl = document.getElementById('arcade-zh');
@@ -2220,7 +2220,6 @@
       const ballWrapper = document.getElementById('arcade-ball-wrapper');
       const ballInner = document.getElementById('arcade-ball');
 
-      // 1. 設置題目顯示 (強制正方形)
       if (current.img && current.img.trim() !== "") {
           imgEl.src = current.img.includes('sz=') ? current.img.replace(/sz=w\d+/, 'sz=w400') : current.img;
           imgEl.style.display = 'block'; zhEl.style.display = 'none';
@@ -2228,9 +2227,9 @@
           imgEl.style.display = 'none'; zhEl.innerText = current.zh || "看字發音"; zhEl.style.display = 'block';
       }
 
-      // 2. 生成四個立體籃框
+      // 1. 生成三個籃框 (1對 2錯)
       targetsContainer.innerHTML = '';
-      let distractors = getWordDistractors(current.en, 3);
+      let distractors = getWordDistractors(current.en, 2); // 🚀 改為只抓 2 個錯的，湊成 3 選 1
       let finalOptions = [current.en, ...distractors].sort(() => Math.random() - 0.5);
 
       let hoops = [];
@@ -2248,11 +2247,23 @@
           hoops.push(hWrap);
       });
 
-      // 3. 重置籃球狀態
-      ballWrapper.style.transform = 'translate(0px, 0px) scale(1)';
-      ballWrapper.style.zIndex = '20';
-      ballInner.classList.remove('ball-spinning');
-      ballInner.style.display = 'block';
+      // 2. 籃球重生系統
+      function resetBall() {
+          ballWrapper.style.transition = 'none';
+          ballWrapper.style.transform = 'translate(0px, 300px) scale(1)'; // 藏在螢幕下方
+          ballWrapper.style.zIndex = '20';
+          ballInner.style.transform = 'rotate(0deg)';
+          currentDx = 0; currentDy = 0;
+          
+          setTimeout(() => {
+              ballWrapper.style.transition = 'transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+              ballWrapper.style.transform = 'translate(0px, 0px) scale(1)';
+              ballInner.classList.add('ball-rolling-in');
+              setTimeout(() => ballInner.classList.remove('ball-rolling-in'), 600);
+          }, 100);
+      }
+
+      resetBall(); // 進入這題時先滾出來
       
       let isDragging = false;
       let startX = 0, startY = 0;
@@ -2261,7 +2272,6 @@
       let originY = baseRect.top;
       let currentDx = 0, currentDy = 0;
 
-      // 防止重複綁定
       if(window.arcadeDragObj) {
           document.removeEventListener('pointermove', window.arcadeDragObj.move);
           document.removeEventListener('pointerup', window.arcadeDragObj.up);
@@ -2281,110 +2291,127 @@
               currentDx = e.clientX - startX;
               currentDy = e.clientY - startY;
               
-              // 限制球不能往下或左右亂跑，強迫「蓄力」感
               if (currentDy > 30) currentDy = 30; 
-              if (currentDx > 50) currentDx = 50;
-              if (currentDx < -50) currentDx = -50;
+              if (currentDx > 70) currentDx = 70;
+              if (currentDx < -70) currentDx = -70;
               
               ballWrapper.style.transform = `translate(${currentDx}px, ${currentDy}px) scale(0.9)`;
+              
+              // 🎯 動態瞄準反饋 (只有真的對準了才會亮紅框！)
+              hoops.forEach(h => {
+                  h.classList.remove('target-locked');
+                  let hRect = h.getBoundingClientRect();
+                  let center = hRect.left + hRect.width / 2;
+                  // 判斷手指 X 軸是否落在籃框寬度的 60% 內
+                  if (Math.abs(e.clientX - center) < hRect.width * 0.6 && currentDy < -20) {
+                      h.classList.add('target-locked');
+                  }
+              });
           },
           up: function(e) {
               if (!isDragging) return;
               isDragging = false;
               
-              // 如果往上推的距離不夠，視為放棄投籃，彈性歸位
               if (currentDy > -20) {
                   ballWrapper.style.transition = 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)';
                   ballWrapper.style.transform = 'translate(0px, 0px) scale(1)';
+                  hoops.forEach(h => h.classList.remove('target-locked'));
                   currentDx = 0; currentDy = 0;
                   return;
               }
               
-              // 🚀 觸發投籃！找出 X 軸最接近的籃框
-              let targetHoop = null; let minDiff = Infinity;
+              // 🚀 命中判定邏輯
+              let targetHoop = null;
+              let hitType = 'airball'; // 預設籃外空心
+              
               hoops.forEach(h => {
                   let hRect = h.getBoundingClientRect();
-                  let diff = Math.abs(e.clientX - (hRect.left + hRect.width / 2));
-                  if (diff < minDiff) { minDiff = diff; targetHoop = h; }
+                  let center = hRect.left + hRect.width / 2;
+                  // 如果放開時手指 X 軸落在籃框範圍內
+                  if (Math.abs(e.clientX - center) < hRect.width * 0.6) {
+                      targetHoop = h;
+                      hitType = (h.dataset.ans === current.en) ? 'swish' : 'brick';
+                  }
+                  h.classList.remove('target-locked');
               });
 
-              if (!targetHoop) return;
-
-              // 🌟 啟動重力引擎 (Gravity Engine)
-              ballInner.classList.add('ball-spinning'); // 開始旋轉
-              let targetRect = targetHoop.getBoundingClientRect();
+              ballInner.classList.add('ball-spinning'); 
               
-              // 計算終點 (籃框的中心點，並往下調整一點點以進入網子)
-              let endX = (targetRect.left + targetRect.width/2) - (originX + 35); // 35 是球半徑
-              let endY = (targetRect.top + targetRect.height/2 + 10) - (originY + 35); 
+              let endX, endY;
+              // 🏀 45 是巨大化籃球的新半徑
+              if (hitType === 'airball') {
+                  // 籃外空心：球飛向手指放開的 X 軸，不會被磁吸！
+                  endX = currentDx * 2.5; 
+                  endY = originY - window.innerHeight * 0.5; // 飛到一半的高度
+              } else {
+                  // 碰到框了
+                  let targetRect = targetHoop.getBoundingClientRect();
+                  endY = (targetRect.top + targetRect.height/2 + 10) - (originY + 45); 
+                  if (hitType === 'swish') {
+                      endX = (targetRect.left + targetRect.width/2) - (originX + 45); // 正中紅心
+                  } else {
+                      // 打鐵：砸在籃圈邊緣 (偏左或偏右)
+                      endX = (targetRect.left + targetRect.width/2) - (originX + 45) + (e.clientX > targetRect.left + targetRect.width/2 ? 35 : -35);
+                  }
+              }
               
-              let frames = 30; // 總飛行幀數 (約 0.5 秒)
-              let gravity = 1.2; // 重力加速度
-              // 物理公式：vy0 = (dy - 0.5 * g * t^2) / t
+              let frames = 25; 
+              let gravity = 1.5; 
               let vy = (endY - currentDy - 0.5 * gravity * frames * frames) / frames;
               let vx = (endX - currentDx) / frames;
               let scale = 0.9;
-              let scaleStep = (0.4 - 0.9) / frames; // 飛向遠處會縮小到 0.4
+              let scaleStep = (0.4 - 0.9) / frames; 
 
               let f = 0;
               function flyLoop() {
-                  f++;
-                  vy += gravity; // 加上重力
-                  currentDx += vx;
-                  currentDy += vy;
-                  scale += scaleStep;
-                  
-                  // 更新球的位置
+                  f++; vy += gravity; currentDx += vx; currentDy += vy; scale += scaleStep;
                   ballWrapper.style.transform = `translate(${currentDx}px, ${currentDy}px) scale(${scale})`;
                   
-                  // 當球飛到最高點開始下落時，把 Z-index 降到 2，讓它掉進「籃框後方、前框內部」
-                  if (vy > 0) ballWrapper.style.zIndex = '2';
+                  if (vy > 0) ballWrapper.style.zIndex = '2'; // 飛過最高點後落入籃框後方
 
                   if (f < frames) {
                       requestAnimationFrame(flyLoop);
                   } else {
-                      // 💥 碰撞判定
                       ballInner.classList.remove('ball-spinning');
                       
-                      if (targetHoop.dataset.ans === current.en) {
-                          // ✅ 空心入網：球繼續往下掉，籃網被扯動！
+                      if (hitType === 'swish') {
+                          // ✅ 完美空心入網
                           targetHoop.classList.add('swish');
                           ballWrapper.style.transition = 'transform 0.3s ease-in';
                           ballWrapper.style.transform = `translate(${currentDx}px, ${currentDy + 80}px) scale(0.3)`;
                           try { const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3'); audio.volume=0.5; audio.play(); } catch(err){}
                           
                           setTimeout(() => {
-                              ballInner.style.display = 'none'; // 掉進深淵消失
+                              ballInner.style.display = 'none'; 
                               targetHoop.classList.remove('swish');
                               warmupPassed[currentIndex] = true; 
                               renderWord(); 
                           }, 500);
                       } else {
-                          // ❌ 打鐵彈出：球撞到框，X軸反彈，Y軸往上彈飛
-                          let bounceVx = (currentDx > 0 ? -1 : 1) * (Math.random() * 5 + 5);
-                          let bounceVy = -15; // 往上彈
-                          let bf = 0;
+                          // ❌ 打鐵 (brick) 或是 籃外空心 (airball)
+                          if(hitType === 'brick') targetHoop.classList.add('wrong');
+                          
+                          let bounceVx = (currentDx > endX ? 1 : -1) * (Math.random() * 8 + 5);
+                          let bounceVy = (hitType === 'brick') ? -15 : -5; // 打鐵彈很高，空心直接掉
                           
                           function bounceLoop() {
-                              bf++;
-                              bounceVy += gravity;
-                              currentDx += bounceVx;
-                              currentDy += bounceVy;
+                              bounceVy += gravity; currentDx += bounceVx; currentDy += bounceVy;
+                              ballInner.style.transform = `rotate(${currentDx * 2}deg)`; // 掉落自轉
                               ballWrapper.style.transform = `translate(${currentDx}px, ${currentDy}px) scale(${scale})`;
-                              if (bf < 25) { requestAnimationFrame(bounceLoop); }
-                              else {
-                                  // 彈出螢幕後，球重置回起點
-                                  ballWrapper.style.transition = 'transform 0.4s ease-out';
-                                  ballWrapper.style.zIndex = '20';
-                                  ballWrapper.style.transform = 'translate(0px, 0px) scale(1)';
-                                  currentDx = 0; currentDy = 0;
+                              
+                              if (currentDy < window.innerHeight) { 
+                                  requestAnimationFrame(bounceLoop); 
+                              } else {
+                                  // 球掉出螢幕外了，啟動重生系統！
+                                  if(hitType === 'brick') targetHoop.classList.remove('wrong');
+                                  resetBall();
                               }
                           }
                           requestAnimationFrame(bounceLoop);
                       }
                   }
               }
-              requestAnimationFrame(flyLoop); // 點火發射！
+              requestAnimationFrame(flyLoop);
           }
       };
 
@@ -2392,11 +2419,12 @@
       document.addEventListener('pointerup', window.arcadeDragObj.up);
   }
 
-  // 輔助函數：抓取錯誤單字
+  // 🛠️ 輔助函數：改為只抓 2 個錯的單字
   function getWordDistractors(correctWord, count) {
       let distractors = [];
       let available = quizData.filter(q => q.en !== correctWord).map(q => q.en);
       const FALLBACK = ["Apple", "Banana", "Cat", "Dog", "Elephant", "Fish", "Grape", "Horse", "Ice", "Juice"];
+      
       while(distractors.length < count) {
           if (available.length > 0) {
               let rIdx = Math.floor(Math.random() * available.length);
@@ -2404,7 +2432,9 @@
               available.splice(rIdx, 1);
           } else {
               let fWord = FALLBACK[Math.floor(Math.random() * FALLBACK.length)];
-              if (!distractors.includes(fWord) && fWord !== correctWord) distractors.push(fWord);
+              if (!distractors.includes(fWord) && fWord !== correctWord) {
+                  distractors.push(fWord);
+              }
           }
       }
       return distractors;
