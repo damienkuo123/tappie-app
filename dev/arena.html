@@ -1193,63 +1193,59 @@
       text-align: center; width: 100%; line-height: 1.4; padding: 10px;
     }
 
-    /* 🧩 磁吸內凹積木槽 (拼字骨架) */
+    /* 🧩 磁吸內凹積木槽 (縮小版 + 句子排版優化) */
     #warmup-word-skeleton {
-      display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; 
-      width: 100%; margin-bottom: 35px;
-    }
-    .skeleton-char { 
-      display: flex; align-items: center; justify-content: center;
-      min-width: 45px; height: 55px; padding: 0 5px;
-      font-size: 32px; font-weight: 900; font-family: 'Varela Round', 'PingFang TC', sans-serif;
-      border-radius: 14px;
-      /* 內凹的陰影營造出「凹槽」的實體感 */
-      background: #f1f5f9; color: transparent; 
-      box-shadow: inset 0 4px 8px rgba(0,0,0,0.06);
-      border: 2px solid #e2e8f0;
-      text-transform: uppercase;
-      transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      display: flex; flex-wrap: wrap; justify-content: center; 
+      width: 100%; margin-bottom: 30px; gap: 12px 0; /* 控制行距 */
     }
     
-    /* 拼字正確瞬間：方塊彈出、發光、變綠 */
+    /* 將單字打包起來，確保同一個單字的字母不會被切斷換行 */
+    .skeleton-word-group {
+      display: flex; gap: 4px; margin-right: 15px; /* 單字之間的空白間距 */
+    }
+
+    .skeleton-char { 
+      display: flex; align-items: center; justify-content: center;
+      width: 36px; height: 46px; /* 🚀 固定縮小尺寸，不管什麼字母都一樣大 */
+      font-size: 26px; font-weight: 900; font-family: 'Varela Round', 'PingFang TC', sans-serif;
+      border-radius: 10px;
+      background: #f1f5f9; color: transparent; 
+      box-shadow: inset 0 3px 6px rgba(0,0,0,0.08);
+      border: 2px solid #e2e8f0; text-transform: uppercase;
+      transition: all 0.2s; position: relative;
+    }
+    
     .skeleton-char.filled { 
       background: #ffffff; color: var(--marian-green); 
       border-color: #2ecc71; 
-      box-shadow: 0 8px 20px rgba(46, 204, 113, 0.25), 0 5px 0 #27ae60; 
-      transform: translateY(-6px) scale(1.05); 
+      box-shadow: 0 4px 10px rgba(46, 204, 113, 0.2), 0 3px 0 #27ae60; 
+      transform: translateY(-4px); 
     }
 
-    /* 🎮 互動按鈕區 */
-    #warmup-options { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; width: 100%; }
-    #warmup-options.list-mode { flex-direction: column; align-items: stretch; gap: 12px; }
+    /* 🎮 互動按鈕區 (統一正方形) */
+    #warmup-options { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; width: 100%; position: relative; }
 
-    /* 🕹️ 共用：3D 氣墊厚度按鈕 */
-    .btn-choice-list, .btn-tap-fill {
-      background: #ffffff; border: 2px solid #cbd5e1; border-radius: 18px; 
+    /* 拼字按鈕專屬：完美正方形，強迫症福音 */
+    .btn-tap-fill {
+      width: 55px; height: 55px; /* 🚀 固定為正方形 */
+      padding: 0; display: flex; align-items: center; justify-content: center;
+      font-size: 26px; font-weight: 900; text-transform: uppercase;
+      background: #ffffff; border: 2px solid #cbd5e1; border-radius: 14px; 
       color: #334155; cursor: pointer; user-select: none;
-      box-shadow: 0 6px 0 #cbd5e1, 0 10px 20px rgba(0,0,0,0.05); 
-      transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 5px 0 #cbd5e1, 0 8px 15px rgba(0,0,0,0.05); 
+      transition: transform 0.1s, box-shadow 0.1s, background 0.2s;
       -webkit-tap-highlight-color: transparent;
     }
-    
-    /* 按下去的物理下沉感 */
-    .btn-choice-list:active, .btn-tap-fill:active { 
-      transform: translateY(6px); 
-      box-shadow: 0 0px 0 #cbd5e1, 0 2px 5px rgba(0,0,0,0.05); 
-      background: #f8fafc;
-    }
+    .btn-tap-fill:active { transform: translateY(5px); box-shadow: 0 0px 0 #cbd5e1; }
 
-    /* 四選一按鈕專屬：置中、文字適應 */
-    .btn-choice-list {
-      padding: 16px 20px; font-size: 20px; font-weight: 800; text-align: center;
-      word-break: break-word; line-height: 1.3; width: 100%; box-sizing: border-box;
-    }
-    /* 移除掉那顆醜醜的表單藍色圓點 */
-    .btn-choice-list::before { display: none; }
-
-    /* 拼字按鈕專屬：大方塊 */
-    .btn-tap-fill {
-      padding: 16px 28px; font-size: 28px; font-weight: 900; text-transform: uppercase;
+    /* 🚀 軌跡飛行專用的替身積木 */
+    .flying-block {
+      position: fixed; z-index: 9999;
+      width: 55px; height: 55px; display: flex; align-items: center; justify-content: center;
+      font-size: 26px; font-weight: 900; text-transform: uppercase;
+      background: #2ecc71; border: 2px solid #27ae60; border-radius: 14px; color: white;
+      box-shadow: 0 10px 20px rgba(46, 204, 113, 0.5);
+      pointer-events: none; transition: all 0.4s cubic-bezier(0.2, -0.3, 0.2, 1.5); /* 帶有回彈感的飛行 */
     }
 
     /* 🌟 果凍彈跳動畫 (答對時) */
@@ -2193,42 +2189,94 @@
 
       } else {
           // ==========================================
-          // 🎲 模式 B：填空拼字 (Tap-to-Fill)
+          // 🎲 模式 B：填空拼字 (軌跡飛行 + 單字群組版)
           // ==========================================
           skeletonContainer.style.display = 'flex'; 
-          // 這裡不加 list-mode，維持 flex-wrap 並排
 
           const wordStr = current.en.toUpperCase();
           let targetCharObj = extractMissingTarget(wordStr); 
           
-          for (let i = 0; i < wordStr.length; i++) {
-              let char = wordStr[i];
-              if (char === ' ' || char === '-') {
-                  skeletonContainer.innerHTML += `<span style="width: 15px;"></span>`;
-              } else if (i === targetCharObj.index) {
-                  // 🚀 拔掉底線符號，讓 CSS 繪製出的 3D 凹槽完美呈現空無一物的質感
-                  skeletonContainer.innerHTML += `<span class="skeleton-char" id="skel-target"></span>`;
-              } else {
-                  skeletonContainer.innerHTML += `<span class="skeleton-char filled">${char}</span>`;
+          // 🚀 1. 句子群組化：用空格把句子切成單字陣列
+          const wordsArray = wordStr.split(' ');
+          let globalCharIndex = 0; // 用來追蹤目前是第幾個字元
+
+          wordsArray.forEach(wordPart => {
+              // 建立一個單字的群組容器
+              let wordGroup = document.createElement('div');
+              wordGroup.className = 'skeleton-word-group';
+
+              for (let i = 0; i < wordPart.length; i++) {
+                  let char = wordPart[i];
+                  
+                  // 檢查這個字元是不是剛好是被抽中的目標
+                  if (globalCharIndex === targetCharObj.index) {
+                      wordGroup.innerHTML += `<span class="skeleton-char" id="skel-target"></span>`;
+                  } else {
+                      wordGroup.innerHTML += `<span class="skeleton-char filled">${char}</span>`;
+                  }
+                  globalCharIndex++;
               }
-          }
+              globalCharIndex++; // 加上被 split 吃掉的空格索引
+              skeletonContainer.appendChild(wordGroup);
+          });
 
           let options = generateDistractors(targetCharObj.char);
           options.forEach(opt => {
               let btn = document.createElement('button');
-              btn.className = 'btn-tap-fill'; // 🚀 維持原本的方塊樣式
+              btn.className = 'btn-tap-fill'; 
               btn.innerText = opt;
-              btn.onclick = function() {
+              
+              btn.onclick = function(e) {
                   if (opt === targetCharObj.char) {
-                      this.classList.add('correct');
-                      document.getElementById('skel-target').innerText = opt;
-                      document.getElementById('skel-target').classList.add('filled');
+                      // ✅ 答對了！啟動「軌跡飛行」引擎
+                      
+                      // 1. 取得起點 (按鈕) 與終點 (凹槽) 的真實座標
+                      const startRect = this.getBoundingClientRect();
+                      const targetEl = document.getElementById('skel-target');
+                      const endRect = targetEl.getBoundingClientRect();
+
+                      // 2. 建立一個替身飛彈
+                      const flyingClone = document.createElement('div');
+                      flyingClone.className = 'flying-block';
+                      flyingClone.innerText = opt;
+                      // 初始位置設定在按鈕上
+                      flyingClone.style.left = startRect.left + 'px';
+                      flyingClone.style.top = startRect.top + 'px';
+                      document.body.appendChild(flyingClone);
+
+                      // 隱藏原本的按鈕，假裝它飛出去了
+                      this.style.visibility = 'hidden';
+
+                      // 3. 觸發飛行 (延遲一點點讓瀏覽器渲染)
+                      requestAnimationFrame(() => {
+                          flyingClone.style.left = endRect.left - (55 - endRect.width)/2 + 'px'; // 讓中心點對齊
+                          flyingClone.style.top = endRect.top - (55 - endRect.height)/2 + 'px';
+                          flyingClone.style.transform = 'scale(0.8) rotate(10deg)'; // 飛行中帶點旋轉
+                      });
+
+                      // 播放發射音效
                       try { const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3'); audio.volume=0.5; audio.play(); } catch(e){}
+
+                      // 4. 飛行結束後的物理碰撞
                       setTimeout(() => {
-                          warmupPassed[currentIndex] = true;
-                          renderWord(); 
-                      }, 600);
+                          flyingClone.remove(); // 移除替身
+                          
+                          // 凹槽瞬間被填滿並發光
+                          targetEl.innerText = opt;
+                          targetEl.classList.add('filled');
+                          
+                          // 震動整個骨架，營造「重重砸入」的打擊感
+                          skeletonContainer.style.transform = "scale(1.05)";
+                          setTimeout(() => skeletonContainer.style.transform = "scale(1)", 150);
+
+                          setTimeout(() => {
+                              warmupPassed[currentIndex] = true;
+                              renderWord(); 
+                          }, 500); // 稍微縮短等待時間，節奏更快
+                      }, 400); // 400ms 是飛行的時間
+
                   } else {
+                      // ❌ 答錯了
                       this.classList.remove('wrong');
                       void this.offsetWidth; 
                       this.classList.add('wrong');
@@ -2237,7 +2285,6 @@
               optionsContainer.appendChild(btn);
           });
       }
-  }
 
   // 🛠️ 輔助函數：從單字中隨機挑一個英文字母挖空
   function extractMissingTarget(word) {
