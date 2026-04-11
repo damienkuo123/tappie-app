@@ -2060,13 +2060,18 @@
     }
   }
 
-  // 🎮 建立暖身小遊戲 (Tap-to-Fill 鷹架系統)
+  // 🎮 建立暖身小遊戲 (雙模式隨機輪盤)
   function setupWarmupZone(current) {
       const imgEl = document.getElementById('warmup-img');
       const zhEl = document.getElementById('warmup-zh');
+      const skeletonContainer = document.getElementById('warmup-word-skeleton');
+      const optionsContainer = document.getElementById('warmup-options');
       
-      // 🛡️ 優雅降級：有圖片就用圖片，沒圖片就用中文
-      // 假設你後端吐來的資料叫 img (配合我們之前在 GAS 修改的)
+      // 每次進入前先清空容器
+      skeletonContainer.innerHTML = '';
+      optionsContainer.innerHTML = '';
+
+      // 🛡️ 視覺區：有圖顯示圖，沒圖顯示中文
       if (current.img && current.img.trim() !== "") {
           imgEl.src = current.img.includes('sz=') ? current.img.replace(/sz=w\d+/, 'sz=w400') : current.img;
           imgEl.style.display = 'block';
@@ -2077,71 +2082,105 @@
           zhEl.style.display = 'block';
       }
 
-      // 🧠 生成挖空格 (處理多個單字的情況，如 "Ice cream")
-      const wordStr = current.en.toUpperCase();
-      let targetCharObj = extractMissingTarget(wordStr); // 找一個字母來挖空
-      
-      const skeletonContainer = document.getElementById('warmup-word-skeleton');
-      skeletonContainer.innerHTML = '';
-      
-      for (let i = 0; i < wordStr.length; i++) {
-          let char = wordStr[i];
-          if (char === ' ') {
-              skeletonContainer.innerHTML += `<span style="width: 15px;"></span>`;
-          } else if (i === targetCharObj.index) {
-              skeletonContainer.innerHTML += `<span class="skeleton-char" id="skel-target">_</span>`;
-          } else {
-              skeletonContainer.innerHTML += `<span class="skeleton-char filled">${char}</span>`;
-          }
-      }
+      // 🎲 隨機決定暖身模式 (0: 四選一, 1: 填空拼字)
+      // 防呆：如果單字只有 1 個字母 (如 "A" 或 "I")，強制使用四選一，避免挖空出錯
+      const warmupMode = (current.en.length < 2 || Math.random() < 0.5) ? 0 : 1;
 
-      // 🎲 生成三個選項按鈕 (1對2錯)
-      const optionsContainer = document.getElementById('warmup-options');
-      optionsContainer.innerHTML = '';
-      
-      let options = generateDistractors(targetCharObj.char);
-      options.forEach(opt => {
-          let btn = document.createElement('button');
-          btn.className = 'btn-tap-fill';
-          btn.innerText = opt;
-          btn.onclick = function() {
-              if (opt === targetCharObj.char) {
-                  // ✅ 答對了！
-                  this.classList.add('correct');
-                  document.getElementById('skel-target').innerText = opt;
-                  document.getElementById('skel-target').classList.add('filled');
-                  
-                  // 播放成功音效 (若有)
-                  try { const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3'); audio.volume=0.5; audio.play(); } catch(e){}
-                  
-                  // 延遲 0.6 秒後，無縫滑入開口決戰區！
-                  setTimeout(() => {
-                      warmupPassed[currentIndex] = true;
-                      renderWord(); // 重新渲染就會進入決戰區
-                  }, 600);
+      if (warmupMode === 0) {
+          // ==========================================
+          // 🎲 模式 A：四選一 (看圖/中選英)
+          // ==========================================
+          skeletonContainer.style.display = 'none'; // 隱藏骨架
+
+          // 取得 3 個干擾選項，湊滿 4 個
+          let distractors = getWordDistractors(current.en, 3);
+          let finalOptions = [current.en, ...distractors].sort(() => Math.random() - 0.5);
+
+          finalOptions.forEach(opt => {
+              let btn = document.createElement('button');
+              btn.className = 'btn-tap-fill';
+              btn.innerText = opt;
+              btn.style.textTransform = 'none'; // 單字保留原本大小寫
+              
+              btn.onclick = function() {
+                  if (opt === current.en) {
+                      // ✅ 答對了！
+                      this.classList.add('correct');
+                      try { const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3'); audio.volume=0.5; audio.play(); } catch(e){}
+                      setTimeout(() => {
+                          warmupPassed[currentIndex] = true;
+                          renderWord(); 
+                      }, 600);
+                  } else {
+                      // ❌ 答錯了
+                      this.classList.remove('wrong');
+                      void this.offsetWidth; 
+                      this.classList.add('wrong');
+                  }
+              };
+              optionsContainer.appendChild(btn);
+          });
+
+      } else {
+          // ==========================================
+          // 🎲 模式 B：填空拼字 (Tap-to-Fill)
+          // ==========================================
+          skeletonContainer.style.display = 'flex'; 
+
+          const wordStr = current.en.toUpperCase();
+          let targetCharObj = extractMissingTarget(wordStr); 
+          
+          for (let i = 0; i < wordStr.length; i++) {
+              let char = wordStr[i];
+              // 遇到空格或連字號，畫出空白
+              if (char === ' ' || char === '-') {
+                  skeletonContainer.innerHTML += `<span style="width: 15px;"></span>`;
+              } else if (i === targetCharObj.index) {
+                  skeletonContainer.innerHTML += `<span class="skeleton-char" id="skel-target">_</span>`;
               } else {
-                  // ❌ 答錯了，震動提示
-                  this.classList.remove('wrong');
-                  void this.offsetWidth; // 觸發重繪
-                  this.classList.add('wrong');
+                  skeletonContainer.innerHTML += `<span class="skeleton-char filled">${char}</span>`;
               }
-          };
-          optionsContainer.appendChild(btn);
-      });
+          }
+
+          let options = generateDistractors(targetCharObj.char);
+          options.forEach(opt => {
+              let btn = document.createElement('button');
+              btn.className = 'btn-tap-fill';
+              btn.innerText = opt;
+              btn.onclick = function() {
+                  if (opt === targetCharObj.char) {
+                      // ✅ 答對了！
+                      this.classList.add('correct');
+                      document.getElementById('skel-target').innerText = opt;
+                      document.getElementById('skel-target').classList.add('filled');
+                      try { const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3'); audio.volume=0.5; audio.play(); } catch(e){}
+                      setTimeout(() => {
+                          warmupPassed[currentIndex] = true;
+                          renderWord(); 
+                      }, 600);
+                  } else {
+                      // ❌ 答錯了
+                      this.classList.remove('wrong');
+                      void this.offsetWidth; 
+                      this.classList.add('wrong');
+                  }
+              };
+              optionsContainer.appendChild(btn);
+          });
+      }
   }
 
-  // 輔助函數：從單字中挑一個字母挖空
+  // 🛠️ 輔助函數：從單字中隨機挑一個英文字母挖空
   function extractMissingTarget(word) {
       let validIndices = [];
       for(let i=0; i<word.length; i++) {
           if(/[A-Z]/.test(word[i])) validIndices.push(i);
       }
-      // 隨機挑一個字母
       let rIdx = validIndices[Math.floor(Math.random() * validIndices.length)];
       return { index: rIdx, char: word[rIdx] };
   }
 
-  // 輔助函數：生成干擾選項
+  // 🛠️ 輔助函數：為「填空拼字」生成 2 個錯誤字母
   function generateDistractors(correctChar) {
       const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".replace(correctChar, "");
       let distractors = [];
@@ -2150,8 +2189,30 @@
           if(!distractors.includes(rChar)) distractors.push(rChar);
       }
       let finalOptions = [correctChar, ...distractors];
-      // 洗牌
       return finalOptions.sort(() => Math.random() - 0.5);
+  }
+
+  // 🛠️ 輔助函數：為「四選一」生成錯誤單字 (自動從題庫抓，不夠就用備用庫)
+  function getWordDistractors(correctWord, count) {
+      let distractors = [];
+      // 先從這單元的其他題目抓
+      let available = quizData.filter(q => q.en !== correctWord).map(q => q.en);
+      const FALLBACK = ["Apple", "Banana", "Cat", "Dog", "Elephant", "Fish", "Grape", "Horse", "Ice", "Juice"];
+      
+      while(distractors.length < count) {
+          if (available.length > 0) {
+              let rIdx = Math.floor(Math.random() * available.length);
+              distractors.push(available[rIdx]);
+              available.splice(rIdx, 1);
+          } else {
+              // 題庫抓乾了，從備用庫抓
+              let fWord = FALLBACK[Math.floor(Math.random() * FALLBACK.length)];
+              if (!distractors.includes(fWord) && fWord !== correctWord) {
+                  distractors.push(fWord);
+              }
+          }
+      }
+      return distractors;
   }
 
   // 🎙️ 建立開口決戰區 (保留你原本的所有強大機制)
