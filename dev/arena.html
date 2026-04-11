@@ -1344,8 +1344,8 @@
           <span>🔊</span> <span>標準發音</span>
         </button>
         <h1 id="word-display">載入中...</h1>
-        </div>
-
+        <div id="production-zh" style="font-size: 22px; color: #7f8c8d; margin-top: 5px; font-weight: bold; letter-spacing: 1px;"></div>
+      </div>
       <button type="button" id="record-btn" oncontextmenu="return false;" style="margin-top: 0px;">🎤</button>
       <p id="status" style="font-weight:bold; color:#636e72; margin-top: 5px;">按住錄音，放開打分</p>
       <div id="feedback" style="font-size: 26px; font-weight: 800; color: var(--marian-green); margin-top: 10px;"></div>
@@ -2308,6 +2308,9 @@
           wordDisplay.style.color = "#0d47a1";
       }
 
+      // 🚀 關鍵修復：在這裡把中文印出來！
+      document.getElementById('production-zh').innerText = current.zh || "";
+      
       // 按鈕重置
       document.getElementById('play-btn').disabled = false;
       if (rb) {
