@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Marian Portal</title>
+    <style>
+        :root {
+            --primary-blue: #007bff;
+            --marian-gold: #ffcc00;
+            --bg-dark: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+            background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            overflow: hidden;
+        }
+
+        /* 玻璃外殼卡片 */
+        .container {
+            position: relative;
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            padding: 60px 40px;
+            border-radius: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        /* 🍎 Logo 與 動態光環 */
+        .logo-wrapper {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pulse-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 4px solid var(--primary-blue);
+            animation: pulse 2s infinite;
+        }
+
+        /* 標題與文字 */
+        h1 {
+            font-size: 2.5em;
+            margin: 10px 0;
+            letter-spacing: 2px;
+            background: linear-gradient(to bottom, #fff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            color: #94a3b8;
+            margin-bottom: 40px;
+        }
+
+        /* 狀態提示框 */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 12px 24px;
+            border-radius: 100px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            background: #22c55e;
+            border-radius: 50%;
+            margin-right: 12px;
+            box-shadow: 0 0 10px #22c55e;
+            animation: blink 1.5s infinite;
+        }
+
+        #msg {
+            margin: 0;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        /* 動畫效果 */
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.8; }
+            70% { transform: scale(1.3); opacity: 0; }
+            100% { transform: scale(1); opacity: 0; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        /* 進入系統時的旋轉特效 */
+        .loading .pulse-ring {
+            border-top-color: var(--marian-gold);
+            animation: spin 1s linear infinite;
+        }
+        .loading .status-dot {
+            background: var(--marian-gold);
+            box-shadow: 0 0 10px var(--marian-gold);
+            animation: none;
+        }
+        .error .status-dot {
+            background: #e74c3c;
+            box-shadow: 0 0 10px #e74c3c;
+            animation: none;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* =======================================================
+           🚀 平板與大螢幕自動適應 (Responsive Design)
+           ======================================================= */
+        @media (min-width: 768px) {
+            .container {
+                max-width: 550px; /* 卡片加寬 */
+                padding: 80px 50px; /* 內距加大，呼吸感更強 */
+                border-radius: 50px;
+            }
+            .logo-wrapper {
+                width: 160px;
+                height: 160px;
+                margin-bottom: 40px;
+            }
+            .logo-wrapper img {
+                width: 120px !important; /* Logo 放大 */
+            }
+            h1 {
+                font-size: 3.5em; /* 標題放大 */
+                margin-bottom: 15px;
+            }
+            .subtitle {
+                font-size: 1.5em;
+                margin-bottom: 50px;
+            }
+            .status-badge {
+                padding: 18px 36px;
+            }
+            .status-dot {
+                width: 14px;
+                height: 14px;
+                margin-right: 15px;
+            }
+            #msg {
+                font-size: 20px; /* 狀態文字放大 */
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="mainCard">
+        <div class="logo-wrapper">
+            <div class="pulse-ring" id="ring"></div>
+            <img src="https://damienkuo123.github.io/marian-app/assets/logo.webp" style="width:90px; margin: 0 auto; display: block;">
+        </div>
+        <h1>快樂瑪麗安</h1>
+        <p class="subtitle">數位系統</p>
+        
+        <div class="status-badge" id="statusBadge">
+            <div class="status-dot"></div>
+            <p id="msg">請感應學生卡</p>
+        </div>
+
+    </div>
+
+    <script>
+        // ⚠️ 記得替換為你的 GAS 網址！
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbyWm-WnRO5h3dliEPR36Cq1hCf5DgM4GIgJqXVUREclhtYOHjxq9DptApmQPkU5p5Ys/exec";
+        
+        const msg = document.getElementById('msg');
+        const card = document.getElementById('mainCard');
+
+        // =======================================================
+        // 🚀 終極無痕掃描系統 (Global Keystroke Catcher)
+        // 解決平板阻擋 focus 問題，不依賴任何輸入框！
+        // =======================================================
+        let rawBuffer = "";
+        let lastPressTime = Date.now();
+
+        document.addEventListener('keydown', function(e) {
+            const now = Date.now();
+            
+            // 1. 測速防呆：人類打字很慢，NFC 掃描極快！
+            // 如果兩次按鍵間隔超過 100 毫秒 (0.1秒)，就判定這不是機器掃描，清空緩衝區
+            if (now - lastPressTime > 100) {
+                rawBuffer = "";
+            }
+            lastPressTime = now;
+
+            // 2. 收集字元：只接收單一字元，過濾掉 Shift, Ctrl 等控制按鍵
+            if (e.key.length === 1) {
+                rawBuffer += e.key;
+            }
+
+            // 3. 雙重觸發機制：收到 Enter 鍵，或字串長度達到你的卡號標準 (假設為10)
+            if (e.key === 'Enter' || rawBuffer.length >= 10) {
+                const val = rawBuffer.trim();
+                
+                // 只要長度大於 6，就送出驗證！
+                if (val.length >= 6) {
+                    verifyCard(val); // 呼叫你原本的登入驗證函數
+                }
+                
+                rawBuffer = ""; // 驗證完畢，立刻清空槍膛準備下一發
+            }
+        });
+
+        // =======================================================
+        // 🚀 背景 API 連線 (無痕跳轉)
+        // =======================================================
+        function verifyCard(cardId) {
+            // 防止重複觸發
+            if (card.classList.contains('loading')) return;
+
+            // 1. 切換至載入狀態 UI
+            card.className = 'container loading';
+            msg.innerText = "🚀 驗證資料中...";
+            msg.style.color = "#ffcc00";
+
+            // 2. 透過背景 API (fetch) 向 GAS 確認身份
+            fetch(`${GAS_URL}?action=verify_card&cardId=${encodeURIComponent(cardId)}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        msg.innerText = "✅ 驗證成功，傳送中...";
+                        msg.style.color = "#2ecc71";
+                        // 直接由 GitHub 跳轉至 Dashboard，完美避開 GAS 的 HTML
+                        setTimeout(() => {
+                            window.location.href = `dashboard.html?id=${data.uid}`;
+                        }, 300);
+                    } else {
+                        // 查無此卡
+                        card.className = 'container error';
+                        msg.innerText = "❌ 查無此卡，請重試";
+                        msg.style.color = "#e74c3c";
+                        setTimeout(resetUI, 2000);
+                    }
+                })
+                .catch(err => {
+                    card.className = 'container error';
+                    msg.innerText = "⚠️ 網路異常，請重試";
+                    msg.style.color = "#e74c3c";
+                    setTimeout(resetUI, 2000);
+                });
+        }
+
+        function resetUI() {
+            card.className = 'container';
+            msg.innerText = "🟢 請感應學生卡";
+            msg.style.color = "white";
+        }
+    </script>
+</body>
+</html>
