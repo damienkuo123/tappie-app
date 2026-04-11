@@ -2116,9 +2116,10 @@
       const skeletonContainer = document.getElementById('warmup-word-skeleton');
       const optionsContainer = document.getElementById('warmup-options');
       
-      // 每次進入前先清空容器
+      // 每次進入前先清空容器，並移除列表排版
       skeletonContainer.innerHTML = '';
       optionsContainer.innerHTML = '';
+      optionsContainer.className = ''; // 🚀 清空 class
 
       // 🛡️ 視覺區：有圖顯示圖，沒圖顯示中文
       if (current.img && current.img.trim() !== "") {
@@ -2132,7 +2133,6 @@
       }
 
       // 🎲 隨機決定暖身模式 (0: 四選一, 1: 填空拼字)
-      // 防呆：如果單字只有 1 個字母 (如 "A" 或 "I")，強制使用四選一，避免挖空出錯
       const warmupMode = (current.en.length < 2 || Math.random() < 0.5) ? 0 : 1;
 
       if (warmupMode === 0) {
@@ -2140,6 +2140,7 @@
           // 🎲 模式 A：四選一 (看圖/中選英)
           // ==========================================
           skeletonContainer.style.display = 'none'; // 隱藏骨架
+          optionsContainer.classList.add('list-mode'); // 🚀 加上專屬垂直列表排版
 
           // 取得 3 個干擾選項，湊滿 4 個
           let distractors = getWordDistractors(current.en, 3);
@@ -2147,9 +2148,8 @@
 
           finalOptions.forEach(opt => {
               let btn = document.createElement('button');
-              btn.className = 'btn-tap-fill';
+              btn.className = 'btn-choice-list'; // 🚀 使用新的質感列表樣式
               btn.innerText = opt;
-              btn.style.textTransform = 'none'; // 單字保留原本大小寫
               
               btn.onclick = function() {
                   if (opt === current.en) {
@@ -2175,13 +2175,13 @@
           // 🎲 模式 B：填空拼字 (Tap-to-Fill)
           // ==========================================
           skeletonContainer.style.display = 'flex'; 
+          // 這裡不加 list-mode，維持 flex-wrap 並排
 
           const wordStr = current.en.toUpperCase();
           let targetCharObj = extractMissingTarget(wordStr); 
           
           for (let i = 0; i < wordStr.length; i++) {
               let char = wordStr[i];
-              // 遇到空格或連字號，畫出空白
               if (char === ' ' || char === '-') {
                   skeletonContainer.innerHTML += `<span style="width: 15px;"></span>`;
               } else if (i === targetCharObj.index) {
@@ -2194,11 +2194,10 @@
           let options = generateDistractors(targetCharObj.char);
           options.forEach(opt => {
               let btn = document.createElement('button');
-              btn.className = 'btn-tap-fill';
+              btn.className = 'btn-tap-fill'; // 🚀 維持原本的方塊樣式
               btn.innerText = opt;
               btn.onclick = function() {
                   if (opt === targetCharObj.char) {
-                      // ✅ 答對了！
                       this.classList.add('correct');
                       document.getElementById('skel-target').innerText = opt;
                       document.getElementById('skel-target').classList.add('filled');
@@ -2208,7 +2207,6 @@
                           renderWord(); 
                       }, 600);
                   } else {
-                      // ❌ 答錯了
                       this.classList.remove('wrong');
                       void this.offsetWidth; 
                       this.classList.add('wrong');
