@@ -1641,11 +1641,9 @@
 
   let stream, mediaRecorder, chunks = [], quizData = [], scores = [], currentIndex = 0, isReReading = false;
   let warmupPassed = []; // 🧠 記錄這 10 題有哪些已經通過暖身了
-  let assignedWarmupModes = []; // 🚀 新增：記錄每一題「抽中」的遊戲模式，防重抽！
-  let azureReports = []; 
+  let azureReports = []; // 🚀 專門用來收集微軟的法醫級音素報告
   let audioContext, analyser, dataArray, source, gradingInterval;
   let maxVolume = 0;
-  let warmupAutoPlayTimer = null; // 🚀 新增：防快速切換連點的計時器
   
   let hasUsedSkill = false; 
   let isUltimateMode = false; 
@@ -1940,8 +1938,7 @@
         if (!data.words || data.words.length === 0) { alert("題目為空"); return; }
         quizData = data.words; 
         scores = new Array(quizData.length).fill(null);
-        warmupPassed = new Array(quizData.length).fill(false); 
-        assignedWarmupModes = new Array(quizData.length).fill(null); // 🚀 補上這行：初始化遊戲記憶卡
+        warmupPassed = new Array(quizData.length).fill(false); // 🚀 補上這行：初始化暖身記憶體
         
         document.getElementById('total-display').innerText = quizData.length;
         document.getElementById('setup-zone').style.display = 'none';
@@ -2262,13 +2259,8 @@
       const skeletonContainer = document.getElementById('warmup-word-skeleton');
       const optionsContainer = document.getElementById('warmup-options');
       
-      // 🚀 手術點 1：防快速切換爆版：清除上一次還沒執行的自動發音計時器
-      if (window.warmupAutoPlayTimer) clearTimeout(window.warmupAutoPlayTimer);
-
-      // 每次進入前先清空容器與排版
+      // 清空所有容器狀態
       skeletonContainer.innerHTML = '';
-      // 🚀 手術點 2：加上 removeAttribute，確保排版樣式徹底清空
-      optionsContainer.removeAttribute('class');
       optionsContainer.innerHTML = '';
       optionsContainer.className = ''; 
       imgEl.style.display = 'none';
@@ -2276,47 +2268,35 @@
       audioBtn.style.display = 'none';
       audioHint.style.display = 'none'; 
 
-      // 🧠 1. 條件判定 (Rules Engine) 與 記憶卡系統
+      // 🧠 1. 條件判定 (Rules Engine)
+      const hasImage = (current.img && current.img.trim() !== "");
+      const wordLen = current.en.length;
+      const isSentence = current.en.includes(" ");
+      // 判斷題庫中是否有足夠的其他圖片來做為干擾項 (至少要有 3 張其他的)
+      const availableImages = quizData.filter(q => q.en !== current.en && q.img && q.img.trim() !== "");
+      const canPlayImageChoice = hasImage && availableImages.length >= 3;
 
-      // 🚀 手術點 3：讀取記憶卡！看看這題是不是已經抽過模式了
-      let warmupMode = assignedWarmupModes[currentIndex];
-
-      // 如果是 null，代表是第一次進入這題，才需要執行派題引擎
-      if (warmupMode === null) {
-          const hasImage = (current.img && current.img.trim() !== "");
-          const wordLen = current.en.length;
-          const isSentence = current.en.includes(" ");
-          // 判斷題庫中是否有足夠的其他圖片來做為干擾項 (至少要有 3 張其他的)
-          const availableImages = quizData.filter(q => q.en !== current.en && q.img && q.img.trim() !== "");
-          const canPlayImageChoice = hasImage && availableImages.length >= 3;
-
-          // 定義 5 種模式的可用性
-          // 0: 看圖選擇單字 (四選一) -> 隨時可用
-          // 1: 看圖拼出單字 (Tap-to-fill) -> 單字需 >= 3，且不能是句子
-          // 2: 聽音選擇單字 -> 隨時可用
-          // 3: 圖片四選一 -> 必須有圖片，且題庫有足夠干擾圖
-          // 4: 果凍字母陣 -> 單字需 >= 3，且不能是句子
-          
-          let availableModes = [0, 2]; // 絕對安全的保底模式
-          
-          if (wordLen >= 3 && !isSentence) {
-              availableModes.push(1); // 允許拼字
-              availableModes.push(4); // 允許果凍矩陣
-          }
-          if (canPlayImageChoice) {
-              availableModes.push(3); // 允許圖片四選一
-          }
-
-          // 🎲 隨機抽取一個符合條件的模式
-          warmupMode = availableModes[Math.floor(Math.random() * availableModes.length)];
-
-          // 🚀 關鍵：將抽到的結果存入記憶卡，這題以後永遠鎖死這個模式！
-          assignedWarmupModes[currentIndex] = warmupMode; 
-
-          console.log(`[派題引擎] 第 ${currentIndex + 1} 題 (${current.en}) 首次分配模式: ${warmupMode}, 可選池: ${availableModes}`);
-      } else {
-          console.log(`[記憶卡讀取] 第 ${currentIndex + 1} 題已鎖定模式: ${warmupMode}`);
+      // 定義 5 種模式的可用性
+      // 0: 看圖選擇單字 (四選一) -> 隨時可用
+      // 1: 看圖拼出單字 (Tap-to-fill) -> 單字需 >= 3，且不能是句子
+      // 2: 聽音選擇單字 -> 隨時可用
+      // 3: 圖片四選一 -> 必須有圖片，且題庫有足夠干擾圖
+      // 4: 果凍字母陣 -> 單字需 >= 3，且不能是句子
+      
+      let availableModes = [0, 2]; // 絕對安全的保底模式
+      
+      if (wordLen >= 3 && !isSentence) {
+          availableModes.push(1); // 允許拼字
+          availableModes.push(4); // 允許果凍矩陣
       }
+      if (canPlayImageChoice) {
+          availableModes.push(3); // 允許圖片四選一
+      }
+
+      // 🎲 隨機抽取一個符合條件的模式
+      const warmupMode = availableModes[Math.floor(Math.random() * availableModes.length)];
+
+      console.log(`題型: ${current.en}, 選中模式: ${warmupMode}, 可用模式: ${availableModes}`);
 
       // 🛡️ 2. 上方視覺區渲染
       if (warmupMode === 2) {
@@ -2672,13 +2652,6 @@
   if(rb) {
     const startPracticeRecord = (e) => { 
         if(isGrading || isRecording) return;
-        
-        // 🚀 終極防呆：檢查 Azure 憑證是否已經抓取完畢！
-        if (!azureAuthToken) {
-            alert("語音引擎正在連線中，請稍等一兩秒再試！");
-            return;
-        }
-
         e.preventDefault(); 
         isRecording = true;
         
