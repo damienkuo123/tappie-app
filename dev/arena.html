@@ -2451,9 +2451,16 @@
       // 🕹️ 3. 下方互動區渲染與邏輯
       // ==========================================
       
+      // 進入暖身時，按鈕鎖定
+      setDockButton('請回答問題', false, null);
+
       const proceedToNext = () => {
           try { const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3'); audio.volume=0.5; audio.play(); } catch(e){}
-          setTimeout(() => { warmupPassed[currentIndex] = true; renderWord(); }, 600);
+          // 🚀 答對，解鎖按鈕！
+          setDockButton('繼續', true, () => {
+              warmupPassed[currentIndex] = true;
+              renderWord();
+          });
       };
 
       const handleWrong = (element) => {
