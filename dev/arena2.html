@@ -6,6 +6,7 @@
   <title>口說對戰</title>
   <script src="https://aka.ms/csspeech/jsbrowserpackageraw"></script>
   <script src="phonics-config.js"></script>
+  <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
   <style>
     :root {
       --primary-blue: #0066cc; 
@@ -1279,114 +1280,101 @@
       50% { transform: translateX(6px); }
       75% { transform: translateX(-6px); }
     }
+    
+    /* 🎧 聽音辨字專屬大按鈕 (拔除多餘白框，純粹實體感) */
+    .btn-listen-huge {
+      background: linear-gradient(135deg, var(--primary-blue), #2980b9);
+      color: white; border: none; border-radius: 50%;
+      width: 120px; height: 120px; display: none; /* 預設隱藏，靠 JS 控制 flex */
+      flex-direction: column; align-items: center; justify-content: center;
+      cursor: pointer; box-shadow: 0 10px 25px rgba(0, 102, 204, 0.4), inset 0 2px 5px rgba(255,255,255,0.3);
+      transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); margin: 15px 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-listen-huge:active { transform: scale(0.9) translateY(4px); box-shadow: 0 4px 10px rgba(0, 102, 204, 0.4); }
+    .btn-listen-huge .icon { font-size: 50px; margin-bottom: 5px; line-height: 1; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
+    .btn-listen-huge .text { font-size: 16px; font-weight: 900; letter-spacing: 2px; }
+
+    /* 🔔 靜音開關防呆提示框 */
+    .audio-hint-box {
+      background: #fff5f5; border: 2px dashed #ffcccc; border-radius: 16px;
+      padding: 10px 15px; display: none; /* 預設隱藏 */
+      align-items: center; justify-content: center; gap: 8px;
+      color: #d63031; font-size: 13px; font-weight: bold; width: 100%; max-width: 250px;
+      margin-bottom: 15px; animation: pulse-border 2s infinite;
+    }
+    @keyframes pulse-border { 0%, 100% { border-color: #ffcccc; } 50% { border-color: #ff7675; } }
 
     /* 開口決戰區進場動畫 (平滑上浮) */
     #production-zone { animation: slideUpFade 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
     @keyframes slideUpFade { from { opacity: 0; transform: translateY(30px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
-
+    
     /* =======================================================
-       🏀 瑪麗安街機：動態全螢幕投籃引擎 (Gravity & Physics)
+       🎮 新增遊戲 UI：圖片四選一 & 果凍字母陣
        ======================================================= */
     
-    /* 🚀 修復 1：放棄 100vh，改用 fixed + top/bottom，完美避開 Safari 黑線！ */
-    .main-panel.arcade-active {
-      position: fixed;
-      top: max(15px, env(safe-area-inset-top));
-      bottom: max(15px, env(safe-area-inset-bottom));
-      left: 10px; right: 10px;
-      width: auto; height: auto;
-      max-width: 550px;
-      margin: 0 auto;
-      box-sizing: border-box;
-      z-index: 9999;
-      display: flex; flex-direction: column;
+    /* 🖼️ 圖片四選一 (2x2 網格) */
+    #warmup-options.grid-image-mode { 
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; 
+      width: 100%; max-width: 320px; margin: 0 auto;
     }
-    .main-panel.arcade-active #studio { flex: 1; display: flex; flex-direction: column; height: 100%; }
+    .btn-image-choice {
+      background: white; border: 3px solid #cbd5e1; border-radius: 16px; 
+      overflow: hidden; cursor: pointer; box-shadow: 0 6px 0 #cbd5e1; 
+      transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+      aspect-ratio: 1; padding: 0; position: relative;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-image-choice img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .btn-image-choice:active { transform: translateY(6px); box-shadow: 0 0px 0 #cbd5e1; }
     
-    #arcade-zone {
-      flex: 1; display: flex; flex-direction: column; align-items: center; 
-      width: 100%; position: relative; animation: fadeIn 0.4s ease-out; touch-action: none;
-      min-height: 0; /* 確保 Flex 壓縮正常 */
+    .btn-image-choice.correct { 
+      border-color: #2ecc71; box-shadow: 0 6px 0 #27ae60, 0 10px 25px rgba(46,204,113,0.4); 
+      transform: scale(1.05); z-index: 10; pointer-events: none;
+    }
+    .btn-image-choice.wrong { 
+      border-color: #e74c3c; box-shadow: 0 6px 0 #c0392b; 
+      animation: shake-soft 0.4s ease-in-out;
+    }
+    .btn-image-choice.wrong::after {
+      content: ''; position: absolute; inset: 0; background: rgba(231, 76, 60, 0.3);
+    }
+    .grid-image-mode.has-answered .btn-image-choice:not(.correct) {
+      opacity: 0.5; transform: scale(0.9); filter: grayscale(0.8);
     }
 
-    /* 頂部籃框區 (3 個) */
-    #arcade-targets {
-      display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; 
-      width: 100%; z-index: 10; margin-bottom: 5px;
+    /* 🔍 果凍字母陣 (Word Search) */
+    #warmup-options.word-search-mode {
+      display: grid; gap: 8px; width: 100%; justify-content: center;
+      /* 欄數會透過 JS 動態設定 grid-template-columns */
     }
+    .ws-letter {
+      width: clamp(40px, 10vw, 55px); height: clamp(40px, 10vw, 55px);
+      display: flex; align-items: center; justify-content: center;
+      background: #ffffff; border: 2px solid #cbd5e1; border-radius: 12px;
+      font-size: clamp(20px, 5vw, 26px); font-weight: 900; color: #334155;
+      cursor: pointer; box-shadow: 0 4px 0 #cbd5e1; transition: all 0.1s;
+      user-select: none; -webkit-tap-highlight-color: transparent;
+    }
+    .ws-letter:active { transform: translateY(4px); box-shadow: 0 0px 0 #cbd5e1; }
     
-    /* 🏀 精緻版 3D 籃框 */
-    .hoop-wrapper { position: relative; display: flex; flex-direction: column; align-items: center; transition: transform 0.2s; }
-    .hoop-backboard {
-      width: 100%; aspect-ratio: 1.2; background: #ffffff; border: 3px solid #cbd5e1; border-radius: 8px; position: relative; display: flex; align-items: center; justify-content: center;
-      font-size: clamp(14px, 4vw, 18px); font-weight: 900; color: #334155; box-shadow: 0 4px 10px rgba(0,0,0,0.05); text-align: center; word-break: break-word; padding: 4px;
+    /* 字母陣選中狀態 */
+    .ws-letter.selected {
+      background: #fdfbf7; border-color: var(--marian-yellow); color: #d35400;
+      box-shadow: 0 4px 0 #d35400, 0 0 15px rgba(241,196,15,0.4); transform: translateY(2px);
     }
-    .hoop-backboard::after { content: ''; position: absolute; bottom: 4px; width: 35%; height: 25%; border: 2px solid #e74c3c; border-radius: 2px; opacity: 0.4; }
-    .hoop-rim-back { position: absolute; bottom: -5px; width: 65%; height: 10px; border: 4px solid #d35400; border-radius: 50%; z-index: 1; }
-    .hoop-net { 
-      position: absolute; bottom: -35px; width: 50%; height: 35px; 
-      background: repeating-linear-gradient(45deg, transparent, transparent 3px, #cbd5e1 3px, #cbd5e1 5px), repeating-linear-gradient(-45deg, transparent, transparent 3px, #cbd5e1 3px, #cbd5e1 5px);
-      opacity: 0.8; z-index: 3; border-radius: 0 0 50% 50%; transform-origin: top center; transition: transform 0.15s ease-out;
+    /* 字母陣連線成功狀態 */
+    .ws-letter.correct-path {
+      background: #2ecc71; border-color: #27ae60; color: white;
+      box-shadow: 0 4px 0 #27ae60, 0 0 20px rgba(46,204,113,0.5);
+      animation: jelly-pop 0.4s; pointer-events: none;
     }
-    .hoop-rim-front { position: absolute; bottom: -5px; width: 65%; height: 10px; border: 4px solid #e67e22; border-radius: 50%; z-index: 5; box-shadow: 0 4px 6px rgba(0,0,0,0.15); clip-path: polygon(0 50%, 100% 50%, 100% 100%, 0 100%); }
-
-    .hoop-wrapper.swish .hoop-net { transform: scaleY(1.5) scaleX(0.8); opacity: 1; }
-    .hoop-wrapper.swish .hoop-backboard { border-color: #2ecc71; box-shadow: 0 0 20px rgba(46,204,113,0.3); color: #27ae60; }
-    .hoop-wrapper.wrong .hoop-backboard { border-color: #e74c3c; color: #e74c3c; background: #fff5f5; animation: shake-error 0.3s; }
-
-    /* 中央圖片題卡 */
-    #arcade-question-card {
-      background: white; border-radius: 20px; padding: 8px; 
-      box-shadow: 0 10px 25px rgba(0,0,0,0.08); border: 1px solid #f1f5f9;
-      display: flex; justify-content: center; align-items: center; 
-      width: auto; max-width: 220px; 
-      height: 20vh; max-height: 180px; aspect-ratio: 1; 
-      z-index: 10; position: relative; margin: 10px 0;
-    }
-    #arcade-img { width: 100%; height: 100%; object-fit: cover; border-radius: 12px; display: none; }
-    #arcade-zh { font-size: clamp(24px, 8vw, 36px); font-weight: 900; color: #334155; display: none; }
-
-    /* 🚀 修復 2：極大化的發球台 (觸控區)，用虛線隔開 */
-    #arcade-pad {
-      flex: 1; width: 100%; min-height: 250px; /* 🚀 觸控區極限拉高，給你滿滿的拖拉空間！ */
-      position: relative; margin-top: auto; margin-bottom: 15px;
-      display: flex; justify-content: center; align-items: flex-end;
-      border-top: 2px dashed #cbd5e1; border-bottom: 2px dashed #cbd5e1;
-      background: rgba(241, 245, 249, 0.5); padding-bottom: 20px;
+    /* 字母陣連線失敗狀態 */
+    .ws-letter.wrong-path {
+      background: #fff5f5; border-color: #ff7675; color: #d63031;
+      animation: shake-soft 0.4s ease-in-out;
     }
     
-    /* 🚀 關鍵修復：加入 pointer-events: none，讓這行字絕對不能阻擋手指觸控！ */
-    .pad-hint { 
-      position: absolute; top: 15px; width: 100%; text-align: center; 
-      color: #94a3b8; font-size: 15px; font-weight: bold; letter-spacing: 4px; 
-      animation: pulse-opacity 1.5s infinite; pointer-events: none; z-index: 10;
-    }
-    @keyframes pulse-opacity { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
-
-    /* 🚀 修復 3：讓底部按鈕列自動推到最下方 */
-    .nav-btn-container {
-      margin-top: auto; /* 將按鈕推到最底 */
-      display: flex; justify-content: center; width: 100%; padding-top: 10px;
-    }
-
-    /* 真實旋轉的巨大化籃球 */
-    #arcade-ball-wrapper {
-      position: absolute; 
-      bottom: 20px; /* 🚀 稍微往上移一點，避免手機下緣誤觸 */
-      z-index: 30; /* 🚀 拉高 Z-index，確保絕對在最上層 */
-      width: 100px; height: 100px; /* 🚀 籃球再度巨大化，增加點擊面積 */
-      display: flex; justify-content: center; align-items: center; 
-      touch-action: none;
-    }
-    #arcade-ball {
-      width: 100%; height: 100%; font-size: 85px; line-height: 1; text-align: center;
-      cursor: grab; filter: drop-shadow(0 8px 10px rgba(0,0,0,0.25)); transition: transform 0.1s;
-    }
-    #arcade-ball-wrapper:active #arcade-ball { cursor: grabbing; transform: scale(0.9); filter: drop-shadow(0 4px 5px rgba(0,0,0,0.2)); }
-    
-    /* 飛行自轉動畫 */
-    .ball-spinning { animation: ball-spin 0.5s linear infinite; }
-    @keyframes ball-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
@@ -1432,20 +1420,24 @@
   <div id="studio" style="display:none;">
     <p style="color:var(--primary-blue); font-weight:bold; margin-bottom: 15px;">第 <span id="idx-display">1</span> / <span id="total-display">0</span> 題</p>
     
-    <div id="arcade-zone" style="display:none;">
-      <div id="arcade-targets"></div>
-      
-      <div id="arcade-question-card">
-         <img id="arcade-img" src="" alt="提示">
-         <div id="arcade-zh"></div>
-      </div>
-      
-      <div id="arcade-pad">
-         <div class="pad-hint">↑ 按住籃球向上拋投 ↑</div>
-         <div id="arcade-ball-wrapper">
-             <div id="arcade-ball">🏀</div>
-         </div>
-      </div>
+    <div id="warmup-zone">
+       <div class="warmup-visual-card">
+          <img id="warmup-img" src="" alt="提示圖片">
+          <div id="warmup-zh"></div>
+          
+          <button id="warmup-audio-btn" class="btn-listen-huge">
+            <span class="icon">👂</span>
+            <span class="text">聽音辨字</span>
+          </button>
+       </div>
+       
+       <div id="warmup-audio-hint" class="audio-hint-box">
+           <span style="font-size:18px;">🔕</span>
+           <span style="text-align:left; line-height:1.3;">聽不到聲音？<br>請確認手機未開啟靜音</span>
+       </div>
+
+       <div id="warmup-word-skeleton"></div>
+       <div id="warmup-options"></div>
     </div>
 
     <div id="production-zone" style="display:none;">
@@ -1454,13 +1446,14 @@
           <span>🔊</span> <span>標準發音</span>
         </button>
         <h1 id="word-display">載入中...</h1>
+        <div id="production-zh" style="font-size: 22px; color: #7f8c8d; margin-top: 5px; font-weight: bold; letter-spacing: 1px;"></div>
       </div>
       <button type="button" id="record-btn" oncontextmenu="return false;" style="margin-top: 0px;">🎤</button>
       <p id="status" style="font-weight:bold; color:#636e72; margin-top: 5px;">按住錄音，放開打分</p>
       <div id="feedback" style="font-size: 26px; font-weight: 800; color: var(--marian-green); margin-top: 10px;"></div>
     </div>
 
-    <div class="nav-btn-container">
+    <div style="margin-top: 30px; display:flex; justify-content:center;">
       <button class="btn btn-nav" id="prev-btn">◀ 上一題</button>
       <button class="btn btn-nav" id="next-btn">下一題 ▶</button>
       <button class="btn btn-nav" id="back-summary-btn" style="display:none; background:var(--marian-green); border-bottom:4px solid #1e8449;">返回結算頁</button>
@@ -2199,288 +2192,351 @@
     if (progContainer) progContainer.style.display = 'block';
 
     document.getElementById('idx-display').innerText = currentIndex + 1;
+    
+    // 更新進度條
     if (quizData.length > 0) {
-        document.getElementById('progress-fill').style.width = (((currentIndex + 1) / quizData.length) * 100) + "%";
+        const progressPercent = ((currentIndex + 1) / quizData.length) * 100;
+        document.getElementById('progress-fill').style.width = progressPercent + "%";
     }
 
-    const mainPanel = document.getElementById('main-card');
-
-    // 🎯 分流判斷：進入街機模式時，把卡片往下撐到最底！
+    // 🎯 核心分流：這題暖身過了沒？
     if (warmupPassed[currentIndex]) {
-        mainPanel.classList.remove('arcade-active'); // 離開遊戲，卡片縮回原樣
-        document.getElementById('arcade-zone').style.display = 'none';
+        // ✅ 已暖身：直接進入開口決戰 (Production Phase)
+        document.getElementById('warmup-zone').style.display = 'none';
         document.getElementById('production-zone').style.display = 'block';
         setupProductionZone(current);
     } else {
-        mainPanel.classList.add('arcade-active'); // 進入遊戲，卡片撐滿螢幕
-        document.getElementById('arcade-zone').style.display = 'flex';
+        // 🚧 未暖身：啟動破冰任務 (Warm-up Phase)
+        document.getElementById('warmup-zone').style.display = 'flex';
         document.getElementById('production-zone').style.display = 'none';
-        setupArcadeZone(current);
+        setupWarmupZone(current);
     }
 
+    // ==========================================
+    // 🎯 嚴格閘門系統：按鈕邏輯更新
+    // ==========================================
     const prevBtn = document.getElementById('prev-btn');
     const nextBtn = document.getElementById('next-btn');
     const backBtn = document.getElementById('back-summary-btn');
 
     if (isReReading) {
-      prevBtn.style.display = 'none'; nextBtn.style.display = 'none'; backBtn.style.display = 'inline-block';
-      backBtn.disabled = false;
+        // 結算後的重唸模式
+        prevBtn.style.display = 'none'; 
+        nextBtn.style.display = 'none'; 
+        backBtn.style.display = 'inline-block';
+        backBtn.disabled = false;
     } else {
-      backBtn.style.display = 'none'; prevBtn.style.display = 'inline-block';
-      prevBtn.disabled = (currentIndex === 0); nextBtn.style.display = 'inline-block'; nextBtn.disabled = false;
-      nextBtn.innerText = currentIndex === quizData.length - 1 ? "查看結算" : "下一題 ▶";
+        backBtn.style.display = 'none'; 
+
+        // 1. 🛑 上一頁邏輯：第一題絕對不顯示 (乾淨俐落)
+        if (currentIndex === 0) {
+            prevBtn.style.display = 'none';
+        } else {
+            prevBtn.style.display = 'inline-block';
+            prevBtn.disabled = false;
+        }
+
+        // 2. 🔐 下一頁解鎖邏輯：(破冰完成) 且 (錄音有分數，即使是 0 分)
+        const hasPassedWarmup = warmupPassed[currentIndex] === true;
+        const hasRecorded = scores[currentIndex] !== null;
+
+        if (hasPassedWarmup && hasRecorded) {
+            // 🔓 條件達成：解鎖並顯示下一頁按鈕
+            nextBtn.style.display = 'inline-block';
+            nextBtn.disabled = false;
+            nextBtn.innerText = currentIndex === quizData.length - 1 ? "查看結算" : "下一題 ▶";
+        } else {
+            // 🔒 條件未滿：徹底隱藏下一頁按鈕，逼迫學生完成當下任務
+            nextBtn.style.display = 'none';
+        }
     }
   }
-
-  // 🏀 瑪麗安街機：硬核物理投籃引擎 (Gravity, Airball, Brick)
-  function setupArcadeZone(current) {
-      const imgEl = document.getElementById('arcade-img');
-      const zhEl = document.getElementById('arcade-zh');
-      const targetsContainer = document.getElementById('arcade-targets');
-      const ballWrapper = document.getElementById('arcade-ball-wrapper');
-      const ballInner = document.getElementById('arcade-ball');
-
-      if (current.img && current.img.trim() !== "") {
-          imgEl.src = current.img.includes('sz=') ? current.img.replace(/sz=w\d+/, 'sz=w400') : current.img;
-          imgEl.style.display = 'block'; zhEl.style.display = 'none';
-      } else {
-          imgEl.style.display = 'none'; zhEl.innerText = current.zh || "看字發音"; zhEl.style.display = 'block';
-      }
-
-      // 1. 生成三個籃框 (1對 2錯)
-      targetsContainer.innerHTML = '';
-      let distractors = getWordDistractors(current.en, 2);
-      let finalOptions = [current.en, ...distractors].sort(() => Math.random() - 0.5);
-
-      let hoops = [];
-      finalOptions.forEach(opt => {
-          let hWrap = document.createElement('div');
-          hWrap.className = 'hoop-wrapper';
-          hWrap.dataset.ans = opt;
-          hWrap.innerHTML = `
-              <div class="hoop-backboard">${opt}</div>
-              <div class="hoop-rim-back"></div>
-              <div class="hoop-net"></div>
-              <div class="hoop-rim-front"></div>
-          `;
-          targetsContainer.appendChild(hWrap);
-          hoops.push(hWrap);
-      });
-
-      // 2. 🌟 極簡版籃球重生系統
-      function resetBall() {
-          ballWrapper.style.transition = 'none';
-          ballWrapper.style.transform = 'translate(0px, 0px) scale(1)';
-          ballWrapper.style.opacity = '1';
-          ballWrapper.style.zIndex = '30';
-          ballInner.style.transform = 'rotate(0deg)';
-          ballInner.style.display = 'block';
-          currentDx = 0; currentDy = 0;
-          
-          requestAnimationFrame(() => {
-              ballWrapper.style.transition = 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
-              ballWrapper.style.transform = 'translate(0px, 0px) scale(1.1)';
-              setTimeout(() => {
-                  ballWrapper.style.transform = 'translate(0px, 0px) scale(1)';
-              }, 150);
-          });
-      }
-
-      resetBall(); 
+  // 🎮 建立暖身小遊戲 (五大模式智能派題引擎 - 狀態鎖定版)
+  function setupWarmupZone(current) {
+      // 🚀 手術點 1：抓取父容器，我們準備進行實體重建
+      const visualCard = document.querySelector('.warmup-visual-card');
+      const audioHint = document.getElementById('warmup-audio-hint'); 
+      const skeletonContainer = document.getElementById('warmup-word-skeleton');
+      const optionsContainer = document.getElementById('warmup-options');
       
-      const pad = document.getElementById('arcade-pad'); // 🚀 抓取整個觸控區
-      let isDragging = false;
-      let startX = 0, startY = 0;
-      let baseRect, originX, originY;
-      let currentDx = 0, currentDy = 0;
+      // 🚀 手術點 2：防快速切換爆版：清除上一次還沒執行的自動發音計時器
+      if (window.warmupAutoPlayTimer) clearTimeout(window.warmupAutoPlayTimer);
 
-      // 統一座標獲取函數
-      const getX = (e) => e.touches ? e.touches[0].clientX : e.clientX;
-      const getY = (e) => e.touches ? e.touches[0].clientY : e.clientY;
+      // 每次進入前先清空容器與排版
+      skeletonContainer.innerHTML = '';
+      optionsContainer.removeAttribute('class');
+      optionsContainer.innerHTML = '';
+      optionsContainer.className = ''; 
+      audioHint.style.display = 'none'; 
 
-      // 🚀 關鍵修復：按下的事件綁在「籃球」上，但滑動的事件要綁在整個「文件」上！
-      const downHandler = (e) => {
-          isDragging = true;
-          // 每次按下的瞬間，重新抓取籃球的絕對起點座標
-          baseRect = ballWrapper.getBoundingClientRect();
-          originX = baseRect.left; 
-          originY = baseRect.top;
-          
-          startX = getX(e) - currentDx; 
-          startY = getY(e) - currentDy;
-          ballWrapper.style.transition = 'none';
-          // e.preventDefault(); // 絕對不能加這行！
-      };
+      // 🚀 手術點 3：暴力清場！直接清空整個視覺卡片，重新塞入乾淨的元素
+      visualCard.innerHTML = `
+          <img id="warmup-img" src="" alt="提示圖片" style="display: none; width: 100%; height: auto; border-radius: 16px; object-fit: cover; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+          <div id="warmup-zh" style="display: none; font-size: clamp(24px, 7vw, 32px); font-weight: 900; color: #334155; letter-spacing: 2px; word-break: break-word; overflow-wrap: break-word; text-align: center; width: 100%; line-height: 1.4; padding: 10px;"></div>
+          <button id="warmup-audio-btn" class="btn-listen-huge" style="display: none;">
+            <span class="icon">👂</span>
+            <span class="text">聽音辨字</span>
+          </button>
+      `;
 
-      ballWrapper.addEventListener('touchstart', downHandler, {passive: true});
-      ballWrapper.addEventListener('mousedown', downHandler);
+      // 重新抓取剛剛建立好的乾淨元素
+      const imgEl = document.getElementById('warmup-img');
+      const zhEl = document.getElementById('warmup-zh');
+      const audioBtn = document.getElementById('warmup-audio-btn');
 
-      const moveHandler = (e) => {
-          if (!isDragging) return;
-          // 防止手機因為滑動而下拉重整 (Pull-to-refresh)
-          if(e.cancelable) e.preventDefault(); 
-          
-          currentDx = getX(e) - startX;
-          currentDy = getY(e) - startY;
-          
-          // 🚀 擴大限制範圍，讓球能拖得更遠！
-          if (currentDy > 20) currentDy = 20; // 往下不能拖太多
-          if (currentDx > 120) currentDx = 120; // 左右可以拖很遠
-          if (currentDx < -120) currentDx = -120;
-          
-          ballWrapper.style.transform = `translate(${currentDx}px, ${currentDy}px) scale(0.9)`;
-          
-          // 🎯 動態瞄準反饋
-          hoops.forEach(h => {
-              h.classList.remove('target-locked');
-              let hRect = h.getBoundingClientRect();
-              let center = hRect.left + hRect.width / 2;
-              // 往上推超過 30px 才開始瞄準，防誤觸
-              if (Math.abs(getX(e) - center) < hRect.width * 0.7 && currentDy < -30) {
-                  h.classList.add('target-locked');
-              }
-          });
-      };
+      // 🧠 1. 條件判定 (Rules Engine) 與 記憶卡系統
 
-      const upHandler = (e) => {
-          if (!isDragging) return;
-          isDragging = false;
+      // 如果 assignedWarmupModes 陣列還沒初始化，就先建立它
+      if (typeof assignedWarmupModes === 'undefined' || assignedWarmupModes.length === 0) {
+          window.assignedWarmupModes = new Array(quizData.length).fill(null);
+      }
+
+      let warmupMode = assignedWarmupModes[currentIndex];
+
+      // 如果是 null，代表是第一次進入這題，才需要執行派題引擎
+      if (warmupMode === null) {
+          const hasImage = (current.img && current.img.trim() !== "");
+          const wordLen = current.en.length;
+          const isSentence = current.en.includes(" ");
+          // 判斷題庫中是否有足夠的其他圖片來做為干擾項 (至少要有 3 張其他的)
+          const availableImages = quizData.filter(q => q.en !== current.en && q.img && q.img.trim() !== "");
+          const canPlayImageChoice = hasImage && availableImages.length >= 3;
+
+          let availableModes = [0, 2]; // 絕對安全的保底模式
           
-          // 🚀 如果沒有往上推超過 30px，視為放棄，原地彈回
-          if (currentDy > -30) {
-              ballWrapper.style.transition = 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)';
-              ballWrapper.style.transform = 'translate(0px, 0px) scale(1)';
-              hoops.forEach(h => h.classList.remove('target-locked'));
-              currentDx = 0; currentDy = 0;
-              return;
+          if (wordLen >= 3 && !isSentence) {
+              availableModes.push(1); // 允許拼字
+              availableModes.push(4); // 允許果凍矩陣
           }
-          
-          let releaseX = e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
+          if (canPlayImageChoice) {
+              availableModes.push(3); // 允許圖片四選一
+          }
 
-          let targetHoop = null;
-          let hitType = 'airball'; 
+          // 為了確保機率平均，我們直接用隨機數，一直抽到合法模式為止
+          let candidateMode;
+          let safeCounter = 0;
+          do {
+              candidateMode = Math.floor(Math.random() * 5); // 隨機抽 0~4
+              safeCounter++;
+              if (safeCounter > 50) { candidateMode = availableModes[0]; break; } // 防呆：避免無限迴圈
+          } while (!availableModes.includes(candidateMode));
           
-          hoops.forEach(h => {
-              let hRect = h.getBoundingClientRect();
-              let center = hRect.left + hRect.width / 2;
-              if (Math.abs(releaseX - center) < hRect.width * 0.7) {
-                  targetHoop = h;
-                  hitType = (h.dataset.ans === current.en) ? 'swish' : 'brick';
-              }
-              h.classList.remove('target-locked');
-          });
+          warmupMode = candidateMode;
 
-          ballInner.classList.add('ball-spinning'); 
+          // 關鍵：將抽到的結果存入記憶卡，這題以後永遠鎖死這個模式！
+          assignedWarmupModes[currentIndex] = warmupMode; 
+
+          console.log(`[派題引擎] 第 ${currentIndex + 1} 題首次分配模式: ${warmupMode}, 可選池: ${availableModes}`);
+      } else {
+          console.log(`[記憶卡讀取] 第 ${currentIndex + 1} 題已鎖定模式: ${warmupMode}`);
+      }
+
+      // 🛡️ 2. 上方視覺區渲染
+      if (warmupMode === 2) {
+          // 模式 2：純聽音
+          audioBtn.style.display = 'flex'; // 🚀 使用 flex 讓內部元素置中
+          audioHint.style.display = 'flex'; // 🚀 顯示防呆提示
+
+          audioBtn.onclick = () => {
+              // 點擊時的果凍微動畫 (不用管 scale，因為 CSS 已經寫了 :active 下沉)
+              audioBtn.style.transform = "scale(1.1)";
+              setTimeout(() => audioBtn.style.transform = "scale(1)", 150);
+              speakWordCloudCached(current.en, 1.8, null, null);
+          };
           
-          let endX, endY;
-          if (hitType === 'airball') {
-              endX = currentDx * 2.5; 
-              endY = originY - window.innerHeight * 0.6; // 飛出螢幕外
+          // 進入這題時，延遲 0.3 秒「自動唸一次」，並將 timer 存起來以便能被清除
+          window.warmupAutoPlayTimer = setTimeout(() => { 
+              if(document.getElementById('arcade-zone') && document.getElementById('arcade-zone').style.display !== 'none') audioBtn.click(); 
+              // 注意：因為我們目前沒有用 arcade-zone，我幫你加上安全的判斷
+              else if(audioBtn.style.display !== 'none') audioBtn.click();
+          }, 300);
+      } else if (warmupMode === 3) {
+          // 模式 3：圖片四選一 (上方只顯示單字/中文)
+          zhEl.innerText = current.en; // 上方顯示目標單字
+          zhEl.style.fontSize = "clamp(30px, 8vw, 45px)";
+          zhEl.style.display = 'block';
+          zhEl.style.color = "var(--primary-blue)";
+      } else {
+          // 模式 0, 1, 4：看圖發音 (有圖顯示圖，沒圖換中文)
+          if (current.img && current.img.trim() !== "") {
+              imgEl.src = current.img.includes('sz=') ? current.img.replace(/sz=w\d+/, 'sz=w400') : current.img;
+              imgEl.style.display = 'block';
           } else {
-              let targetRect = targetHoop.getBoundingClientRect();
-              endY = (targetRect.top + targetRect.height/2 + 10) - (originY + 50); // 50是新半徑
-              if (hitType === 'swish') {
-                  endX = (targetRect.left + targetRect.width/2) - (originX + 50); 
+              zhEl.innerText = current.zh || "看字發音";
+              zhEl.style.display = 'block';
+              zhEl.style.fontSize = "clamp(24px, 7vw, 32px)";
+              zhEl.style.color = "#334155";
+          }
+      }
+
+      // ==========================================
+      // 🕹️ 3. 下方互動區渲染與邏輯
+      // ==========================================
+      
+      const proceedToNext = () => {
+          try { const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3'); audio.volume=0.5; audio.play(); } catch(e){}
+          setTimeout(() => { warmupPassed[currentIndex] = true; renderWord(); }, 600);
+      };
+
+      const handleWrong = (element) => {
+          element.classList.remove('wrong');
+          void element.offsetWidth; 
+          element.classList.add('wrong');
+      };
+
+      if (warmupMode === 0 || warmupMode === 2) {
+          // 📌 模式 0/2：經典文字四選一
+          skeletonContainer.style.display = 'none';
+          optionsContainer.classList.add('list-mode');
+
+          let distractors = getWordDistractors(current.en, 3);
+          let finalOptions = [current.en, ...distractors].sort(() => Math.random() - 0.5);
+
+          finalOptions.forEach(opt => {
+              let btn = document.createElement('button');
+              btn.className = 'btn-choice-list'; 
+              btn.innerText = opt;
+              btn.onclick = function() {
+                  if (opt === current.en) {
+                      this.classList.add('correct'); proceedToNext();
+                  } else { handleWrong(this); }
+              };
+              optionsContainer.appendChild(btn);
+          });
+
+      } else if (warmupMode === 3) {
+          // 📌 模式 3：圖片四選一 (2x2 網格)
+          skeletonContainer.style.display = 'none';
+          optionsContainer.classList.add('grid-image-mode');
+
+          let distractors = getImageDistractors(current.en, 3);
+          // 把正確答案的物件跟干擾圖包裝在一起
+          let finalOptions = [{img: current.img, isCorrect: true}, ...distractors].sort(() => Math.random() - 0.5);
+
+          finalOptions.forEach(opt => {
+              let btn = document.createElement('button');
+              btn.className = 'btn-image-choice';
+              
+              let iEl = document.createElement('img');
+              iEl.src = opt.img.includes('sz=') ? opt.img.replace(/sz=w\d+/, 'sz=w400') : opt.img;
+              btn.appendChild(iEl);
+
+              btn.onclick = function() {
+                  optionsContainer.classList.add('has-answered'); // 讓其他圖變暗
+                  if (opt.isCorrect) {
+                      this.classList.add('correct'); proceedToNext();
+                  } else { handleWrong(this); }
+              };
+              optionsContainer.appendChild(btn);
+          });
+
+      } else if (warmupMode === 1) {
+          // 📌 模式 1：填空拼字 (Tap-to-Fill)
+          skeletonContainer.style.display = 'flex'; 
+
+          const wordStr = current.en.toUpperCase();
+          let targetCharObj = extractMissingTarget(wordStr); 
+          
+          for (let i = 0; i < wordStr.length; i++) {
+              let char = wordStr[i];
+              if (char === ' ' || char === '-') {
+                  skeletonContainer.innerHTML += `<span style="width: 15px;"></span>`;
+              } else if (i === targetCharObj.index) {
+                  skeletonContainer.innerHTML += `<span class="skeleton-char" id="skel-target"></span>`;
               } else {
-                  endX = (targetRect.left + targetRect.width/2) - (originX + 50) + (releaseX > targetRect.left + targetRect.width/2 ? 40 : -40);
+                  skeletonContainer.innerHTML += `<span class="skeleton-char filled">${char}</span>`;
               }
           }
+
+          let options = generateDistractors(targetCharObj.char);
+          options.forEach(opt => {
+              let btn = document.createElement('button');
+              btn.className = 'btn-tap-fill'; 
+              btn.innerText = opt;
+              btn.onclick = function() {
+                  if (opt === targetCharObj.char) {
+                      this.classList.add('correct');
+                      document.getElementById('skel-target').innerText = opt;
+                      document.getElementById('skel-target').classList.add('filled');
+                      proceedToNext();
+                  } else { handleWrong(this); }
+              };
+              optionsContainer.appendChild(btn);
+          });
+      } else if (warmupMode === 4) {
+          // 📌 模式 4：果凍字母陣 (Word Search)
+          skeletonContainer.style.display = 'none';
+          optionsContainer.classList.add('word-search-mode');
           
-          let frames = 25; 
-          let gravity = 2.0; // 重力再加強
-          let vy = (endY - currentDy - 0.5 * gravity * frames * frames) / frames;
-          let vx = (endX - currentDx) / frames;
-          let scale = 0.9;
-          let scaleStep = (0.3 - 0.9) / frames; 
+          const word = current.en.toUpperCase().replace(/\s+/g, ''); // 拔除空格
+          // 決定陣列大小 (至少 6x4)
+          const cols = 6;
+          const rows = Math.max(4, Math.ceil((word.length + 10) / cols)); 
+          optionsContainer.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
 
-          let f = 0;
-          function flyLoop() {
-              f++; vy += gravity; currentDx += vx; currentDy += vy; scale += scaleStep;
-              ballWrapper.style.transform = `translate(${currentDx}px, ${currentDy}px) scale(${scale})`;
-              
-              if (vy > 0) ballWrapper.style.zIndex = '2';
+          // 生成矩陣與答案路徑
+          const { matrix, path } = generateWordSearchMatrix(word, cols, rows);
+          
+          let selectedPath = []; // 玩家點擊的歷史
 
-              if (f < frames) {
-                  requestAnimationFrame(flyLoop);
-              } else {
-                  ballInner.classList.remove('ball-spinning');
-                  
-                  if (hitType === 'swish') {
-                      targetHoop.classList.add('swish');
-                      ballWrapper.style.transition = 'transform 0.3s ease-in';
-                      ballWrapper.style.transform = `translate(${currentDx}px, ${currentDy + 80}px) scale(0.2)`;
-                      try { const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3'); audio.volume=0.5; audio.play(); } catch(err){}
+          matrix.forEach((row, y) => {
+              row.forEach((char, x) => {
+                  let btn = document.createElement('button');
+                  btn.className = 'ws-letter';
+                  btn.innerText = char;
+                  btn.dataset.x = x; btn.dataset.y = y;
+
+                  btn.onclick = function() {
+                      // 如果已經選了 2 個，就不給按
+                      if (selectedPath.length >= 2) return;
                       
-                      setTimeout(() => {
-                          ballInner.style.display = 'none'; 
-                          targetHoop.classList.remove('swish');
+                      // 記錄點擊
+                      selectedPath.push({x: x, y: y, el: this});
+                      this.classList.add('selected');
+
+                      if (selectedPath.length === 2) {
+                          const p1 = selectedPath[0];
+                          const p2 = selectedPath[1];
                           
-                          document.getElementById('arcade-zone').style.opacity = '0';
-                          setTimeout(() => {
-                              document.getElementById('main-card').classList.remove('arcade-active');
-                              document.getElementById('arcade-zone').style.display = 'none';
-                              document.getElementById('arcade-zone').style.opacity = '1';
-                              warmupPassed[currentIndex] = true; 
-                              renderWord(); 
-                          }, 300);
-                      }, 500);
-                  } else {
-                      if(hitType === 'brick') targetHoop.classList.add('wrong');
-                      
-                      let bounceVx = (currentDx > endX ? 1 : -1) * (Math.random() * 8 + 5);
-                      let bounceVy = (hitType === 'brick') ? -20 : -5; // 打鐵彈更高
-                      
-                      function bounceLoop() {
-                          bounceVy += gravity; currentDx += bounceVx; currentDy += bounceVy;
-                          ballInner.style.transform = `rotate(${currentDx * 2}deg)`; 
-                          ballWrapper.style.transform = `translate(${currentDx}px, ${currentDy}px) scale(${scale})`;
-                          
-                          if (currentDy < window.innerHeight) { 
-                              requestAnimationFrame(bounceLoop); 
+                          // 檢查是否跟答案的起點/終點吻合 (順向或逆向都可以)
+                          const isMatch = 
+                              (p1.x === path[0].x && p1.y === path[0].y && p2.x === path[path.length-1].x && p2.y === path[path.length-1].y) ||
+                              (p1.x === path[path.length-1].x && p1.y === path[path.length-1].y && p2.x === path[0].x && p2.y === path[0].y);
+
+                          if (isMatch) {
+                              // ✅ 連線成功！波浪發光動畫
+                              path.forEach((pObj, pIdx) => {
+                                  setTimeout(() => {
+                                      // 根據 x, y 找到對應的按鈕
+                                      let targetBtn = optionsContainer.children[pObj.y * cols + pObj.x];
+                                      targetBtn.classList.remove('selected');
+                                      targetBtn.classList.add('correct-path');
+                                  }, pIdx * 80); // 波浪延遲
+                              });
+                              proceedToNext();
                           } else {
-                              if(hitType === 'brick') targetHoop.classList.remove('wrong');
-                              resetBall();
+                              // ❌ 連線錯誤，彈回原狀
+                              p1.el.classList.add('wrong-path');
+                              p2.el.classList.add('wrong-path');
+                              setTimeout(() => {
+                                  p1.el.classList.remove('selected', 'wrong-path');
+                                  p2.el.classList.remove('selected', 'wrong-path');
+                                  selectedPath = []; // 重置
+                              }, 500);
                           }
                       }
-                      requestAnimationFrame(bounceLoop);
-                  }
-              }
-          }
-          requestAnimationFrame(flyLoop);
-      };
-
-      // 🚀 關鍵修復：將 Move 和 Up 綁定在 document 上，手指就算滑出籃球也不會斷！
-      document.addEventListener('touchmove', moveHandler, {passive: false});
-      document.addEventListener('mousemove', moveHandler);
-      document.addEventListener('touchend', upHandler);
-      document.addEventListener('mouseup', upHandler);
-      
-      // 在離開此題時，記得解除全域綁定，以免干擾錄音
-      window.arcadeDragObj = { move: moveHandler, up: upHandler };
-  }
-
-  // 🛠️ 輔助函數：改為只抓 2 個錯的單字
-  function getWordDistractors(correctWord, count) {
-      let distractors = [];
-      let available = quizData.filter(q => q.en !== correctWord).map(q => q.en);
-      const FALLBACK = ["Apple", "Banana", "Cat", "Dog", "Elephant", "Fish", "Grape", "Horse", "Ice", "Juice"];
-      
-      while(distractors.length < count) {
-          if (available.length > 0) {
-              let rIdx = Math.floor(Math.random() * available.length);
-              distractors.push(available[rIdx]);
-              available.splice(rIdx, 1);
-          } else {
-              let fWord = FALLBACK[Math.floor(Math.random() * FALLBACK.length)];
-              if (!distractors.includes(fWord) && fWord !== correctWord) {
-                  distractors.push(fWord);
-              }
-          }
+                  };
+                  optionsContainer.appendChild(btn);
+              });
+          });
       }
-      return distractors;
   }
 
-  // 🛠️ 輔助函數：從單字中隨機挑一個英文字母挖空
+  // =======================================================
+  // 🧠 輔助演算法大集合 (必須放在 setupWarmupZone 下方)
+  // =======================================================
+
+  // 輔助：從單字中隨機挑一個字母挖空
   function extractMissingTarget(word) {
       let validIndices = [];
       for(let i=0; i<word.length; i++) {
@@ -2490,7 +2546,7 @@
       return { index: rIdx, char: word[rIdx] };
   }
 
-  // 🛠️ 輔助函數：為「填空拼字」生成 2 個錯誤字母
+  // 輔助：生成 2 個錯誤字母
   function generateDistractors(correctChar) {
       const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".replace(correctChar, "");
       let distractors = [];
@@ -2502,10 +2558,9 @@
       return finalOptions.sort(() => Math.random() - 0.5);
   }
 
-  // 🛠️ 輔助函數：為「四選一」生成錯誤單字 (自動從題庫抓，不夠就用備用庫)
+  // 輔助：生成錯誤的單字干擾項
   function getWordDistractors(correctWord, count) {
       let distractors = [];
-      // 先從這單元的其他題目抓
       let available = quizData.filter(q => q.en !== correctWord).map(q => q.en);
       const FALLBACK = ["Apple", "Banana", "Cat", "Dog", "Elephant", "Fish", "Grape", "Horse", "Ice", "Juice"];
       
@@ -2515,14 +2570,74 @@
               distractors.push(available[rIdx]);
               available.splice(rIdx, 1);
           } else {
-              // 題庫抓乾了，從備用庫抓
               let fWord = FALLBACK[Math.floor(Math.random() * FALLBACK.length)];
-              if (!distractors.includes(fWord) && fWord !== correctWord) {
-                  distractors.push(fWord);
-              }
+              if (!distractors.includes(fWord) && fWord !== correctWord) distractors.push(fWord);
           }
       }
       return distractors;
+  }
+
+  // 輔助：生成錯誤的圖片干擾項 (必須要有 img 屬性)
+  function getImageDistractors(correctWord, count) {
+      let distractors = [];
+      let available = quizData.filter(q => q.en !== correctWord && q.img && q.img.trim() !== "");
+      
+      // 如果題庫圖片真的不夠 (理論上規則引擎會擋掉，但這是保險)，用透明圖墊檔避免報錯
+      const FALLBACK_IMG = "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs="; 
+
+      while(distractors.length < count) {
+          if (available.length > 0) {
+              let rIdx = Math.floor(Math.random() * available.length);
+              distractors.push({ img: available[rIdx].img, isCorrect: false });
+              available.splice(rIdx, 1);
+          } else {
+              distractors.push({ img: FALLBACK_IMG, isCorrect: false });
+          }
+      }
+      return distractors;
+  }
+
+  // 輔助：生成 6x4 果凍字母陣，並藏入單字
+  function generateWordSearchMatrix(word, cols, rows) {
+      // 初始化空矩陣
+      let matrix = Array(rows).fill(null).map(() => Array(cols).fill(''));
+      const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+      
+      // 決定方向：0=水平右, 1=垂直下, 2=斜右下
+      const dir = Math.floor(Math.random() * 3);
+      let startX = 0, startY = 0;
+      let path = [];
+
+      // 根據方向決定合法的起點範圍
+      if (dir === 0) { // 水平
+          startX = Math.floor(Math.random() * (cols - word.length + 1));
+          startY = Math.floor(Math.random() * rows);
+      } else if (dir === 1) { // 垂直
+          startX = Math.floor(Math.random() * cols);
+          startY = Math.floor(Math.random() * (rows - word.length + 1));
+      } else { // 斜向
+          startX = Math.floor(Math.random() * (cols - word.length + 1));
+          startY = Math.floor(Math.random() * (rows - word.length + 1));
+      }
+
+      // 把答案寫進矩陣，並記錄座標路徑
+      for (let i = 0; i < word.length; i++) {
+          let cx = startX + (dir === 0 || dir === 2 ? i : 0);
+          let cy = startY + (dir === 1 || dir === 2 ? i : 0);
+          matrix[cy][cx] = word[i];
+          path.push({x: cx, y: cy});
+      }
+
+      // 剩下的空格填滿隨機字母
+      for (let y = 0; y < rows; y++) {
+          for (let x = 0; x < cols; x++) {
+              if (matrix[y][x] === '') {
+                  matrix[y][x] = alphabet[Math.floor(Math.random() * alphabet.length)];
+              }
+          }
+      }
+
+      return { matrix, path };
   }
 
   // 🎙️ 建立開口決戰區 (保留你原本的所有強大機制)
@@ -2549,6 +2664,9 @@
           wordDisplay.style.color = "#0d47a1";
       }
 
+      // 🚀 關鍵修復：在這裡把中文印出來！
+      document.getElementById('production-zh').innerText = current.zh || "";
+      
       // 按鈕重置
       document.getElementById('play-btn').disabled = false;
       if (rb) {
@@ -2575,6 +2693,13 @@
   if(rb) {
     const startPracticeRecord = (e) => { 
         if(isGrading || isRecording) return;
+        
+        // 🚀 修復問題一：終極防呆！檢查 Azure 憑證是否已經抓取完畢
+        if (!azureAuthToken) {
+            alert("語音引擎正在連線中，請稍等一兩秒再試！");
+            return;
+        }
+
         e.preventDefault(); 
         isRecording = true;
         
