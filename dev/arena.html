@@ -2250,32 +2250,41 @@
         }
     }
   }
-  // 🎮 建立暖身小遊戲 (五大模式智能派題引擎)
+  // 🎮 建立暖身小遊戲 (五大模式智能派題引擎 - 狀態鎖定版)
   function setupWarmupZone(current) {
-      const imgEl = document.getElementById('warmup-img');
-      const zhEl = document.getElementById('warmup-zh');
-      const audioBtn = document.getElementById('warmup-audio-btn'); 
+      // 🚀 手術點 1：抓取父容器，我們準備進行實體重建
+      const visualCard = document.querySelector('.warmup-visual-card');
       const audioHint = document.getElementById('warmup-audio-hint'); 
       const skeletonContainer = document.getElementById('warmup-word-skeleton');
       const optionsContainer = document.getElementById('warmup-options');
       
-      // 🚀 修復問題三：防快速切換爆版。清除上一次還沒執行的自動發音計時器
+      // 🚀 手術點 2：防快速切換爆版：清除上一次還沒執行的自動發音計時器
       if (window.warmupAutoPlayTimer) clearTimeout(window.warmupAutoPlayTimer);
 
       // 每次進入前先清空容器與排版
       skeletonContainer.innerHTML = '';
-      // 🚀 修復問題三：加上 removeAttribute，確保排版樣式徹底清空，不會因為快速切換而殘留上一題的 Class
       optionsContainer.removeAttribute('class');
       optionsContainer.innerHTML = '';
       optionsContainer.className = ''; 
-      imgEl.style.display = 'none';
-      zhEl.style.display = 'none';
-      audioBtn.style.display = 'none';
       audioHint.style.display = 'none'; 
+
+      // 🚀 手術點 3：暴力清場！直接清空整個視覺卡片，重新塞入乾淨的元素
+      visualCard.innerHTML = `
+          <img id="warmup-img" src="" alt="提示圖片" style="display: none; width: 100%; height: auto; border-radius: 16px; object-fit: cover; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+          <div id="warmup-zh" style="display: none; font-size: clamp(24px, 7vw, 32px); font-weight: 900; color: #334155; letter-spacing: 2px; word-break: break-word; overflow-wrap: break-word; text-align: center; width: 100%; line-height: 1.4; padding: 10px;"></div>
+          <button id="warmup-audio-btn" class="btn-listen-huge" style="display: none;">
+            <span class="icon">👂</span>
+            <span class="text">聽音辨字</span>
+          </button>
+      `;
+
+      // 重新抓取剛剛建立好的乾淨元素
+      const imgEl = document.getElementById('warmup-img');
+      const zhEl = document.getElementById('warmup-zh');
+      const audioBtn = document.getElementById('warmup-audio-btn');
 
       // 🧠 1. 條件判定 (Rules Engine) 與 記憶卡系統
 
-      // 🚀 修復問題二：讀取記憶卡！看看這題是不是已經抽過模式了
       // 如果 assignedWarmupModes 陣列還沒初始化，就先建立它
       if (typeof assignedWarmupModes === 'undefined' || assignedWarmupModes.length === 0) {
           window.assignedWarmupModes = new Array(quizData.length).fill(null);
@@ -2302,7 +2311,7 @@
               availableModes.push(3); // 允許圖片四選一
           }
 
-          // 🚀 修復問題四：為了確保機率平均，我們直接用隨機數，一直抽到合法模式為止
+          // 為了確保機率平均，我們直接用隨機數，一直抽到合法模式為止
           let candidateMode;
           let safeCounter = 0;
           do {
@@ -2313,7 +2322,7 @@
           
           warmupMode = candidateMode;
 
-          // 🚀 關鍵：將抽到的結果存入記憶卡，這題以後永遠鎖死這個模式！
+          // 關鍵：將抽到的結果存入記憶卡，這題以後永遠鎖死這個模式！
           assignedWarmupModes[currentIndex] = warmupMode; 
 
           console.log(`[派題引擎] 第 ${currentIndex + 1} 題首次分配模式: ${warmupMode}, 可選池: ${availableModes}`);
@@ -2334,7 +2343,7 @@
               speakWordCloudCached(current.en, 1.8, null, null);
           };
           
-          // 🚀 進入這題時，延遲 0.3 秒「自動唸一次」，並將 timer 存起來以便能被清除
+          // 進入這題時，延遲 0.3 秒「自動唸一次」，並將 timer 存起來以便能被清除
           window.warmupAutoPlayTimer = setTimeout(() => { 
               if(document.getElementById('arcade-zone') && document.getElementById('arcade-zone').style.display !== 'none') audioBtn.click(); 
               // 注意：因為我們目前沒有用 arcade-zone，我幫你加上安全的判斷
@@ -2348,7 +2357,7 @@
           zhEl.style.color = "var(--primary-blue)";
       } else {
           // 模式 0, 1, 4：看圖發音 (有圖顯示圖，沒圖換中文)
-          if (hasImage) {
+          if (current.img && current.img.trim() !== "") {
               imgEl.src = current.img.includes('sz=') ? current.img.replace(/sz=w\d+/, 'sz=w400') : current.img;
               imgEl.style.display = 'block';
           } else {
