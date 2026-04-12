@@ -2337,27 +2337,9 @@
       // 🚀 手術點 2：防快速切換爆版：清除上一次還沒執行的自動發音計時器
       if (window.warmupAutoPlayTimer) clearTimeout(window.warmupAutoPlayTimer);
 
-      // 每次進入前先清空容器與排版
-      skeletonContainer.innerHTML = '';
-      optionsContainer.removeAttribute('class');
-      optionsContainer.innerHTML = '';
-      optionsContainer.className = ''; 
-      audioHint.style.display = 'none'; 
-
-      // 🚀 手術點 3：暴力清場！直接清空整個視覺卡片，重新塞入乾淨的元素
-      visualCard.innerHTML = `
-          <img id="warmup-img" src="" alt="提示圖片" style="display: none; width: 100%; height: auto; border-radius: 16px; object-fit: cover; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-          <div id="warmup-zh" style="display: none; font-size: clamp(24px, 7vw, 32px); font-weight: 900; color: #334155; letter-spacing: 2px; word-break: break-word; overflow-wrap: break-word; text-align: center; width: 100%; line-height: 1.4; padding: 10px;"></div>
-          <button id="warmup-audio-btn" class="btn-listen-huge" style="display: none;">
-            <span class="icon">👂</span>
-            <span class="text">聽音辨字</span>
-          </button>
-      `;
-
-      // 重新抓取剛剛建立好的乾淨元素
-      const imgEl = document.getElementById('warmup-img');
-      const zhEl = document.getElementById('warmup-zh');
-      const audioBtn = document.getElementById('warmup-audio-btn');
+      // 👇 🚀 局部修正 3A：已經把上色代碼刪除了，直接進入重置畫面
+      document.getElementById('normal-header').style.display = 'none';
+      document.getElementById('warmup-header').style.display = 'flex';
 
       // 🧠 1. 條件判定 (Rules Engine) 與 記憶卡系統
 
