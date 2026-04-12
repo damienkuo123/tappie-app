@@ -2027,7 +2027,7 @@
         if (unitDisplay) unitDisplay.innerText = `今天挑戰：${TARGET_UNIT}`;
     }
     
-    playMascot('setup-mascot', 'idle'); 
+    playMascot('setup-mascot', 'idle'); // 開始畫面精靈待機
     
     // 🚀 動態對話框替換邏輯
     const speechText = document.getElementById('setup-speech-text');
@@ -2037,9 +2037,11 @@
         setTimeout(() => { speechText.innerText = "準備好了嗎！Here we go~"; }, 4000);
     }
     
+    // 初始化底座按鈕為「開始」
     setDockButton('開始', true, async () => {
         setDockButton('連線中...', false, null);
         try {
+            // 🚀 啟動並永久保溫麥克風
             globalMicStream = await navigator.mediaDevices.getUserMedia({ audio: true }); 
         } catch (e) { 
             alert("請開啟麥克風權限才能進行口說練習！");
@@ -2047,12 +2049,9 @@
             return; 
         }
         
-        // 🚀 完全還原原始的 GAS 抓題邏輯
-        const fetchUrl = TARGET_UNIT 
-            ? `${GAS_URL}?id=${STUDENT_ID}&action=get_data&unit=${encodeURIComponent(TARGET_UNIT)}`
-            : `${GAS_URL}?id=${STUDENT_ID}&action=get_data`;
-
-        fetch(fetchUrl)
+        // 🚀 終極還原：拔除所有的假題目與多餘檢查，完全還原你原本的完美抓題邏輯！
+        // 只要是空字串，GAS 就會自動給「今日挑戰」；有字串就會給「單元練習」！
+        fetch(`${GAS_URL}?id=${STUDENT_ID}&action=get_data&unit=${encodeURIComponent(TARGET_UNIT)}`)
           .then(res => res.json())
           .then(data => {
             if (!data.words || data.words.length === 0) { 
@@ -2060,9 +2059,12 @@
                 setDockButton('重試', true, handleDockClick);
                 return; 
             }
+            
+            // 寫入從 GAS 真實抓回來的資料
             quizData = data.words; 
             scores = new Array(quizData.length).fill(null);
             warmupPassed = new Array(quizData.length).fill(false);
+            assignedWarmupModes = new Array(quizData.length).fill(null); // 確保暖身陣列正確初始化
             
             const totalDisplay = document.getElementById('total-display');
             if (totalDisplay) totalDisplay.innerText = quizData.length;
@@ -2076,11 +2078,12 @@
             const studio = document.getElementById('studio');
             if (studio) studio.style.display = 'block';
             
+            // 🚀 關鍵：先綁定監聽器，再畫出第一題！(還原你原本的順序)
             attachButtonListeners();
             renderWord();
           }).catch(err => {
             console.error("載入失敗詳細原因:", err);
-            alert("題目載入失敗，請檢查網路連線！");
+            alert("題目載入失敗，請檢查網路連線或重新整理！");
             setDockButton('重試', true, handleDockClick);
           });
     });
