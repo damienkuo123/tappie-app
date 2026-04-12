@@ -2731,17 +2731,15 @@
       // 🚀 關鍵修復：在這裡把中文印出來！
       document.getElementById('production-zh').innerText = current.zh || "";
       
+      // ... 前面省略 ...
       document.getElementById('prod-feedback-text').style.display = 'none';
-      document.getElementById('prod-tts-btn').onclick = () => {
-          playModularAudio(null, current.en); // 呼叫你原本的發音引擎
-          playMascot('prod-mascot', 'thinking');
-      };
-
+      
       const feedbackEl = document.getElementById('prod-feedback-text');
       const ttsText = document.getElementById('prod-tts-text');
 
       document.getElementById('prod-tts-btn').onclick = () => {
-          playModularAudio(null, current.en); // 呼叫你原本的發音引擎
+          // 🚀 局部修正 3B：替換成正確的發音引擎，解決卡關當機問題！
+          speakWordCloudCached(current.en, 1.8, null, null); 
           playMascot('prod-mascot', 'thinking');
       };
 
