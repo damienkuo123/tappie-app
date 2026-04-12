@@ -1708,6 +1708,7 @@
 
   let stream, mediaRecorder, chunks = [], quizData = [], scores = [], currentIndex = 0, isReReading = false;
   let warmupPassed = []; // 🧠 記錄這 10 題有哪些已經通過暖身了
+  let assignedWarmupModes = []; // 🚀 補上全域變數宣告，解決無聲當機！
   let azureReports = []; // 🚀 專門用來收集微軟的法醫級音素報告
   let audioContext, analyser, dataArray, source, gradingInterval;
   let maxVolume = 0;
