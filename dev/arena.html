@@ -2403,8 +2403,11 @@
       // 🧠 1. 條件判定 (Rules Engine) 與 記憶卡系統
 
       // 如果 assignedWarmupModes 陣列還沒初始化，就先建立它
-      if (typeof assignedWarmupModes === 'undefined' || assignedWarmupModes.length === 0) {
-          window.assignedWarmupModes = new Array(quizData.length).fill(null);
+      // 🧠 1. 條件判定 (Rules Engine) 與 記憶卡系統
+
+      // 🚀 修復陣列判定，確保它能正確讀取與寫入
+      if (!assignedWarmupModes || assignedWarmupModes.length === 0) {
+          assignedWarmupModes = new Array(quizData.length).fill(null);
       }
 
       let warmupMode = assignedWarmupModes[currentIndex];
