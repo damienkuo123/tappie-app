@@ -2145,25 +2145,44 @@
         setupWarmupZone(current);
     }
 
-    // 按鈕邏輯更新
+    // ==========================================
+    // 🎯 嚴格閘門系統：按鈕邏輯更新
+    // ==========================================
     const prevBtn = document.getElementById('prev-btn');
     const nextBtn = document.getElementById('next-btn');
     const backBtn = document.getElementById('back-summary-btn');
 
     if (isReReading) {
-      prevBtn.style.display = 'none';
-      nextBtn.style.display = 'none';
-      backBtn.style.display = 'inline-block';
-      backBtn.disabled = false;
+        // 結算後的重唸模式
+        prevBtn.style.display = 'none'; 
+        nextBtn.style.display = 'none'; 
+        backBtn.style.display = 'inline-block';
+        backBtn.disabled = false;
     } else {
-      backBtn.style.display = 'none';
-      prevBtn.style.display = 'inline-block';
-      prevBtn.disabled = (currentIndex === 0);
-      nextBtn.style.display = 'inline-block';
-      nextBtn.disabled = false;
-      nextBtn.innerText = currentIndex === quizData.length - 1 ? "查看結算" : "下一題 ▶";
+        backBtn.style.display = 'none'; 
+
+        // 1. 🛑 上一頁邏輯：第一題絕對不顯示 (乾淨俐落)
+        if (currentIndex === 0) {
+            prevBtn.style.display = 'none';
+        } else {
+            prevBtn.style.display = 'inline-block';
+            prevBtn.disabled = false;
+        }
+
+        // 2. 🔐 下一頁解鎖邏輯：(破冰完成) 且 (錄音有分數，即使是 0 分)
+        const hasPassedWarmup = warmupPassed[currentIndex] === true;
+        const hasRecorded = scores[currentIndex] !== null;
+
+        if (hasPassedWarmup && hasRecorded) {
+            // 🔓 條件達成：解鎖並顯示下一頁按鈕
+            nextBtn.style.display = 'inline-block';
+            nextBtn.disabled = false;
+            nextBtn.innerText = currentIndex === quizData.length - 1 ? "查看結算" : "下一題 ▶";
+        } else {
+            // 🔒 條件未滿：徹底隱藏下一頁按鈕，逼迫學生完成當下任務
+            nextBtn.style.display = 'none';
+        }
     }
-  }
 
   // 🎮 建立暖身小遊戲 (三模式隨機輪盤)
   function setupWarmupZone(current) {
