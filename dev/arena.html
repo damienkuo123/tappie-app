@@ -2341,7 +2341,7 @@
       });
   }
 
-  // 🚀 升級版：動態心流渲染引擎
+  // 🚀 升級版：動態心流渲染引擎 (含安全防呆)
   function renderWord() {
     const current = quizData[currentIndex];
     if (!current) return;
@@ -2349,19 +2349,22 @@
     const progContainer = document.getElementById('progress-container');
     if (progContainer) progContainer.style.display = 'block';
 
-    document.getElementById('idx-display').innerText = currentIndex + 1;
+    // 🛡️ 防呆鎖：檢查舊版題號標籤是否存在，找不到就不執行，防止當機
+    const idxDisplay = document.getElementById('idx-display');
+    if (idxDisplay) idxDisplay.innerText = currentIndex + 1;
     
     // 更新進度條
     if (quizData.length > 0) {
         const progressPercent = ((currentIndex + 1) / quizData.length) * 100;
-        document.getElementById('progress-fill').style.width = progressPercent + "%";
+        const progFill = document.getElementById('progress-fill');
+        if (progFill) progFill.style.width = progressPercent + "%";
     }
 
     // 🎯 核心分流：這題暖身過了沒？
     if (warmupPassed[currentIndex]) {
         // ✅ 已暖身：直接進入開口決戰 (Production Phase)
         document.getElementById('warmup-zone').style.display = 'none';
-        document.getElementById('production-zone').style.display = 'block';
+        document.getElementById('production-zone').style.display = 'flex'; // 修正顯示方式
         setupProductionZone(current);
     } else {
         // 🚧 未暖身：啟動破冰任務 (Warm-up Phase)
