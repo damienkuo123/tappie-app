@@ -2023,7 +2023,7 @@
   const originalOnload = async () => {
     playMascot('setup-mascot', 'idle'); // 開始畫面精靈待機
     
-    // 🚀 局部修正 2：對話框一句一句替換的動畫
+    // 🚀 動態對話框替換邏輯
     const speechText = document.getElementById('setup-speech-text');
     if (speechText) {
         speechText.innerText = "嗨～我們來增進英語口說吧！";
@@ -2049,17 +2049,24 @@
             scores = new Array(quizData.length).fill(null);
             warmupPassed = new Array(quizData.length).fill(false);
             
-            document.getElementById('total-display').innerText = quizData.length;
-            document.getElementById('setup-zone').style.display = 'none';
-            document.getElementById('top-nav-bar').style.display = 'flex'; 
-            document.getElementById('studio').style.display = 'block';
+            // 🚀 安全檢查：確保元素存在再修改，避免當機跳到 catch 區
+            const totalDisplay = document.getElementById('total-display');
+            if (totalDisplay) totalDisplay.innerText = quizData.length;
             
-            attachButtonListeners(); // 🚀 關鍵：把按鈕監聽器加回來，不然麥克風會壞掉
+            const setupZone = document.getElementById('setup-zone');
+            if (setupZone) setupZone.style.display = 'none';
+            
+            const topNavBar = document.getElementById('top-nav-bar');
+            if (topNavBar) topNavBar.style.display = 'flex'; // 秀出進度列
+            
+            const studio = document.getElementById('studio');
+            if (studio) studio.style.display = 'block';
+            
+            attachButtonListeners();
             renderWord();
           }).catch(err => {
-            // 🚀 加入錯誤捕捉，萬一網路出錯不會卡死在「連線中...」
-            console.error("載入失敗:", err);
-            alert("題目載入失敗，請重試！");
+            console.error("載入失敗詳細原因:", err);
+            alert("題目載入失敗，請檢查網路連線或 HTML 結構是否完整！");
             setDockButton('重試', true, handleDockClick);
           });
     });
