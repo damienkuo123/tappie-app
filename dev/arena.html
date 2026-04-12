@@ -2748,10 +2748,20 @@
           playMascot('prod-mascot', 'thinking');
       };
 
+      const feedbackEl = document.getElementById('prod-feedback-text');
+      const ttsText = document.getElementById('prod-tts-text');
+
+      document.getElementById('prod-tts-btn').onclick = () => {
+          playModularAudio(null, current.en); // 呼叫你原本的發音引擎
+          playMascot('prod-mascot', 'thinking');
+      };
+
       if (currentScore !== null) {
           // 已錄音狀態：顯示回饋、解鎖繼續按鈕
-          document.getElementById('prod-feedback-text').style.display = 'block';
-          document.getElementById('prod-feedback-text').innerHTML = `得分：${currentScore}<br><small>${currentFeedback}</small>`;
+          feedbackEl.style.display = 'block';
+          feedbackEl.innerHTML = `<span style="color:var(--marian-green); font-weight:900;">得分：${currentScore}</span><br><small>${currentFeedback}</small>`;
+          ttsText.style.display = 'none'; // 錄完音只保留喇叭 icon
+          
           playMascot('prod-mascot', currentScore >= 70 ? 'success' : 'fail');
           
           setDockButton(currentIndex === quizData.length - 1 ? '查看結算' : '繼續', true, () => {
@@ -2759,7 +2769,10 @@
               else { showSummary(); }
           });
       } else {
-          // 未錄音狀態：鎖死按鈕
+          // 未錄音狀態：鎖死按鈕，顯示大喇叭
+          feedbackEl.style.display = 'none';
+          ttsText.style.display = 'inline'; // 顯示「我來唸一次」
+          
           playMascot('prod-mascot', 'idle');
           setDockButton('請錄音', false, null);
       }
