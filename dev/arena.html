@@ -1308,6 +1308,72 @@
     #production-zone { animation: slideUpFade 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
     @keyframes slideUpFade { from { opacity: 0; transform: translateY(30px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
     
+    /* =======================================================
+       🎮 新增遊戲 UI：圖片四選一 & 果凍字母陣
+       ======================================================= */
+    
+    /* 🖼️ 圖片四選一 (2x2 網格) */
+    #warmup-options.grid-image-mode { 
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; 
+      width: 100%; max-width: 320px; margin: 0 auto;
+    }
+    .btn-image-choice {
+      background: white; border: 3px solid #cbd5e1; border-radius: 16px; 
+      overflow: hidden; cursor: pointer; box-shadow: 0 6px 0 #cbd5e1; 
+      transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+      aspect-ratio: 1; padding: 0; position: relative;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-image-choice img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .btn-image-choice:active { transform: translateY(6px); box-shadow: 0 0px 0 #cbd5e1; }
+    
+    .btn-image-choice.correct { 
+      border-color: #2ecc71; box-shadow: 0 6px 0 #27ae60, 0 10px 25px rgba(46,204,113,0.4); 
+      transform: scale(1.05); z-index: 10; pointer-events: none;
+    }
+    .btn-image-choice.wrong { 
+      border-color: #e74c3c; box-shadow: 0 6px 0 #c0392b; 
+      animation: shake-soft 0.4s ease-in-out;
+    }
+    .btn-image-choice.wrong::after {
+      content: ''; position: absolute; inset: 0; background: rgba(231, 76, 60, 0.3);
+    }
+    .grid-image-mode.has-answered .btn-image-choice:not(.correct) {
+      opacity: 0.5; transform: scale(0.9); filter: grayscale(0.8);
+    }
+
+    /* 🔍 果凍字母陣 (Word Search) */
+    #warmup-options.word-search-mode {
+      display: grid; gap: 8px; width: 100%; justify-content: center;
+      /* 欄數會透過 JS 動態設定 grid-template-columns */
+    }
+    .ws-letter {
+      width: clamp(40px, 10vw, 55px); height: clamp(40px, 10vw, 55px);
+      display: flex; align-items: center; justify-content: center;
+      background: #ffffff; border: 2px solid #cbd5e1; border-radius: 12px;
+      font-size: clamp(20px, 5vw, 26px); font-weight: 900; color: #334155;
+      cursor: pointer; box-shadow: 0 4px 0 #cbd5e1; transition: all 0.1s;
+      user-select: none; -webkit-tap-highlight-color: transparent;
+    }
+    .ws-letter:active { transform: translateY(4px); box-shadow: 0 0px 0 #cbd5e1; }
+    
+    /* 字母陣選中狀態 */
+    .ws-letter.selected {
+      background: #fdfbf7; border-color: var(--marian-yellow); color: #d35400;
+      box-shadow: 0 4px 0 #d35400, 0 0 15px rgba(241,196,15,0.4); transform: translateY(2px);
+    }
+    /* 字母陣連線成功狀態 */
+    .ws-letter.correct-path {
+      background: #2ecc71; border-color: #27ae60; color: white;
+      box-shadow: 0 4px 0 #27ae60, 0 0 20px rgba(46,204,113,0.5);
+      animation: jelly-pop 0.4s; pointer-events: none;
+    }
+    /* 字母陣連線失敗狀態 */
+    .ws-letter.wrong-path {
+      background: #fff5f5; border-color: #ff7675; color: #d63031;
+      animation: shake-soft 0.4s ease-in-out;
+    }
+    
   </style>
 </head>
 <body>
