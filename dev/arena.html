@@ -2075,9 +2075,18 @@
             return; // 提早結束，不呼叫 API
         }
 
-        // 正常的 API 呼叫流程
-        fetch(`${GAS_URL}?id=${STUDENT_ID}&action=get_data&unit=${encodeURIComponent(TARGET_UNIT)}`)
-          .then(res => res.json()).then(data => {
+        // 🚀 正常的 API 呼叫流程 (含空字串防呆)
+        // 如果 TARGET_UNIT 有值，就帶上 unit 參數；如果沒有，就不帶 unit 參數，讓後端用預設邏輯給題目
+        const fetchUrl = TARGET_UNIT 
+            ? `${GAS_URL}?id=${STUDENT_ID}&action=get_data&unit=${encodeURIComponent(TARGET_UNIT)}`
+            : `${GAS_URL}?id=${STUDENT_ID}&action=get_data`; // 拿掉空的 unit 參數避免後端報錯
+
+        fetch(fetchUrl)
+          .then(res => {
+              if (!res.ok) throw new Error("Network response was not ok");
+              return res.json();
+          })
+          .then(data => {
             if (!data.words || data.words.length === 0) { 
                 alert("題目為空"); 
                 setDockButton('重試', true, handleDockClick);
