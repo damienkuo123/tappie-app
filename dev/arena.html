@@ -138,25 +138,28 @@
     /* 主卡片平滑過渡 */
     .main-panel { transition: background 0.8s ease, box-shadow 0.8s ease, border-color 0.8s ease !important; }
     
-    /* 🎨 4 種高質感的清透馬卡龍漸層 (Pastel Gradients) */
-    .warmup-bg-1 { background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%); border-color: #cbb4f0; } /* 薰衣草紫 -> 蜜桃粉 */
-    .warmup-bg-2 { background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%); border-color: #ffb3b6; } /* 珊瑚紅 -> 櫻花粉 */
-    .warmup-bg-3 { background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%); border-color: #a4f0c4; } /* 蘋果綠 -> 冰川藍 */
-    .warmup-bg-4 { background: linear-gradient(135deg, #f6d365 0%, #fda085 100%); border-color: #fce085; } /* 香草黃 -> 蜜橙色 */
+    /* =======================================================
+       🌟 瑪麗安 3.0：Duolingo 級實體深度漸層與高光標題
+       ======================================================= */
     
+    /* 確保主卡片有平滑的過渡效果 */
+    .main-panel { transition: background 0.5s ease, box-shadow 0.5s ease, border-color 0.5s ease !important; }
+    
+    /* 🎨 4 種高飽和深度的實體漸層 (垂直 180deg，無晃動動畫) */
+    .warmup-bg-1 { background: linear-gradient(180deg, #c084fc 0%, #7e22ce 100%); border-color: #a855f7; } /* 💜 寶石紫 */
+    .warmup-bg-2 { background: linear-gradient(180deg, #38bdf8 0%, #0284c7 100%); border-color: #0ea5e9; } /* 💙 汪洋藍 */
+    .warmup-bg-3 { background: linear-gradient(180deg, #4ade80 0%, #059669 100%); border-color: #10b981; } /* 💚 翡翠綠 */
+    .warmup-bg-4 { background: linear-gradient(180deg, #fb923c 0%, #c2410c 100%); border-color: #ea580c; } /* 🧡 活力橘 */
+    
+    /* 強化立體感：深色外陰影 + 頂部白色內發光 */
     .warmup-bg-1, .warmup-bg-2, .warmup-bg-3, .warmup-bg-4 {
-      background-size: 200% 200%;
-      animation: bg-sway 6s ease-in-out infinite alternate;
-      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1), inset 0 0 25px rgba(255,255,255,0.6);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25), inset 0 2px 10px rgba(255,255,255,0.4);
     }
-    
-    /* 🌊 緩慢的液體流動感 */
-    @keyframes bg-sway { 0% { background-position: 0% 50%; } 100% { background-position: 100% 50%; } }
 
-    /* 🌟 暖身運動專屬：白字發光標題 (解決對比度問題) */
+    /* 🌟 暖身運動專屬：白字發光標題 */
     .warmup-title-text {
       color: #ffffff !important;
-      text-shadow: 0 2px 10px rgba(0,0,0,0.2), 0 0 8px rgba(255,255,255,0.6);
+      text-shadow: 0 4px 10px rgba(0,0,0,0.4), 0 0 15px rgba(255,255,255,0.6);
     }
 
     /* ✅ 完成暖身的打勾彈出特效 */
@@ -2304,11 +2307,11 @@
       
       if (window.warmupAutoPlayTimer) clearTimeout(window.warmupAutoPlayTimer);
 
-      // 🚀 隨機套用 1~4 號 Juicy 漸層，並確保打勾隱藏
+      // 🚀 手術點 A：隨機套用 1~4 號果凍漸層，並切換標題
       const mainCard = document.getElementById('main-card');
       mainCard.classList.remove('warmup-bg-1', 'warmup-bg-2', 'warmup-bg-3', 'warmup-bg-4');
       const randomBg = Math.floor(Math.random() * 4) + 1;
-      mainCard.classList.add(`warmup-bg-${randomBg}`); 
+      mainCard.classList.add(`warmup-bg-${randomBg}`);
       document.getElementById('normal-header').style.display = 'none';
       document.getElementById('warmup-header').style.display = 'flex';
       document.getElementById('warmup-check').classList.remove('check-pop'); // 確保打勾藏起來
