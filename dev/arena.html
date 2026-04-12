@@ -123,20 +123,31 @@
     .colored-char { font-weight: bold; transition: color 0.3s ease; }
     .word-omission { color: #b2bec3 !important; text-decoration: line-through; opacity: 0.5; }
     
-    body { font-family: -apple-system, sans-serif; text-align: center; padding: 20px; background: #eaeff2; margin: 0; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
-    .main-panel { 
-      background: white; padding: 25px; border-radius: 28px; 
-      box-shadow: 0 10px 30px rgba(0,0,0,0.15); max-width: 400px; 
-      margin: 10px auto; border: 1px solid #ddd; 
-      position: relative; z-index: 100; /* 🚀 確保面板在所有東西上面 */
+    /* 🚀 手術 1：全螢幕畫布化 */
+    body { 
+      font-family: -apple-system, sans-serif; text-align: center; margin: 0; padding: 0;
+      user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; 
+      height: 100vh; height: 100dvh; overflow: hidden; /* 鎖死捲動，變成純正 App */
+      background: #ffffff; /* 預設白色，口說階段用 */
+      transition: background 0.5s ease;
     }
     
-    /* =======================================================
-       🌟 瑪麗安 3.0：頂級 Pastel 微漸層與發光標題
-       ======================================================= */
+    .main-panel { 
+      /* 拔掉白底、陰影、邊框，讓它變成全螢幕容器 */
+      background: transparent; padding: max(20px, env(safe-area-inset-top)) 20px 140px; 
+      width: 100%; box-sizing: border-box; max-width: 600px; margin: 0 auto;
+      height: 100%; overflow-y: auto; overflow-x: hidden; /* 讓內部可以捲動 */
+      position: relative; z-index: 100; display: flex; flex-direction: column;
+    }
     
-    /* 主卡片平滑過渡 */
-    .main-panel { transition: background 0.8s ease, box-shadow 0.8s ease, border-color 0.8s ease !important; }
+    /* 🎨 Duolingo 級背景漸層 (直接打在 body 上) */
+    body.warmup-bg-1 { background: linear-gradient(180deg, #c084fc 0%, #7e22ce 100%); }
+    body.warmup-bg-2 { background: linear-gradient(180deg, #38bdf8 0%, #0284c7 100%); }
+    body.warmup-bg-3 { background: linear-gradient(180deg, #4ade80 0%, #059669 100%); }
+    body.warmup-bg-4 { background: linear-gradient(180deg, #fb923c 0%, #c2410c 100%); }
+
+    /* 🌟 白字發光標題 */
+    .warmup-title-text { color: #ffffff !important; text-shadow: 0 2px 10px rgba(0,0,0,0.3); }
     
     /* =======================================================
        🌟 瑪麗安 3.0：Duolingo 級實體深度漸層與高光標題
@@ -198,6 +209,26 @@
     .score-badge { float: right; font-weight: bold; color: var(--primary-blue); font-size: 18px; }
     .btn-re { background: var(--marian-red); font-size: 13px; padding: 6px 12px; border-radius: 8px; color: white; border: none; cursor: pointer; font-weight: bold; }
     #zh-display { font-size: 20px; color: #7f8c8d; margin: -10px 0 20px 0; font-weight: bold; }
+    
+    /* 🚀 手術 2：底部固定操作台 */
+    .bottom-controls-dock {
+      position: fixed; bottom: 0; left: 0; width: 100%;
+      padding: 15px 20px max(15px, env(safe-area-inset-bottom));
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      box-shadow: 0 -5px 20px rgba(0,0,0,0.05);
+      border-top: 1px solid rgba(0,0,0,0.05);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      z-index: 500; box-sizing: border-box; gap: 10px;
+    }
+    
+    /* 暖身模式下，底部控制台變成透明，融入漸層背景 */
+    body[class*="warmup-bg"] .bottom-controls-dock {
+      background: transparent; box-shadow: none; border-top: none; backdrop-filter: none;
+    }
+    
+    .nav-btn-group { display: flex; justify-content: center; width: 100%; max-width: 400px; gap: 15px; }
+    .nav-btn-group .btn { flex: 1; margin: 0; padding: 15px; font-size: 18px; }
 
     /* ========================================= */
     /* 🚀 傳送門：頂級 3D 全息對峙 Loading 畫面 (終極隔離防擋版) */
@@ -1459,52 +1490,55 @@
     <p id="info-text">正在開啟麥克風...</p>
     <button class="btn" style="background:var(--primary-blue); font-size: 22px; padding: 18px 40px; border-bottom: 4px solid #003366;" id="start-btn" style="display:none;">開始挑戰</button>
   </div>
-  <div id="studio" style="display:none;">
-    <div style="display:flex; flex-direction:column; align-items:center; margin-bottom: 15px; min-height: 25px;">
+  <div id="studio" style="display:none; height: 100%; display: flex; flex-direction: column;">
+    
+    <div style="display:flex; flex-direction:column; align-items:center; margin-bottom: 15px; min-height: 25px; flex-shrink: 0;">
        <p id="normal-header" style="color:var(--primary-blue); font-weight:bold; margin: 0;">第 <span id="idx-display">1</span> / <span id="total-display">0</span> 題</p>
        <div id="warmup-header" class="warmup-title-text" style="display:none; font-weight:900; font-size: 20px; align-items: center; gap: 8px; margin: 0;">
           ✨ 暖身運動 Exercise <span id="warmup-check" style="opacity:0; transform:scale(0); font-size: 24px; text-shadow:none;">✅</span>
        </div>
     </div>
     
-    <div id="warmup-zone">
-       <div class="warmup-visual-card">
-          <img id="warmup-img" src="" alt="提示圖片">
-          <div id="warmup-zh"></div>
+    <div style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
+        
+        <div id="warmup-zone">
+           <div class="warmup-visual-card">
+              <img id="warmup-img" src="" alt="提示圖片">
+              <div id="warmup-zh"></div>
+              <button id="warmup-audio-btn" class="btn-listen-huge"><span class="icon">👂</span><span class="text">聽音辨字</span></button>
+           </div>
+           
+           <div id="warmup-audio-hint" class="audio-hint-box">
+               <span style="font-size:18px;">🔕</span>
+               <span style="text-align:left; line-height:1.3;">聽不到聲音？<br>請確認手機未開啟靜音</span>
+           </div>
+    
+           <div id="warmup-word-skeleton"></div>
+           <div id="warmup-options"></div>
+        </div>
+    
+        <div id="production-zone" style="display:none; flex-direction: column; align-items: center;">
+          <button id="play-btn" class="btn-play-pill" style="margin-bottom: 15px;"><span>🔊</span> <span>標準發音</span></button>
           
-          <button id="warmup-audio-btn" class="btn-listen-huge">
-            <span class="icon">👂</span>
-            <span class="text">聽音辨字</span>
-          </button>
-       </div>
+          <h1 id="word-display" style="font-size: clamp(35px, 10vw, 55px) !important; margin: 0 0 10px 0;">載入中...</h1>
+          <div id="production-zh" style="font-size: 20px; color: #7f8c8d; font-weight: bold;"></div>
+          
+          <div id="feedback" style="font-size: 22px; font-weight: 800; color: var(--marian-green); margin-top: 15px; min-height: 30px;"></div>
+        </div>
+
+    </div>
+
+    <div class="bottom-controls-dock" id="bottom-controls-dock">
+       <button type="button" id="record-btn" oncontextmenu="return false;" style="margin: 0; display: none;">🎤</button>
+       <p id="status" style="font-weight:bold; color:#636e72; margin: 5px 0 10px; font-size: 14px; display: none;">按住錄音，放開打分</p>
        
-       <div id="warmup-audio-hint" class="audio-hint-box">
-           <span style="font-size:18px;">🔕</span>
-           <span style="text-align:left; line-height:1.3;">聽不到聲音？<br>請確認手機未開啟靜音</span>
+       <div class="nav-btn-group">
+         <button class="btn btn-nav" id="prev-btn">◀ 上一題</button>
+         <button class="btn btn-nav" id="next-btn">下一題 ▶</button>
+         <button class="btn btn-nav" id="back-summary-btn" style="display:none; background:var(--marian-green); border-bottom:4px solid #1e8449;">返回結算頁</button>
        </div>
-
-       <div id="warmup-word-skeleton"></div>
-       <div id="warmup-options"></div>
     </div>
 
-    <div id="production-zone" style="display:none;">
-      <div style="min-height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px 0; margin-bottom: 0px;">
-        <button id="play-btn" class="btn-play-pill" style="margin-bottom: 10px;">
-          <span>🔊</span> <span>標準發音</span>
-        </button>
-        <h1 id="word-display">載入中...</h1>
-        <div id="production-zh" style="font-size: 22px; color: #7f8c8d; margin-top: 5px; font-weight: bold; letter-spacing: 1px;"></div>
-      </div>
-      <button type="button" id="record-btn" oncontextmenu="return false;" style="margin-top: 0px;">🎤</button>
-      <p id="status" style="font-weight:bold; color:#636e72; margin-top: 5px;">按住錄音，放開打分</p>
-      <div id="feedback" style="font-size: 26px; font-weight: 800; color: var(--marian-green); margin-top: 10px;"></div>
-    </div>
-
-    <div style="margin-top: 30px; display:flex; justify-content:center;">
-      <button class="btn btn-nav" id="prev-btn">◀ 上一題</button>
-      <button class="btn btn-nav" id="next-btn">下一題 ▶</button>
-      <button class="btn btn-nav" id="back-summary-btn" style="display:none; background:var(--marian-green); border-bottom:4px solid #1e8449;">返回結算頁</button>
-    </div>
   </div>
   <div id="summary" style="display:none;">
     <h2 id="summary-title" style="color:var(--primary-blue); margin-bottom:5px;">學習總結</h2>
@@ -2307,11 +2341,9 @@
       
       if (window.warmupAutoPlayTimer) clearTimeout(window.warmupAutoPlayTimer);
 
-      // 🚀 手術點 A：隨機套用 1~4 號果凍漸層，並切換標題
-      const mainCard = document.getElementById('main-card');
-      mainCard.classList.remove('warmup-bg-1', 'warmup-bg-2', 'warmup-bg-3', 'warmup-bg-4');
+      document.body.classList.remove('warmup-bg-1', 'warmup-bg-2', 'warmup-bg-3', 'warmup-bg-4');
       const randomBg = Math.floor(Math.random() * 4) + 1;
-      mainCard.classList.add(`warmup-bg-${randomBg}`);
+      document.body.classList.add(`warmup-bg-${randomBg}`);
       document.getElementById('normal-header').style.display = 'none';
       document.getElementById('warmup-header').style.display = 'flex';
       document.getElementById('warmup-check').classList.remove('check-pop'); // 確保打勾藏起來
@@ -2686,9 +2718,11 @@
 
   // 🎙️ 建立開口決戰區 
   function setupProductionZone(current) {
-      // 🚀 進入嚴肅錄音區，洗掉所有的漸層果凍色，恢復純白！
-      const mainCard = document.getElementById('main-card');
-      mainCard.classList.remove('warmup-bg-1', 'warmup-bg-2', 'warmup-bg-3', 'warmup-bg-4');
+
+      // 🚀 改成這樣，並且控制底部控制台的顯示邏輯：
+      document.body.classList.remove('warmup-bg-1', 'warmup-bg-2', 'warmup-bg-3', 'warmup-bg-4');
+      document.getElementById('record-btn').style.display = 'block';
+      document.getElementById('status').style.display = 'block';
       document.getElementById('normal-header').style.display = 'block';
       document.getElementById('warmup-header').style.display = 'none';
       
