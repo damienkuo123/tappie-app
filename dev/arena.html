@@ -2023,7 +2023,11 @@
   }
 
   const originalOnload = async () => {
-    if(TARGET_UNIT) document.getElementById('unit-title-display').innerText = `今天挑戰：${TARGET_UNIT}`;
+    if(TARGET_UNIT) {
+        const unitDisplay = document.getElementById('unit-title-display');
+        if (unitDisplay) unitDisplay.innerText = `今天挑戰：${TARGET_UNIT}`;
+    }
+    
     playMascot('setup-mascot', 'idle'); // 開始畫面精靈待機
     
     // 初始化底座按鈕為「開始」
