@@ -2891,6 +2891,12 @@
                                 window.feedbacks[currentIndex] = data.feedback;
                                 
                                 // 🚀 關鍵：一鍵恢復所有按鈕觸發與樣式！
+                                // 存入數據
+                                scores[currentIndex] = data.score; 
+                                if(!window.feedbacks) window.feedbacks = [];
+                                window.feedbacks[currentIndex] = data.feedback;
+                                 
+                                // 🚀 重新渲染目前畫面，觸發按鈕解鎖與精靈變更！
                                 renderWord();
                             }).catch(() => {
                                 document.getElementById('status').innerText = "⚠️ 導師寫評語失敗";
