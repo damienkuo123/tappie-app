@@ -2372,50 +2372,6 @@
       if (statusEl) { statusEl.innerText = "按住錄音，放開打分"; statusEl.style.color = "#afafaf"; }
   }
 
-  // 🏆 結算與傳送機制
-  function showSummary() {
-    document.getElementById('top-nav-bar').style.display = 'none';
-    document.getElementById('studio').style.display = 'none';
-    document.getElementById('summary').style.display = 'block';
-    
-    let sum = 0, count = 0;
-    const list = document.getElementById('word-list');
-    list.innerHTML = "";
-
-    quizData.forEach((item, i) => {
-      let s = scores[i] || 0;
-      let f = (window.feedbacks && window.feedbacks[i]) ? window.feedbacks[i] : "尚未錄音";
-      sum += s; count++;
-      list.innerHTML += `<tr><td><b style="color:#0d47a1">${item.en}</b><br><span style="color:#afafaf; font-size:14px">${item.zh}</span><br><p style="margin:5px 0; font-size:13px; color:#4b4b4b;">💡 ${f}</p></td><td><span class="score-badge">${s} 分</span></td></tr>`;
-    });
-
-    const avg = count > 0 ? Math.round(sum / count) : 0;
-    document.getElementById('total-avg').innerText = avg;
-    const rewardHint = document.getElementById('reward-hint');
-
-    if (MODE === 'review') {
-        rewardHint.innerText = `✅ 練習完成！`;
-        setDockButton('完成練習', true, () => handleClaimReward(avg, 0));
-    } else {
-        if (avg >= 70) {
-            let reward = (avg >= 90) ? 30 : (avg >= 80 ? 10 : 0);
-            rewardHint.innerText = reward > 0 ? `🎁 可獲得：${reward} 點` : `✅ 挑戰成功！`;
-            
-            setDockButton('領取獎勵', true, () => {
-                document.getElementById('summary').style.display = 'none';
-                document.querySelector('.bottom-dock').style.display = 'none'; 
-                document.getElementById('epic-reward-zone').style.display = 'flex';
-                document.getElementById('reward-points-display').innerText = reward;
-                
-                playMascot('epic-mascot', 'epic'); 
-                handleClaimReward(avg, reward);
-            });
-        } else {
-            rewardHint.innerText = `❌ 平均需達 70 分才能領獎`;
-            setDockButton('平均需達 70 分才能領獎', false, null);
-        }
-    }
-  }
 
   function handleClaimReward(avg, reward) {
     let detailArr = quizData.map((item, i) => ({
