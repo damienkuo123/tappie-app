@@ -2262,8 +2262,13 @@
       const skeletonContainer = document.getElementById('warmup-word-skeleton');
       const optionsContainer = document.getElementById('warmup-options');
       
-      // 清空所有容器狀態
+      // 🚀 手術點 1：防快速切換爆版：清除上一次還沒執行的自動發音計時器
+      if (window.warmupAutoPlayTimer) clearTimeout(window.warmupAutoPlayTimer);
+
+      // 每次進入前先清空容器與排版
       skeletonContainer.innerHTML = '';
+      // 🚀 手術點 2：加上 removeAttribute，確保排版樣式徹底清空
+      optionsContainer.removeAttribute('class');
       optionsContainer.innerHTML = '';
       optionsContainer.className = ''; 
       imgEl.style.display = 'none';
