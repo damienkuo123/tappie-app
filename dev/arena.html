@@ -123,114 +123,38 @@
     .colored-char { font-weight: bold; transition: color 0.3s ease; }
     .word-omission { color: #b2bec3 !important; text-decoration: line-through; opacity: 0.5; }
     
-    /* =======================================================
-       🌟 瑪麗安 3.0：Duolingo 級全螢幕與底部控制台
-       ======================================================= */
-    
-    /* 🚀 1. 解放全螢幕與基礎背景 */
-    body {
-      font-family: 'Nunito', -apple-system, sans-serif;
-      text-align: center; margin: 0; padding: 0;
-      user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
-      min-height: 100vh; min-height: 100dvh;
-      background: #ffffff; /* 預設白色，給口說錄音用 */
-      transition: background 0.4s ease; 
-      color: #4b4b4b; /* Duolingo 標準深灰字 */
+    body { font-family: -apple-system, sans-serif; text-align: center; padding: 20px; background: #eaeff2; margin: 0; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+    .main-panel { 
+      background: white; padding: 25px; border-radius: 28px; 
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15); max-width: 400px; 
+      margin: 10px auto; border: 1px solid #ddd; 
+      position: relative; z-index: 100; /* 🚀 確保面板在所有東西上面 */
     }
     
-    /* 拔掉白底方框，讓容器透明並撐滿，底部留 150px 給固定按鈕 */
-    .main-panel {
-      background: transparent; border: none; box-shadow: none; border-radius: 0;
-      width: 100%; max-width: 600px; margin: 0 auto;
-      padding: max(15px, env(safe-area-inset-top)) 20px 150px; 
-      box-sizing: border-box; display: flex; flex-direction: column;
+    /* 🚀 讓按鈕在被按下去時有明顯的觸感回饋 */
+    .btn:active, .btn-play:active { transform: scale(0.92); opacity: 0.8; }
+    #record-btn { background: var(--marian-red); width: 110px; height: 110px; border-radius: 50%; border: 8px solid white; font-size: 45px; box-shadow: 0 6px 15px rgba(214, 48, 49, 0.4); margin: 20px auto; cursor: pointer; display: none; outline: none; }
+    #record-btn.active { transform: scale(0.95); background: #333; animation: pulse 1s infinite; }
+    @keyframes pulse { 0% { box-shadow: 0 0 0 0px rgba(214, 48, 49, 0.4); } 100% { box-shadow: 0 0 0 20px rgba(214, 48, 49, 0); } }
+    .btn-play { background: var(--primary-blue); width: 45px; height: 45px; border-radius: 50%; border: none; color: white; font-size: 20px; cursor: pointer; margin-left: 10px; vertical-align: middle; box-shadow: 0 3px 6px rgba(0,0,0,0.1); }
+    .btn { padding: 12px 25px; border-radius: 12px; font-weight: bold; border: none; cursor: pointer; color: white; margin: 5px; box-shadow: 0 4px 0 rgba(0,0,0,0.2); }
+    .btn-nav { background: #4b6584; border-bottom: 4px solid #2c3e50; }
+    .btn-nav:disabled { background: #ccc; border-bottom: none; }
+    .btn-finish { width: 100%; font-size: 22px; padding: 20px; margin-top: 20px; border-bottom: 5px solid rgba(0,0,0,0.2); transition: 0.3s; }
+    .btn-finish:disabled { background: #636e72 !important; cursor: not-allowed; border-bottom: none; opacity: 0.7; }
+    .progress-bar { width: 100%; background: #dfe6e9; height: 12px; border-radius: 6px; margin-bottom: 20px; overflow: hidden; border: 1px solid #ccc; }
+    .progress-fill { 
+      background: var(--primary-blue); 
+      background-color: #0066cc; /* 🚀 備用色：確保變數失效時還是藍色 */
+      height: 100%; 
+      width: 0%; 
+      transition: 0.5s; 
     }
-    
-    /* 🎨 2. Duolingo 高純度實體漸層 (直接打在 body 上) */
-    body.warmup-bg-1 { background: linear-gradient(180deg, #a453f5 0%, #7e22ce 100%); } /* 💜 寶石紫 */
-    body.warmup-bg-2 { background: linear-gradient(180deg, #38bdf8 0%, #0284c7 100%); } /* 💙 天空藍 */
-    body.warmup-bg-3 { background: linear-gradient(180deg, #28ca63 0%, #15a34a 100%); } /* 💚 翡翠綠 */
-    body.warmup-bg-4 { background: linear-gradient(180deg, #fb923c 0%, #c2410c 100%); } /* 🧡 活力橘 */
-
-    /* 頂部進度條 */
-    .progress-bar { width: 100%; background: #e5e5e5; height: 16px; border-radius: 10px; margin-bottom: 20px; overflow: hidden; border: none; }
-    .progress-fill { background: #58cc02; height: 100%; width: 0%; transition: width 0.5s ease-out; border-radius: 10px; }
-
-    /* 🚀 3. 底部固定控制台 (永遠黏在最下方) */
-    .bottom-controls-dock {
-      position: fixed; bottom: 0; left: 0; width: 100%;
-      background: #ffffff; border-top: 2px solid #e5e5e5;
-      padding: 15px 20px max(20px, env(safe-area-inset-bottom));
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      z-index: 500; box-sizing: border-box; gap: 10px; transition: background 0.4s, border-color 0.4s;
-    }
-    /* 暖身狀態下，控制台透明融入背景 */
-    body[class*="warmup-bg-"] .bottom-controls-dock { background: transparent; border-top-color: transparent; }
-    .nav-btn-group { display: flex; justify-content: center; width: 100%; max-width: 560px; gap: 15px; }
-
-    /* 🚀 4. Duolingo 導航大按鈕 */
-    .btn-nav, .btn-finish, #start-btn {
-      flex: 1; padding: 16px; font-size: 18px; font-weight: 800; letter-spacing: 1px;
-      border-radius: 16px; cursor: pointer; text-transform: uppercase;
-      background: #58cc02; color: white; border: none; box-shadow: 0 4px 0 #58a700;
-      transition: transform 0.1s, box-shadow 0.1s, background 0.2s; width: 100%; max-width: 400px;
-    }
-    .btn-nav:active, .btn-finish:active, #start-btn:active { transform: translateY(4px); box-shadow: 0 0px 0 #58a700; }
-    .btn-nav:disabled, .btn-finish:disabled { background: #e5e5e5; color: #afafaf; box-shadow: none; transform: none; cursor: not-allowed; }
-    
-    /* 次要按鈕 (上一題) */
-    #prev-btn { background: #ffffff; color: #afafaf; border: 2px solid #e5e5e5; box-shadow: 0 4px 0 #e5e5e5; }
-    #prev-btn:active { transform: translateY(4px); box-shadow: 0 0px 0 #e5e5e5; }
-    
-    /* 暖身模式下的按鈕反白 */
-    body[class*="warmup-bg-"] .btn-nav, body[class*="warmup-bg-"] #start-btn { background: #ffffff; color: #1cb0f6; box-shadow: 0 4px 0 rgba(0,0,0,0.2); border: none; }
-    body[class*="warmup-bg-"] .btn-nav:active, body[class*="warmup-bg-"] #start-btn:active { box-shadow: 0 0px 0 rgba(0,0,0,0.2); }
-
-    /* 🚀 5. 遊戲按鈕與圖片外框質感 */
-    .warmup-visual-card { 
-      background: white; border-radius: 24px; padding: 10px; margin: 0 auto 30px; 
-      box-shadow: 0 8px 0 rgba(0,0,0,0.1); width: 100%; max-width: 320px; 
-    }
-    #warmup-img { border-radius: 18px; width: 100%; height: auto; object-fit: cover; display: none; }
-
-    .btn-choice-list, .btn-tap-fill, .btn-image-choice, .ws-letter {
-      background: #ffffff; border: 2px solid #e5e5e5; border-bottom-width: 4px; border-radius: 16px;
-      color: #4b4b4b; cursor: pointer; user-select: none; font-weight: 800; text-align: center;
-      transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.1s, border-bottom-width 0.1s;
-    }
-    .btn-choice-list:active, .btn-tap-fill:active, .btn-image-choice:active, .ws-letter:active {
-      border-bottom-width: 0px; transform: translateY(4px); background: #f7f7f7;
-    }
-    /* 答對狀態 */
-    .btn-choice-list.correct, .btn-tap-fill.correct, .btn-image-choice.correct, .ws-letter.correct-path {
-      background: #d7ffb8; border-color: #58cc02; border-bottom-color: #58cc02; color: #58a700; pointer-events: none;
-    }
-    /* 答錯狀態 */
-    .btn-choice-list.wrong, .btn-tap-fill.wrong {
-      background: #ffdfe0; border-color: #ff4b4b; border-bottom-color: #ff4b4b; color: #ea1537;
-      animation: shake-soft 0.4s ease-in-out;
-    }
-
-    /* 🌟 白字發光標題 & 克制的字體大小 */
-    .warmup-title-text { color: #ffffff !important; font-size: 24px; text-shadow: 0 4px 0 rgba(0,0,0,0.15); margin-bottom: 20px; }
-    #word-display { font-size: clamp(28px, 8vw, 40px) !important; color: #4b4b4b; text-shadow: none; margin-bottom: 5px; }
-    #production-zh { font-size: 18px; color: #afafaf; font-weight: bold; margin-bottom: 20px; }
-    
-    /* 🎤 錄音麥克風按鈕更新 (像 Duolingo 藍色主按鈕) */
-    #record-btn { 
-      background: #1cb0f6; width: 100px; height: 100px; border-radius: 50%; border: none; 
-      font-size: 40px; box-shadow: 0 6px 0 #1899d6; margin: 10px auto; color: white; cursor: pointer; outline: none; 
-      transition: transform 0.1s, box-shadow 0.1s, background 0.1s; 
-    }
-    #record-btn:active, #record-btn.active { transform: translateY(6px); box-shadow: 0 0px 0 #1899d6; background: #1480b3; }
-    
-    /* 暖身模式下，底部控制台變成透明，融入漸層背景 */
-    body[class*="warmup-bg"] .bottom-controls-dock {
-      background: transparent; box-shadow: none; border-top: none; backdrop-filter: none;
-    }
-    
-    .nav-btn-group { display: flex; justify-content: center; width: 100%; max-width: 400px; gap: 15px; }
-    .nav-btn-group .btn { flex: 1; margin: 0; padding: 15px; font-size: 18px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; background: #fff; border-radius: 10px; overflow: hidden; }
+    td { padding: 12px; border-bottom: 1px solid #eee; text-align: left; }
+    .score-badge { float: right; font-weight: bold; color: var(--primary-blue); font-size: 18px; }
+    .btn-re { background: var(--marian-red); font-size: 13px; padding: 6px 12px; border-radius: 8px; color: white; border: none; cursor: pointer; font-weight: bold; }
+    #zh-display { font-size: 20px; color: #7f8c8d; margin: -10px 0 20px 0; font-weight: bold; }
 
     /* ========================================= */
     /* 🚀 傳送門：頂級 3D 全息對峙 Loading 畫面 (終極隔離防擋版) */
@@ -1250,6 +1174,7 @@
       min-height: 250px; animation: fadeIn 0.4s ease-out;
     }
 
+    /* 🖼️ 精緻拍立得相框 (視覺卡片) */
     .warmup-visual-card {
       background: #ffffff; border-radius: 24px; padding: 12px;
       margin-bottom: 30px; 
@@ -1258,7 +1183,6 @@
       display: flex; justify-content: center; align-items: center; 
       min-height: 140px; border: 1px solid #f1f5f9;
       transition: transform 0.3s;
-      flex-shrink: 0; /* 🚀 手術點：鎖死大小，絕對不准被瀏覽器擠扁！ */
     }
     .warmup-visual-card:hover { transform: translateY(-3px); }
     #warmup-img { width: 100%; height: auto; border-radius: 16px; object-fit: cover; display: none; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
@@ -1492,54 +1416,47 @@
     <p id="info-text">正在開啟麥克風...</p>
     <button class="btn" style="background:var(--primary-blue); font-size: 22px; padding: 18px 40px; border-bottom: 4px solid #003366;" id="start-btn" style="display:none;">開始挑戰</button>
   </div>
-  <div id="studio" style="display:none; height: 100%; display: flex; flex-direction: column;">
+  <div id="studio" style="display:none;">
+    <p style="color:var(--primary-blue); font-weight:bold; margin-bottom: 15px;">第 <span id="idx-display">1</span> / <span id="total-display">0</span> 題</p>
     
-    <div style="display:flex; flex-direction:column; align-items:center; margin-bottom: 15px; min-height: 25px; flex-shrink: 0;">
-       <p id="normal-header" style="color:var(--primary-blue); font-weight:bold; margin: 0;">第 <span id="idx-display">1</span> / <span id="total-display">0</span> 題</p>
-       <div id="warmup-header" class="warmup-title-text" style="display:none; font-weight:900; font-size: 20px; align-items: center; gap: 8px; margin: 0;">
-          ✨ 暖身運動 Exercise <span id="warmup-check" style="opacity:0; transform:scale(0); font-size: 24px; text-shadow:none;">✅</span>
+    <div id="warmup-zone">
+       <div class="warmup-visual-card">
+          <img id="warmup-img" src="" alt="提示圖片">
+          <div id="warmup-zh"></div>
+          
+          <button id="warmup-audio-btn" class="btn-listen-huge">
+            <span class="icon">👂</span>
+            <span class="text">聽音辨字</span>
+          </button>
        </div>
-    </div>
-    
-    <div style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
-        
-        <div id="warmup-zone">
-           <div class="warmup-visual-card">
-              <img id="warmup-img" src="" alt="提示圖片">
-              <div id="warmup-zh"></div>
-              <button id="warmup-audio-btn" class="btn-listen-huge"><span class="icon">👂</span><span class="text">聽音辨字</span></button>
-           </div>
-           
-           <div id="warmup-audio-hint" class="audio-hint-box">
-               <span style="font-size:18px;">🔕</span>
-               <span style="text-align:left; line-height:1.3;">聽不到聲音？<br>請確認手機未開啟靜音</span>
-           </div>
-    
-           <div id="warmup-word-skeleton"></div>
-           <div id="warmup-options"></div>
-        </div>
-    
-        <div id="production-zone" style="display:none; flex-direction: column; align-items: center;">
-          <button id="play-btn" class="btn-play-pill" style="margin-bottom: 15px;"><span>🔊</span> <span>標準發音</span></button>
-          
-          <h1 id="word-display" style="font-size: clamp(35px, 10vw, 55px) !important; margin: 0 0 10px 0;">載入中...</h1>
-          <div id="production-zh" style="font-size: 20px; color: #7f8c8d; font-weight: bold;"></div>
-          
-          <div id="feedback" style="font-size: 22px; font-weight: 800; color: var(--marian-green); margin-top: 15px; min-height: 30px;"></div>
-        </div>
-
-    </div>
-
-    <div class="bottom-controls-dock" id="bottom-controls-dock">
-       <button type="button" id="record-btn" oncontextmenu="return false;" style="display: none;">🎤</button>
-       <p id="status" style="display: none;">按住錄音，放開打分</p>
        
-       <div class="nav-btn-group">
-         <button class="btn btn-nav" id="prev-btn">上一題</button>
-         <button class="btn btn-nav" id="next-btn">繼續</button>
+       <div id="warmup-audio-hint" class="audio-hint-box">
+           <span style="font-size:18px;">🔕</span>
+           <span style="text-align:left; line-height:1.3;">聽不到聲音？<br>請確認手機未開啟靜音</span>
        </div>
+
+       <div id="warmup-word-skeleton"></div>
+       <div id="warmup-options"></div>
     </div>
 
+    <div id="production-zone" style="display:none;">
+      <div style="min-height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px 0; margin-bottom: 0px;">
+        <button id="play-btn" class="btn-play-pill" style="margin-bottom: 10px;">
+          <span>🔊</span> <span>標準發音</span>
+        </button>
+        <h1 id="word-display">載入中...</h1>
+        <div id="production-zh" style="font-size: 22px; color: #7f8c8d; margin-top: 5px; font-weight: bold; letter-spacing: 1px;"></div>
+      </div>
+      <button type="button" id="record-btn" oncontextmenu="return false;" style="margin-top: 0px;">🎤</button>
+      <p id="status" style="font-weight:bold; color:#636e72; margin-top: 5px;">按住錄音，放開打分</p>
+      <div id="feedback" style="font-size: 26px; font-weight: 800; color: var(--marian-green); margin-top: 10px;"></div>
+    </div>
+
+    <div style="margin-top: 30px; display:flex; justify-content:center;">
+      <button class="btn btn-nav" id="prev-btn">◀ 上一題</button>
+      <button class="btn btn-nav" id="next-btn">下一題 ▶</button>
+      <button class="btn btn-nav" id="back-summary-btn" style="display:none; background:var(--marian-green); border-bottom:4px solid #1e8449;">返回結算頁</button>
+    </div>
   </div>
   <div id="summary" style="display:none;">
     <h2 id="summary-title" style="color:var(--primary-blue); margin-bottom:5px;">學習總結</h2>
@@ -2333,102 +2250,113 @@
         }
     }
   }
-  // 🎮 建立暖身小遊戲 (五大模式智能派題引擎 - 終極記憶鎖定版)
+  // 🎮 建立暖身小遊戲 (五大模式智能派題引擎 - 狀態鎖定版)
   function setupWarmupZone(current) {
+      // 🚀 手術點 1：抓取父容器，我們準備進行實體重建
       const visualCard = document.querySelector('.warmup-visual-card');
       const audioHint = document.getElementById('warmup-audio-hint'); 
       const skeletonContainer = document.getElementById('warmup-word-skeleton');
       const optionsContainer = document.getElementById('warmup-options');
       
+      // 🚀 手術點 2：防快速切換爆版：清除上一次還沒執行的自動發音計時器
       if (window.warmupAutoPlayTimer) clearTimeout(window.warmupAutoPlayTimer);
 
-      // 找到設定背景的地方，改成 targeting document.body
-      document.body.classList.remove('warmup-bg-1', 'warmup-bg-2', 'warmup-bg-3', 'warmup-bg-4');
-      const randomBg = Math.floor(Math.random() * 4) + 1;
-      document.body.classList.add(`warmup-bg-${randomBg}`);
-      
-      document.getElementById('normal-header').style.display = 'none';
-      document.getElementById('warmup-header').style.display = 'flex';
-      document.getElementById('warmup-check').classList.remove('check-pop'); // 確保打勾藏起來
-
+      // 每次進入前先清空容器與排版
       skeletonContainer.innerHTML = '';
       optionsContainer.removeAttribute('class');
       optionsContainer.innerHTML = '';
       optionsContainer.className = ''; 
       audioHint.style.display = 'none'; 
 
-      // 🚀 手術點 2：暴力清場！重建乾淨的 DOM 元素，杜絕上一頁的圖片 src 殘留
+      // 🚀 手術點 3：暴力清場！直接清空整個視覺卡片，重新塞入乾淨的元素
       visualCard.innerHTML = `
           <img id="warmup-img" src="" alt="提示圖片" style="display: none; width: 100%; height: auto; border-radius: 16px; object-fit: cover; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
           <div id="warmup-zh" style="display: none; font-size: clamp(24px, 7vw, 32px); font-weight: 900; color: #334155; letter-spacing: 2px; word-break: break-word; overflow-wrap: break-word; text-align: center; width: 100%; line-height: 1.4; padding: 10px;"></div>
           <button id="warmup-audio-btn" class="btn-listen-huge" style="display: none;">
-            <span class="icon">👂</span><span class="text">聽音辨字</span>
+            <span class="icon">👂</span>
+            <span class="text">聽音辨字</span>
           </button>
       `;
 
+      // 重新抓取剛剛建立好的乾淨元素
       const imgEl = document.getElementById('warmup-img');
       const zhEl = document.getElementById('warmup-zh');
       const audioBtn = document.getElementById('warmup-audio-btn');
 
       // 🧠 1. 條件判定 (Rules Engine) 與 記憶卡系統
+
+      // 如果 assignedWarmupModes 陣列還沒初始化，就先建立它
       if (typeof assignedWarmupModes === 'undefined' || assignedWarmupModes.length === 0) {
           window.assignedWarmupModes = new Array(quizData.length).fill(null);
-      }
-      // 🚀 手術點 3：新增「選項記憶卡」，記住抽出來的圖片跟矩陣，防重抽！
-      if (typeof window.warmupDataMemory === 'undefined') {
-          window.warmupDataMemory = new Array(quizData.length).fill(null);
       }
 
       let warmupMode = assignedWarmupModes[currentIndex];
 
+      // 如果是 null，代表是第一次進入這題，才需要執行派題引擎
       if (warmupMode === null) {
           const hasImage = (current.img && current.img.trim() !== "");
           const wordLen = current.en.length;
           const isSentence = current.en.includes(" ");
+          // 判斷題庫中是否有足夠的其他圖片來做為干擾項 (至少要有 3 張其他的)
           const availableImages = quizData.filter(q => q.en !== current.en && q.img && q.img.trim() !== "");
           const canPlayImageChoice = hasImage && availableImages.length >= 3;
 
-          let availableModes = [0, 2]; 
+          let availableModes = [0, 2]; // 絕對安全的保底模式
           
           if (wordLen >= 3 && !isSentence) {
-              availableModes.push(1); 
-              availableModes.push(4); 
+              availableModes.push(1); // 允許拼字
+              availableModes.push(4); // 允許果凍矩陣
           }
           if (canPlayImageChoice) {
-              availableModes.push(3); 
+              availableModes.push(3); // 允許圖片四選一
           }
 
+          // 為了確保機率平均，我們直接用隨機數，一直抽到合法模式為止
           let candidateMode;
           let safeCounter = 0;
           do {
-              candidateMode = Math.floor(Math.random() * 5); 
+              candidateMode = Math.floor(Math.random() * 5); // 隨機抽 0~4
               safeCounter++;
-              if (safeCounter > 50) { candidateMode = availableModes[0]; break; } 
+              if (safeCounter > 50) { candidateMode = availableModes[0]; break; } // 防呆：避免無限迴圈
           } while (!availableModes.includes(candidateMode));
           
           warmupMode = candidateMode;
+
+          // 關鍵：將抽到的結果存入記憶卡，這題以後永遠鎖死這個模式！
           assignedWarmupModes[currentIndex] = warmupMode; 
-      } 
+
+          console.log(`[派題引擎] 第 ${currentIndex + 1} 題首次分配模式: ${warmupMode}, 可選池: ${availableModes}`);
+      } else {
+          console.log(`[記憶卡讀取] 第 ${currentIndex + 1} 題已鎖定模式: ${warmupMode}`);
+      }
 
       // 🛡️ 2. 上方視覺區渲染
       if (warmupMode === 2) {
-          audioBtn.style.display = 'flex'; 
-          audioHint.style.display = 'flex'; 
+          // 模式 2：純聽音
+          audioBtn.style.display = 'flex'; // 🚀 使用 flex 讓內部元素置中
+          audioHint.style.display = 'flex'; // 🚀 顯示防呆提示
+
           audioBtn.onclick = () => {
+              // 點擊時的果凍微動畫 (不用管 scale，因為 CSS 已經寫了 :active 下沉)
               audioBtn.style.transform = "scale(1.1)";
               setTimeout(() => audioBtn.style.transform = "scale(1)", 150);
               speakWordCloudCached(current.en, 1.8, null, null);
           };
+          
+          // 進入這題時，延遲 0.3 秒「自動唸一次」，並將 timer 存起來以便能被清除
           window.warmupAutoPlayTimer = setTimeout(() => { 
               if(document.getElementById('arcade-zone') && document.getElementById('arcade-zone').style.display !== 'none') audioBtn.click(); 
+              // 注意：因為我們目前沒有用 arcade-zone，我幫你加上安全的判斷
               else if(audioBtn.style.display !== 'none') audioBtn.click();
           }, 300);
       } else if (warmupMode === 3) {
-          zhEl.innerText = current.en; 
+          // 模式 3：圖片四選一 (上方只顯示單字/中文)
+          zhEl.innerText = current.en; // 上方顯示目標單字
           zhEl.style.fontSize = "clamp(30px, 8vw, 45px)";
           zhEl.style.display = 'block';
           zhEl.style.color = "var(--primary-blue)";
       } else {
+          // 模式 0, 1, 4：看圖發音 (有圖顯示圖，沒圖換中文)
           if (current.img && current.img.trim() !== "") {
               imgEl.src = current.img.includes('sz=') ? current.img.replace(/sz=w\d+/, 'sz=w400') : current.img;
               imgEl.style.display = 'block';
@@ -2443,18 +2371,10 @@
       // ==========================================
       // 🕹️ 3. 下方互動區渲染與邏輯
       // ==========================================
-      // 🚀 手術點：移除導致按鈕失效的危險 CSS 動畫，回歸最穩定的 display 切換
+      
       const proceedToNext = () => {
           try { const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3'); audio.volume=0.5; audio.play(); } catch(e){}
-          
-          // 彈出綠色打勾！
-          document.getElementById('warmup-check').classList.add('check-pop');
-          
-          setTimeout(() => { 
-              // 停頓 0.6 秒讓學生看到打勾後，直接、乾淨地切換到錄音區！絕對不會卡按鈕！
-              warmupPassed[currentIndex] = true; 
-              renderWord(); 
-          }, 600); 
+          setTimeout(() => { warmupPassed[currentIndex] = true; renderWord(); }, 600);
       };
 
       const handleWrong = (element) => {
@@ -2464,78 +2384,70 @@
       };
 
       if (warmupMode === 0 || warmupMode === 2) {
+          // 📌 模式 0/2：經典文字四選一
           skeletonContainer.style.display = 'none';
           optionsContainer.classList.add('list-mode');
 
-          // 🚀 讀取或儲存干擾項
-          if (!window.warmupDataMemory[currentIndex]) {
-              let distractors = getWordDistractors(current.en, 3);
-              window.warmupDataMemory[currentIndex] = [current.en, ...distractors].sort(() => Math.random() - 0.5);
-          }
-          let finalOptions = window.warmupDataMemory[currentIndex];
+          let distractors = getWordDistractors(current.en, 3);
+          let finalOptions = [current.en, ...distractors].sort(() => Math.random() - 0.5);
 
           finalOptions.forEach(opt => {
               let btn = document.createElement('button');
               btn.className = 'btn-choice-list'; 
               btn.innerText = opt;
               btn.onclick = function() {
-                  if (opt === current.en) { this.classList.add('correct'); proceedToNext(); } 
-                  else { handleWrong(this); }
+                  if (opt === current.en) {
+                      this.classList.add('correct'); proceedToNext();
+                  } else { handleWrong(this); }
               };
               optionsContainer.appendChild(btn);
           });
 
       } else if (warmupMode === 3) {
+          // 📌 模式 3：圖片四選一 (2x2 網格)
           skeletonContainer.style.display = 'none';
           optionsContainer.classList.add('grid-image-mode');
 
-          // 🚀 讀取或儲存圖片干擾項
-          if (!window.warmupDataMemory[currentIndex]) {
-              let distractors = getImageDistractors(current.en, 3);
-              window.warmupDataMemory[currentIndex] = [{img: current.img, isCorrect: true}, ...distractors].sort(() => Math.random() - 0.5);
-          }
-          let finalOptions = window.warmupDataMemory[currentIndex];
+          let distractors = getImageDistractors(current.en, 3);
+          // 把正確答案的物件跟干擾圖包裝在一起
+          let finalOptions = [{img: current.img, isCorrect: true}, ...distractors].sort(() => Math.random() - 0.5);
 
           finalOptions.forEach(opt => {
               let btn = document.createElement('button');
               btn.className = 'btn-image-choice';
+              
               let iEl = document.createElement('img');
               iEl.src = opt.img.includes('sz=') ? opt.img.replace(/sz=w\d+/, 'sz=w400') : opt.img;
-              iEl.style.pointerEvents = 'none';
               btn.appendChild(iEl);
 
               btn.onclick = function() {
-                  if (opt.isCorrect) { 
-                      // 🚀 修復：只有答對了，才加上 has-answered 讓其他圖片變暗！
-                      optionsContainer.classList.add('has-answered'); 
-                      this.classList.add('correct'); 
-                      proceedToNext(); 
-                  } 
-                  else { handleWrong(this); }
+                  optionsContainer.classList.add('has-answered'); // 讓其他圖變暗
+                  if (opt.isCorrect) {
+                      this.classList.add('correct'); proceedToNext();
+                  } else { handleWrong(this); }
               };
               optionsContainer.appendChild(btn);
           });
 
       } else if (warmupMode === 1) {
+          // 📌 模式 1：填空拼字 (Tap-to-Fill)
           skeletonContainer.style.display = 'flex'; 
 
           const wordStr = current.en.toUpperCase();
-          
-          // 🚀 讀取或儲存拼字資料
-          if (!window.warmupDataMemory[currentIndex]) {
-              let targetCharObj = extractMissingTarget(wordStr); 
-              let options = generateDistractors(targetCharObj.char);
-              window.warmupDataMemory[currentIndex] = { targetCharObj, options };
-          }
-          let { targetCharObj, options } = window.warmupDataMemory[currentIndex];
+          let targetCharObj = extractMissingTarget(wordStr); 
           
           for (let i = 0; i < wordStr.length; i++) {
               let char = wordStr[i];
-              if (char === ' ' || char === '-') skeletonContainer.innerHTML += `<span style="width: 15px;"></span>`;
-              else if (i === targetCharObj.index) skeletonContainer.innerHTML += `<span class="skeleton-char" id="skel-target"></span>`;
-              else skeletonContainer.innerHTML += `<span class="skeleton-char filled">${char}</span>`;
+              if (char === ' ' || char === '-') {
+                  skeletonContainer.innerHTML += `<span style="width: 15px;"></span>`;
+              } else if (i === targetCharObj.index) {
+                  skeletonContainer.innerHTML += `<span class="skeleton-char" id="skel-target"></span>`;
+              } else {
+                  skeletonContainer.innerHTML += `<span class="skeleton-char filled">${char}</span>`;
+              }
           }
 
+          let options = generateDistractors(targetCharObj.char);
           options.forEach(opt => {
               let btn = document.createElement('button');
               btn.className = 'btn-tap-fill'; 
@@ -2551,23 +2463,20 @@
               optionsContainer.appendChild(btn);
           });
       } else if (warmupMode === 4) {
+          // 📌 模式 4：果凍字母陣 (Word Search)
           skeletonContainer.style.display = 'none';
           optionsContainer.classList.add('word-search-mode');
           
-          const wordStr = current.en.toUpperCase().replace(/\s+/g, ''); 
-          
-          // 🚀 讀取或儲存矩陣資料，並動態確保陣列夠大！
-          if (!window.warmupDataMemory[currentIndex]) {
-              const cols = Math.max(6, wordStr.length + 2); // 確保欄數大於單字長度
-              const rows = Math.max(5, wordStr.length + 1); // 確保列數大於單字長度
-              const { matrix, path } = generateWordSearchMatrix(wordStr, cols, rows);
-              window.warmupDataMemory[currentIndex] = { cols, rows, matrix, path };
-          }
-          
-          const { cols, rows, matrix, path } = window.warmupDataMemory[currentIndex];
+          const word = current.en.toUpperCase().replace(/\s+/g, ''); // 拔除空格
+          // 決定陣列大小 (至少 6x4)
+          const cols = 6;
+          const rows = Math.max(4, Math.ceil((word.length + 10) / cols)); 
           optionsContainer.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+
+          // 生成矩陣與答案路徑
+          const { matrix, path } = generateWordSearchMatrix(word, cols, rows);
           
-          let selectedPath = []; 
+          let selectedPath = []; // 玩家點擊的歷史
 
           matrix.forEach((row, y) => {
               row.forEach((char, x) => {
@@ -2577,33 +2486,41 @@
                   btn.dataset.x = x; btn.dataset.y = y;
 
                   btn.onclick = function() {
+                      // 如果已經選了 2 個，就不給按
                       if (selectedPath.length >= 2) return;
+                      
+                      // 記錄點擊
                       selectedPath.push({x: x, y: y, el: this});
                       this.classList.add('selected');
 
                       if (selectedPath.length === 2) {
                           const p1 = selectedPath[0];
                           const p2 = selectedPath[1];
+                          
+                          // 檢查是否跟答案的起點/終點吻合 (順向或逆向都可以)
                           const isMatch = 
                               (p1.x === path[0].x && p1.y === path[0].y && p2.x === path[path.length-1].x && p2.y === path[path.length-1].y) ||
                               (p1.x === path[path.length-1].x && p1.y === path[path.length-1].y && p2.x === path[0].x && p2.y === path[0].y);
 
                           if (isMatch) {
+                              // ✅ 連線成功！波浪發光動畫
                               path.forEach((pObj, pIdx) => {
                                   setTimeout(() => {
+                                      // 根據 x, y 找到對應的按鈕
                                       let targetBtn = optionsContainer.children[pObj.y * cols + pObj.x];
                                       targetBtn.classList.remove('selected');
                                       targetBtn.classList.add('correct-path');
-                                  }, pIdx * 80); 
+                                  }, pIdx * 80); // 波浪延遲
                               });
                               proceedToNext();
                           } else {
+                              // ❌ 連線錯誤，彈回原狀
                               p1.el.classList.add('wrong-path');
                               p2.el.classList.add('wrong-path');
                               setTimeout(() => {
                                   p1.el.classList.remove('selected', 'wrong-path');
                                   p2.el.classList.remove('selected', 'wrong-path');
-                                  selectedPath = []; 
+                                  selectedPath = []; // 重置
                               }, 500);
                           }
                       }
@@ -2679,29 +2596,30 @@
       return distractors;
   }
 
-  // 輔助：生成果凍字母陣，並藏入單字 (🚀 加入數學防呆)
+  // 輔助：生成 6x4 果凍字母陣，並藏入單字
   function generateWordSearchMatrix(word, cols, rows) {
+      // 初始化空矩陣
       let matrix = Array(rows).fill(null).map(() => Array(cols).fill(''));
       const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+      
+      // 決定方向：0=水平右, 1=垂直下, 2=斜右下
       const dir = Math.floor(Math.random() * 3);
       let startX = 0, startY = 0;
       let path = [];
 
-      // 🚀 絕對防護：確保 Math.random 的乘數不會是負數
-      let maxStartX = Math.max(0, cols - word.length);
-      let maxStartY = Math.max(0, rows - word.length);
-
+      // 根據方向決定合法的起點範圍
       if (dir === 0) { // 水平
-          startX = Math.floor(Math.random() * (maxStartX + 1));
+          startX = Math.floor(Math.random() * (cols - word.length + 1));
           startY = Math.floor(Math.random() * rows);
       } else if (dir === 1) { // 垂直
           startX = Math.floor(Math.random() * cols);
-          startY = Math.floor(Math.random() * (maxStartY + 1));
+          startY = Math.floor(Math.random() * (rows - word.length + 1));
       } else { // 斜向
-          startX = Math.floor(Math.random() * (maxStartX + 1));
-          startY = Math.floor(Math.random() * (maxStartY + 1));
+          startX = Math.floor(Math.random() * (cols - word.length + 1));
+          startY = Math.floor(Math.random() * (rows - word.length + 1));
       }
 
+      // 把答案寫進矩陣，並記錄座標路徑
       for (let i = 0; i < word.length; i++) {
           let cx = startX + (dir === 0 || dir === 2 ? i : 0);
           let cy = startY + (dir === 1 || dir === 2 ? i : 0);
@@ -2709,6 +2627,7 @@
           path.push({x: cx, y: cy});
       }
 
+      // 剩下的空格填滿隨機字母
       for (let y = 0; y < rows; y++) {
           for (let x = 0; x < cols; x++) {
               if (matrix[y][x] === '') {
@@ -2716,19 +2635,12 @@
               }
           }
       }
+
       return { matrix, path };
   }
 
-  // 🎙️ 建立開口決戰區 
+  // 🎙️ 建立開口決戰區 (保留你原本的所有強大機制)
   function setupProductionZone(current) {
-
-      // 🚀 改成這樣，並且控制底部控制台的顯示邏輯：
-      // 進入錄音區時，洗掉 body 的漸層，讓他變回白色
-      document.body.classList.remove('warmup-bg-1', 'warmup-bg-2', 'warmup-bg-3', 'warmup-bg-4');
-      
-      document.getElementById('normal-header').style.display = 'block';
-      document.getElementById('warmup-header').style.display = 'none';
-      
       const wordDisplay = document.getElementById('word-display');
       const rb = document.getElementById('record-btn');
       
