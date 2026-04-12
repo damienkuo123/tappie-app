@@ -132,37 +132,38 @@
     }
     
     /* =======================================================
-       🌟 瑪麗安 3.0：暖身專屬 Juicy 果凍漸層與過關動畫
+       🌟 瑪麗安 3.0：隨機 Juicy 果凍漸層與無縫轉場
        ======================================================= */
     
-    /* 確保主卡片有平滑的過渡效果 */
-    .main-panel {
-      transition: background 0.6s ease, box-shadow 0.6s ease, border-color 0.6s ease !important;
+    /* 主卡片平滑過渡 */
+    .main-panel { transition: background 0.8s ease, box-shadow 0.8s ease, border-color 0.8s ease !important; }
+    
+    /* 🎨 4 種隨機的高級果凍漸層 (帶有呼吸晃動動畫) */
+    .warmup-bg-1 { background: linear-gradient(120deg, #e0c3fc 0%, #8ec5fc 100%); border-color: #cbb4f0; }
+    .warmup-bg-2 { background: linear-gradient(120deg, #f6d365 0%, #fda085 100%); border-color: #f6d365; }
+    .warmup-bg-3 { background: linear-gradient(120deg, #d4fc79 0%, #96e6a1 100%); border-color: #bbf08b; }
+    .warmup-bg-4 { background: linear-gradient(120deg, #ffecd2 0%, #fcb69f 100%); border-color: #ffd6b8; }
+    
+    .warmup-bg-1, .warmup-bg-2, .warmup-bg-3, .warmup-bg-4 {
+      background-size: 300% 300%;
+      animation: bg-sway 8s ease-in-out infinite alternate;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08), inset 0 0 20px rgba(255,255,255,0.7);
     }
     
-    /* 🚀 暖身狀態下的背景 (會像呼吸一樣緩慢移動的漸層) */
-    .main-panel.warmup-bg {
-      background: linear-gradient(120deg, #f0f9ff 0%, #e0f2fe 50%, #f0fdf4 100%);
-      background-size: 200% 200%;
-      animation: gradient-shift 4s ease infinite;
-      border-color: #bae6fd;
-      box-shadow: 0 15px 35px rgba(0, 102, 204, 0.12), inset 0 0 20px rgba(255,255,255,0.9);
-    }
-    @keyframes gradient-shift {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
+    /* 🌊 背景晃動呼吸動畫 */
+    @keyframes bg-sway { 0% { background-position: 0% 50%; } 100% { background-position: 100% 50%; } }
 
     /* ✅ 完成暖身的打勾彈出特效 */
-    .check-pop {
-      animation: check-pop-anim 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-    }
+    .check-pop { animation: check-pop-anim 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
     @keyframes check-pop-anim {
       0% { transform: scale(0) rotate(-20deg); opacity: 0; }
       50% { transform: scale(1.4) rotate(10deg); opacity: 1; }
       100% { transform: scale(1.1) rotate(0deg); opacity: 1; }
     }
+
+    /* 🎞️ 暖身區淡出轉場特效 */
+    #warmup-zone { opacity: 1; transform: translateY(0) scale(1); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    .fade-out-smooth { opacity: 0 !important; transform: translateY(-10px) scale(0.98) !important; pointer-events: none; }
     
     /* 🚀 讓按鈕在被按下去時有明顯的觸感回饋 */
     .btn:active, .btn-play:active { transform: scale(0.92); opacity: 0.8; }
@@ -2297,8 +2298,14 @@
       
       if (window.warmupAutoPlayTimer) clearTimeout(window.warmupAutoPlayTimer);
 
-      // 🚀 手術 3-A：套用漸層底色與暖身標題
-      document.getElementById('main-card').classList.add('warmup-bg'); 
+      // 🚀 確保每次進來都是顯示狀態，解除上一題的淡出隱形
+      document.getElementById('warmup-zone').classList.remove('fade-out-smooth');
+
+      // 🚀 隨機套用 1~4 號 Juicy 漸層，並確保打勾隱藏
+      const mainCard = document.getElementById('main-card');
+      mainCard.classList.remove('warmup-bg-1', 'warmup-bg-2', 'warmup-bg-3', 'warmup-bg-4');
+      const randomBg = Math.floor(Math.random() * 4) + 1;
+      mainCard.classList.add(`warmup-bg-${randomBg}`); 
       document.getElementById('normal-header').style.display = 'none';
       document.getElementById('warmup-header').style.display = 'flex';
       document.getElementById('warmup-check').classList.remove('check-pop'); // 確保打勾藏起來
@@ -2395,18 +2402,23 @@
       // ==========================================
       // 🕹️ 3. 下方互動區渲染與邏輯
       // ==========================================
-      // 🚀 手術 3-B：過關時先秀打勾，再切換畫面
+      // 🚀 修復：加入轉場淡出動畫
       const proceedToNext = () => {
           try { const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3'); audio.volume=0.5; audio.play(); } catch(e){}
           
           // 彈出綠色打勾！
           document.getElementById('warmup-check').classList.add('check-pop');
           
-          // 延遲 800 毫秒，讓學生看清楚打勾的成就感，然後才進入下一階段
           setTimeout(() => { 
-              warmupPassed[currentIndex] = true; 
-              renderWord(); 
-          }, 800);
+              // 1. 觸發暖身區塊的淡出動畫
+              document.getElementById('warmup-zone').classList.add('fade-out-smooth');
+              
+              // 2. 等待淡出動畫 (400ms) 播完後，再切換到錄音區塊
+              setTimeout(() => {
+                  warmupPassed[currentIndex] = true; 
+                  renderWord(); 
+              }, 400); 
+          }, 600); // 讓學生看 0.6 秒的打勾成就感
       };
 
       const handleWrong = (element) => {
@@ -2457,8 +2469,12 @@
               btn.appendChild(iEl);
 
               btn.onclick = function() {
-                  optionsContainer.classList.add('has-answered'); 
-                  if (opt.isCorrect) { this.classList.add('correct'); proceedToNext(); } 
+                  if (opt.isCorrect) { 
+                      // 🚀 修復：只有答對了，才加上 has-answered 讓其他圖片變暗！
+                      optionsContainer.classList.add('has-answered'); 
+                      this.classList.add('correct'); 
+                      proceedToNext(); 
+                  } 
                   else { handleWrong(this); }
               };
               optionsContainer.appendChild(btn);
@@ -2669,8 +2685,9 @@
 
   // 🎙️ 建立開口決戰區 
   function setupProductionZone(current) {
-      // 🚀 手術 3-C：移除漸層底色，恢復純白嚴肅的錄音標題
-      document.getElementById('main-card').classList.remove('warmup-bg');
+      // 🚀 進入嚴肅錄音區，洗掉所有的漸層果凍色，恢復純白！
+      const mainCard = document.getElementById('main-card');
+      mainCard.classList.remove('warmup-bg-1', 'warmup-bg-2', 'warmup-bg-3', 'warmup-bg-4');
       document.getElementById('normal-header').style.display = 'block';
       document.getElementById('warmup-header').style.display = 'none';
       
