@@ -2384,9 +2384,11 @@
       // 🚀 手術點 2：防快速切換爆版：清除上一次還沒執行的自動發音計時器
       if (window.warmupAutoPlayTimer) clearTimeout(window.warmupAutoPlayTimer);
 
-      // 👇 🚀 局部修正 3A：已經把上色代碼刪除了，直接進入重置畫面
-      document.getElementById('normal-header').style.display = 'none';
-      document.getElementById('warmup-header').style.display = 'flex';
+      // 🛡️ 防呆鎖：檢查舊版標籤是否存在，避免找不到而當機
+      const normalHeader = document.getElementById('normal-header');
+      if (normalHeader) normalHeader.style.display = 'none';
+      const warmupHeader = document.getElementById('warmup-header');
+      if (warmupHeader) warmupHeader.style.display = 'flex';
 
       // 🧠 1. 條件判定 (Rules Engine) 與 記憶卡系統
 
