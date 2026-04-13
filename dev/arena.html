@@ -671,12 +671,27 @@
   let audioContext, analyser, dataArray, source, gradingInterval;
   let maxVolume = 0;
 
-  // ⚓ 底部主按鈕全域控制器 (Bottom Docking Logic)
+  // ⚓ 底部主按鈕全域控制器 (包含狀態變色機制)
   window.currentDockAction = null;
   function handleDockClick() { if (window.currentDockAction) window.currentDockAction(); }
-  function setDockButton(text, isActive, actionFn) {
+  function setDockButton(text, isActive, actionFn, state = 'default') {
       const btn = document.getElementById('global-dock-btn');
-      if (btn) { btn.innerText = text; btn.className = isActive ? 'btn-dock active' : 'btn-dock disabled'; }
+      const dock = document.querySelector('.bottom-dock');
+      
+      if (btn) { 
+          btn.innerText = text; 
+          
+          if (!isActive) btn.className = 'btn-dock disabled';
+          else if (state === 'wrong') btn.className = 'btn-dock wrong-btn';
+          else btn.className = 'btn-dock active';
+      }
+      
+      if (dock) {
+          dock.className = 'bottom-dock'; // Reset
+          if (state === 'correct') dock.classList.add('correct-bg');
+          if (state === 'wrong') dock.classList.add('wrong-bg');
+      }
+      
       window.currentDockAction = isActive ? actionFn : null;
   }
 
