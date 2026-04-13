@@ -856,7 +856,11 @@
       const zhEl = document.getElementById('warmup-zh');
       const audioBtn = document.getElementById('warmup-audio-btn');
 
-      if (!assignedWarmupModes || assignedWarmupModes.length === 0) assignedWarmupModes = new Array(quizData.length).fill(null);
+      // 確保陣列有正確初始化
+      if (!assignedWarmupModes || assignedWarmupModes.length === 0) {
+          assignedWarmupModes = new Array(quizData.length).fill(null);
+      }
+
       let warmupMode = assignedWarmupModes[currentIndex];
 
       if (warmupMode === null) {
