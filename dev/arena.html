@@ -1391,11 +1391,13 @@
           
           playMascot('prod-mascot', currentScore >= 70 ? 'success' : 'fail', currentMascot); 
           
-          // 🚀 3. 三秒後，隱藏回饋，重新顯示「🔊 我來唸一次」
+          // 🚀 3. 六秒後，對話框收起評語，變回「我來唸一次」
           window.bubbleTimeout = setTimeout(() => {
               if (feedbackEl) feedbackEl.style.display = 'none';
               if (ttsBtnWrap) ttsBtnWrap.style.display = 'flex';
-          }, 3000);
+              // 確保精靈恢復閒置狀態
+              playMascot('prod-mascot', 'idle', currentMascot); 
+          }, 6000); // 延長到 6 秒
           
           const isPass = currentScore >= 70;
           setDockButton(
