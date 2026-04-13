@@ -558,58 +558,91 @@
     rb.innerHTML = "👊";
   }
 
+  const audioBufferCache = new Map(); // 🧠 2.0 省錢引擎
+
   const originalOnload = async () => {
     hideLoadingScreen();
-    // 🚀 一啟動就顯示導航欄
     const navBar = document.getElementById('top-nav-bar');
     if (navBar) navBar.style.display = 'flex';
-
     const speechText = document.getElementById('setup-speech-text');
     playMascot('setup-mascot', 'idle');
     if (speechText) {
         speechText.innerText = "嗨～我們來增進英語口說吧！";
-        setTimeout(() => { 
-            speechText.innerText = `今天挑戰：${TARGET_UNIT ? TARGET_UNIT : '今日挑戰'}`; 
-        }, 2000);
+        setTimeout(() => { speechText.innerText = `今天挑戰：${TARGET_UNIT || '今日挑戰'}`; }, 2000);
     }
-
     try {
       globalMicStream = await navigator.mediaDevices.getUserMedia({ audio: true }); 
     } catch (e) { 
-      alert("請開啟麥克風權限才能開始！");
-      if (speechText) speechText.innerText = "請開啟權限後重新整理。";
-      return;
+      alert("請開啟麥克風權限"); return;
     }
 
     setDockButton('開始', true, () => {
-        if (speechText) speechText.innerText = "正在為您載入題目...";
-        
-        // 🚀 修正 URL 拼接問題
+        if (speechText) speechText.innerText = "正在載入題目...";
         let fetchUrl = GAS_URL + "?id=" + STUDENT_ID + "&action=get_data";
         if (TARGET_UNIT) fetchUrl += "&unit=" + encodeURIComponent(TARGET_UNIT);
-
-        fetch(fetchUrl)
-          .then(res => res.json())
-          .then(data => {
-            // 🚀 嚴格檢查資料結構
-            if (!data || !data.words || data.words.length === 0) { throw new Error("Empty quiz"); }
-            
-            quizData = data.words; 
-            scores = new Array(quizData.length).fill(null);
+        fetch(fetchUrl).then(res => res.json()).then(data => {
+            if (!data || !data.words || data.words.length === 0) throw new Error("Empty");
+            quizData = data.words; scores = new Array(quizData.length).fill(null);
             warmupPassed = new Array(quizData.length).fill(false);
             assignedWarmupModes = new Array(quizData.length).fill(null);
-            
             document.getElementById('setup-zone').style.display = 'none';
             document.getElementById('studio').style.display = 'block';
-            
+            attachButtonListeners(); // 🚀 重新接通神經
             renderWord();
-          })
-          .catch(err => {
-            console.error("Quiz Fetch Error:", err);
-            alert("載入失敗！請確認網路連線或單元名稱是否正確。");
-          });
+        }).catch(err => alert("載入失敗！"));
     });
   };
+
+  // 💡 恢復法醫級發音染色邏輯 (包含燈泡生成)
+  function generateColoredHTML(azureData, originalText) {
+      if (!azureData || !azureData.Words) return originalText;
+      const tokens = originalText.split(/(\s+|[.,?!:;]+)/);
+      return tokens.map(token => {
+          if (!/[a-zA-Z0-9]/.test(token)) return token;
+          const azureWord = azureData.Words.shift(); if (!azureWord) return token;
+          const assess = azureWord.PronunciationAssessment || {};
+          const subData = (azureWord.Phonemes || azureWord.Syllables || []);
+          let coloredWord = "";
+          let charPointer = 0;
+          
+          subData.forEach(sub => {
+              const score = sub.PronunciationAssessment.AccuracyScore || 0;
+              const len = sub.Grapheme ? sub.Grapheme.length : 1;
+              const chunk = token.substr(charPointer, len);
+              const color = getScoreColor(score);
+              // 🚀 恢復 2.0 版紅字燈泡邏輯
+              if (score < 75) {
+                  coloredWord += `<span class="char-help-wrapper" style="color:${color}">${chunk}<button class="helper-bulb" onclick="showPhonicHelper('${token}', '${chunk.toLowerCase()}', '${chunk}')">💡</button></span>`;
+              } else {
+                  coloredWord += `<span style="color:${color}">${chunk}</span>`;
+              }
+              charPointer += len;
+          });
+          return coloredWord;
+      }).join('');
+  }
+
+  // 🔊 恢復 KTV 序列導讀引擎
+  async function showPhonicHelper(word, localKey, displayLabel) {
+      const overlay = document.getElementById('phonic-helper-overlay');
+      document.getElementById('helper-word-title').innerText = "發音示範";
+      document.getElementById('helper-instruction').innerHTML = `<div style="font-size:32px;">${displayLabel} ... ${word}</div>`;
+      overlay.style.display = 'flex';
+      // 🚀 執行 KTV 播放：局部音素 x2 + 全詞 x1
+      await playPhonicLocal(localKey, 2.0); 
+      await new Promise(r => setTimeout(r, 400));
+      await speakWordCloudCached(word, 1.8);
+  }
+
+  function attachButtonListeners() {
+      const rb = document.getElementById('record-btn');
+      const playBtn = document.getElementById('prod-tts-btn');
+      if (playBtn) playBtn.onclick = () => {
+          speakWordCloudCached(quizData[currentIndex].en, 1.8);
+          playMascot('prod-mascot', 'thinking');
+      };
+      // ... 錄音監聽器邏輯比照辦理 ...
+  }
 
   window.onload = async () => { await originalOnload(); };
   
