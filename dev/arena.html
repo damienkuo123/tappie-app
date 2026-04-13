@@ -1483,46 +1483,6 @@
         document.getElementById('back-summary-btn').disabled = true;
     };
 
-    const startPracticeRecord = async (e) => { 
-        if(isGrading || isRecording) return;
-        
-        if (!azureAuthToken) {
-            alert("語音引擎正在連線中，請稍等一兩秒再試！");
-            return;
-        }
-
-        e.preventDefault(); 
-        
-        // 🚀 核心修復 1：麥克風喚醒機制。如果麥克風睡著或斷線了，重新要一次權限！
-        if (!globalMicStream || !globalMicStream.active || globalMicStream.getAudioTracks().some(t => t.readyState === 'ended')) {
-            try {
-                document.getElementById('status').innerText = "喚醒麥克風中...";
-                globalMicStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            } catch(err) {
-                alert("無法存取麥克風，請確認權限！");
-                return;
-            }
-        }
-
-        isRecording = true;
-        rb.classList.add('active'); 
-        
-        if (!sysAudioCtx) sysAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        if (sysAudioCtx.state === 'suspended') sysAudioCtx.resume();
-        
-        practiceRecorder = new MediaRecorder(globalMicStream);
-        practiceChunks = [];
-        practiceRecorder.ondataavailable = ev => { if(ev.data.size > 0) practiceChunks.push(ev.data); };
-        
-        // 🚀 核心修復 2：加上 timeslice (250ms)，強迫瀏覽器不斷吐出音檔資料，防止空包彈
-        practiceRecorder.start(250); 
-
-        document.getElementById('status').innerText = "🔴 錄音中...";
-        document.getElementById('status').style.color = "#eb3b5a";
-        document.getElementById('prev-btn').disabled = true;
-        document.getElementById('next-btn').disabled = true;
-    };
-
     const stopPracticeRecord = (e) => {
         if(!isRecording) return;
         e.preventDefault();
@@ -1532,7 +1492,10 @@
         if (!practiceRecorder || practiceRecorder.state !== "recording") {
             document.getElementById('status').innerText = "🚨 錄音異常，請重試";
             document.getElementById('status').style.color = "#e74c3c";
+            // 🚀 確保解鎖
             isGrading = false; 
+            document.getElementById('next-btn').disabled = false;
+            if (currentIndex > 0) document.getElementById('prev-btn').disabled = false;
             return;
         }
 
@@ -1545,14 +1508,11 @@
         practiceRecorder.onstop = async () => {
             const rawBlob = new Blob(practiceChunks); 
             
-            // 🚀 核心修復 3：如果錄音太短，保留字樣，手動解開封印，【絕對不呼叫 renderWord() 洗畫面】！
             if (practiceChunks.length === 0 || rawBlob.size < 500) {
                 document.getElementById('status').innerText = "🚨 錄音太短，請按住重唸";
                 document.getElementById('status').style.color = "#e74c3c";
-                isGrading = false;
-                rb.style.pointerEvents = "auto"; 
-                rb.style.opacity = "1";
-                return; 
+                renderWord(); // 🚀 發生錯誤也立刻一鍵恢復
+                return;
             }
             
             try {
@@ -1583,41 +1543,42 @@
                             fetch(`${GAS_URL}?action=evaluate_speech_azure&word=${encodeURIComponent(targetWord)}`, { 
                                 method: 'POST', body: JSON.stringify(rawAzureData) 
                             }).then(res => res.json()).then(data => {
+                                // 存入數據
                                 scores[currentIndex] = data.score; 
                                 if(!window.feedbacks) window.feedbacks = [];
                                 window.feedbacks[currentIndex] = data.feedback;
                                 
-                                // 只有在確認拿到分數後，才重新渲染畫面！
+                                // 🚀 關鍵：一鍵恢復所有按鈕觸發與樣式！
                                 renderWord();
                             }).catch(() => {
                                 document.getElementById('status').innerText = "⚠️ 導師寫評語失敗";
                                 document.getElementById('status').style.color = "#e74c3c";
-                                isGrading = false; rb.style.pointerEvents = "auto"; rb.style.opacity = "1";
+                                renderWord();
                             });
                         } else {
                             document.getElementById('status').innerText = "❌ 發音含糊或無關，請重唸";
                             document.getElementById('status').style.color = "#e74c3c";
-                            isGrading = false; rb.style.pointerEvents = "auto"; rb.style.opacity = "1";
+                            renderWord();
                         }
                         recognizer.close();
                     },
                     (err) => {
                         document.getElementById('status').innerText = "🚨 引擎連線錯誤";
                         document.getElementById('status').style.color = "#e74c3c";
-                        isGrading = false; rb.style.pointerEvents = "auto"; rb.style.opacity = "1";
+                        renderWord();
                         recognizer.close();
                     }
                 );
             } catch(err) {
+                console.error(err);
                 document.getElementById('status').innerText = "🚨 音檔處理失敗，請重試";
                 document.getElementById('status').style.color = "#e74c3c";
-                isGrading = false; rb.style.pointerEvents = "auto"; rb.style.opacity = "1";
+                renderWord(); 
             }
         };
         practiceRecorder.stop();
     };
 
-    // 🚀 重新綁定事件
     rb.onpointerdown = startPracticeRecord;
     rb.onpointerup = stopPracticeRecord;
     rb.onpointerout = stopPracticeRecord; 
