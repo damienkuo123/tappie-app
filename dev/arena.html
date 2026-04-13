@@ -1331,35 +1331,52 @@
       return { matrix, path };
   }
 
-  // 🎙️ 建立開口決戰區 (保留你原本的所有強大機制)
+  // 🎙️ 升級版：開口決戰區 (對接精靈與 Dock)
   function setupProductionZone(current) {
       const wordDisplay = document.getElementById('word-display');
       const rb = document.getElementById('record-btn');
-      
       const currentScore = scores[currentIndex];
       const currentFeedback = (window.feedbacks && window.feedbacks[currentIndex]) ? window.feedbacks[currentIndex] : "";
-      document.getElementById('feedback').innerHTML = currentScore !== null ? `得分：${currentScore}<br><small>${currentFeedback}</small>` : "";
-
-      // 字體智慧縮放
+      
       const charCount = current.en.length;
       if (charCount > 20) wordDisplay.style.fontSize = "32px";
       else if (charCount > 10) wordDisplay.style.fontSize = "42px";
       else wordDisplay.style.fontSize = "52px";
 
-      // 上字與染色邏輯 (維持原本的微軟法醫報告解析)
       const existingReport = azureReports[currentIndex];
-      if (existingReport) {
-          wordDisplay.innerHTML = generateColoredHTML(existingReport, current.en);
-      } else {
-          wordDisplay.innerText = current.en;
-          wordDisplay.style.color = "#0d47a1";
-      }
+      if (existingReport) { wordDisplay.innerHTML = generateColoredHTML(existingReport, current.en); } 
+      else { wordDisplay.innerText = current.en; wordDisplay.style.color = "#0d47a1"; }
 
-      // 🚀 關鍵修復：在這裡把中文印出來！
-      document.getElementById('production-zh').innerText = current.zh || "";
+      const prodZh = document.getElementById('production-zh');
+      if(prodZh) prodZh.innerText = current.zh || "";
+
+      const feedbackEl = document.getElementById('prod-feedback-text');
+      const ttsText = document.getElementById('prod-tts-text');
+
+      if (currentScore !== null) {
+          // 有分數：顯示回饋、隱藏「我來唸一次」文字、精靈給出表情
+          if (feedbackEl) {
+              feedbackEl.style.display = 'block';
+              feedbackEl.innerHTML = `<span style="color:var(--marian-green); font-weight:900;">得分：${currentScore}</span><br><small>${currentFeedback}</small>`;
+          }
+          if (ttsText) ttsText.style.display = 'none'; 
+          playMascot('prod-mascot', currentScore >= 70 ? 'success' : 'fail'); // 🎭 3.0 精靈
+          
+          // ✅ 解鎖 Dock 按鈕，允許前往下一題或結算
+          setDockButton(currentIndex === quizData.length - 1 ? '查看結算' : '繼續', true, () => {
+              if (currentIndex < quizData.length - 1) { currentIndex++; renderWord(); } 
+              else { showSummary(); }
+          });
+      } else {
+          // 沒分數：初始狀態，精靈閒置
+          if (feedbackEl) feedbackEl.style.display = 'none';
+          if (ttsText) ttsText.style.display = 'inline'; 
+          playMascot('prod-mascot', 'idle'); // 🎭 3.0 精靈
+          
+          // 🛑 鎖死 Dock 按鈕
+          setDockButton('請錄音', false, null);
+      }
       
-      // 按鈕重置
-      document.getElementById('play-btn').disabled = false;
       if (rb) {
           rb.style.display = 'block';
           rb.style.pointerEvents = "auto"; 
@@ -1367,10 +1384,9 @@
           rb.classList.remove('active');
       }
       
-      isGrading = false;
-      isRecording = false;
-      document.getElementById('status').innerText = "按住錄音，放開打分";
-      document.getElementById('status').style.color = "#636e72"; 
+      isGrading = false; isRecording = false;
+      const statusEl = document.getElementById('status');
+      if (statusEl) { statusEl.innerText = "按住錄音，放開打分"; statusEl.style.color = "#afafaf"; }
   }
   
   let isGrading = false; 
