@@ -1341,11 +1341,20 @@
       return { matrix, path };
   }
 
-  // 🎙️ 升級版：開口決戰區 (對話框 3秒切換 & 分數獨立)
+  // 🎙️ 升級版：開口決戰區 (自體修復防呆 + 對話框 3秒切換)
   function setupProductionZone(current) {
       const wordDisplay = document.getElementById('word-display');
       const rb = document.getElementById('record-btn');
-      const scoreEl = document.getElementById('score-display'); // 🚀 抓取分數預留區
+      
+      // 🛡️ 終極防呆：如果 HTML 漏了分數預留區，JS 自動幫你生出來！絕對不當機！
+      let scoreEl = document.getElementById('score-display');
+      if (!scoreEl && wordDisplay) {
+          scoreEl = document.createElement('div');
+          scoreEl.id = 'score-display';
+          scoreEl.style = "height: 35px; font-size: 26px; font-weight: 900; margin-bottom: 5px; opacity: 0; transition: opacity 0.3s; letter-spacing: 1px;";
+          wordDisplay.parentNode.insertBefore(scoreEl, wordDisplay);
+      }
+
       const currentScore = scores[currentIndex];
       const currentFeedback = (window.feedbacks && window.feedbacks[currentIndex]) ? window.feedbacks[currentIndex] : "";
       
@@ -1357,9 +1366,8 @@
       if(prodZh) prodZh.innerText = current.zh || "";
 
       const feedbackEl = document.getElementById('prod-feedback-text');
-      const ttsBtnWrap = document.getElementById('prod-tts-btn'); // 整個播放按鈕容器
+      const ttsBtnWrap = document.getElementById('prod-tts-btn'); 
 
-      // 防呆：清除上一次可能還在跑的 3 秒計時器
       if (window.bubbleTimeout) clearTimeout(window.bubbleTimeout);
 
       if (!assignedMascots[currentIndex]) {
@@ -1370,15 +1378,17 @@
       if (currentScore !== null) {
           // 🚀 1. 分數獨立顯示在單字上方
           const fbColor = currentScore >= 70 ? 'var(--marian-green)' : '#ea1537';
-          scoreEl.innerHTML = `<span style="color:${fbColor};">得分：${currentScore}</span>`;
-          scoreEl.style.opacity = "1"; // 浮現分數
+          if (scoreEl) {
+              scoreEl.innerHTML = `<span style="color:${fbColor};">得分：${currentScore}</span>`;
+              scoreEl.style.opacity = "1"; 
+          }
 
           // 🚀 2. 對話框只顯示導師純文字回饋
           if (feedbackEl) {
               feedbackEl.style.display = 'block';
               feedbackEl.innerHTML = currentFeedback;
           }
-          if (ttsBtnWrap) ttsBtnWrap.style.display = 'none'; // 先隱藏播放鍵
+          if (ttsBtnWrap) ttsBtnWrap.style.display = 'none'; 
           
           playMascot('prod-mascot', currentScore >= 70 ? 'success' : 'fail', currentMascot); 
           
@@ -1399,9 +1409,10 @@
               isPass ? 'correct' : 'wrong'
           );
       } else {
-          // 狀態初始化：沒分數時
-          scoreEl.style.opacity = "0"; // 隱藏分數區但保留空間
-          scoreEl.innerHTML = "";
+          if (scoreEl) {
+              scoreEl.style.opacity = "0"; 
+              scoreEl.innerHTML = "";
+          }
           
           if (feedbackEl) feedbackEl.style.display = 'none';
           if (ttsBtnWrap) ttsBtnWrap.style.display = 'flex'; 
@@ -1410,6 +1421,7 @@
           setDockButton('請錄音', false, null);
       }
       
+      // 🚀 4. 解開封印按鈕 (只要前面沒當機，這裡就一定會執行)
       if (rb) {
           rb.style.display = 'flex';
           rb.style.pointerEvents = "auto"; 
