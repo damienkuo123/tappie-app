@@ -128,57 +128,40 @@
       font-family: 'Nunito', -apple-system, sans-serif; text-align: center; margin: 0; padding: 0; 
       user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; 
       background: #ffffff; color: #4b4b4b; height: 100vh; height: 100dvh; overflow: hidden; 
-      box-sizing: border-box;
     }
     
-    /* 🚀 確保所有元素包含邊框計算 */
-    *, *:before, *:after { box-sizing: inherit; }
-
     .main-panel { 
       background: transparent; width: 100%; max-width: 600px; margin: 0 auto; 
       height: 100%; display: flex; flex-direction: column; position: relative; z-index: 100; 
     }
     
+    /* 🚀 修正導航列與打叉按鈕 */
     .top-nav-bar { display: flex; align-items: center; padding: 15px 20px; gap: 15px; flex-shrink: 0; z-index: 1000; }
     .btn-close-app { background: none; border: none; font-size: 28px; color: #afafaf; cursor: pointer; padding: 5px; font-weight: bold; line-height: 1; }
     .progress-bar-container { flex: 1; background: #e5e5e5; height: 16px; border-radius: 10px; overflow: hidden; }
     .progress-fill { background: #58cc02; height: 100%; width: 0%; transition: width 0.5s ease-out; }
 
-    .content-scroll-area { 
-      flex: 1; overflow-y: auto; padding: 10px 20px 160px; 
-      display: flex; flex-direction: column; align-items: center; width: 100%; 
-    }
-
-    /* 🚀 修正圖片與卡片爆炸 */
-    .warmup-visual-card { 
-      background: white; border: 2px solid #e5e5e5; border-radius: 20px; padding: 10px; 
-      margin-bottom: 25px; width: 100%; max-width: 320px; flex-shrink: 0;
-    }
-    #warmup-img { border-radius: 14px; width: 100%; max-height: 200px; object-fit: contain; display: none; }
-    #warmup-zh { font-size: 26px; font-weight: 900; color: #4b4b4b; display: none; text-align: center; padding: 10px; }
+    .content-scroll-area { flex: 1; overflow-y: auto; padding: 10px 20px 140px; display: flex; flex-direction: column; align-items: center; }
 
     .bottom-dock { 
       position: fixed; bottom: 0; left: 0; width: 100%; 
       padding: 15px 20px 30px; background: #ffffff; border-top: 2px solid #e5e5e5; 
-      display: flex; justify-content: center; z-index: 2000; box-sizing: border-box; 
+      display: flex; justify-content: center; z-index: 500; box-sizing: border-box; 
     }
     .btn-dock { width: 100%; max-width: 500px; padding: 16px; font-size: 20px; font-weight: 800; border-radius: 16px; cursor: pointer; border: none; }
     .btn-dock.disabled { background: #e5e5e5; color: #afafaf; }
     .btn-dock.active { background: #58cc02; color: white; box-shadow: 0 5px 0 #58a700; }
 
-    .avatar-bubble-row { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 10px; flex-shrink: 0; width: 100%; }
-    .speech-bubble { background: #ffffff; border: 2px solid #e5e5e5; border-radius: 20px; padding: 12px 18px; position: relative; max-width: 65%; text-align: left; box-shadow: 0 4px 0 #e5e5e5; color: #4b4b4b; font-weight: bold; }
+    .avatar-bubble-row { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 25px; flex-shrink: 0; width: 100%; }
+    .speech-bubble { background: #ffffff; border: 2px solid #e5e5e5; border-radius: 20px; padding: 15px 20px; position: relative; max-width: 65%; text-align: left; box-shadow: 0 4px 0 #e5e5e5; color: #4b4b4b; font-weight: bold; }
     .speech-bubble.left-tail::before { content: ''; position: absolute; left: -12px; top: 20px; border-top: 10px solid transparent; border-bottom: 10px solid transparent; border-right: 12px solid #e5e5e5; }
     .speech-bubble.left-tail::after { content: ''; position: absolute; left: -8px; top: 20px; border-top: 10px solid transparent; border-bottom: 10px solid transparent; border-right: 10px solid #ffffff; }
 
-    /* 🚀 修正按鈕寬度 */
-    #warmup-options { width: 100%; display: flex; flex-direction: column; gap: 10px; align-items: center; }
-    .btn-choice-list, .btn-tap-fill, .btn-image-choice, .ws-letter { background: #ffffff; border: 2px solid #e5e5e5; border-bottom-width: 4px; border-radius: 16px; font-weight: 800; width: 100%; max-width: 400px; padding: 15px; }
+    .btn-choice-list, .btn-tap-fill, .btn-image-choice, .ws-letter { background: #ffffff; border: 2px solid #e5e5e5; border-bottom-width: 4px; border-radius: 16px; font-weight: 800; }
     .btn-choice-list.correct, .btn-tap-fill.correct, .btn-image-choice.correct, .ws-letter.correct-path { background: #d7ffb8; border-color: #58cc02; color: #58a700; }
     
-    /* 🚀 錄音按鈕 */
-    #record-btn { background: #1cb0f6; width: 100px; height: 100px; border-radius: 50%; border: none; font-size: 40px; box-shadow: 0 6px 0 #1899d6; color: white; cursor: pointer; flex-shrink: 0; position: relative; z-index: 100; }
-    #record-btn:active { transform: translateY(4px); box-shadow: 0 0px 0 #1899d6; }
+    #record-btn { background: #1cb0f6; width: 100px; height: 100px; border-radius: 50%; border: none; font-size: 40px; box-shadow: 0 6px 0 #1899d6; color: white; cursor: pointer; flex-shrink: 0; }
+    #record-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #1899d6; }
     
     table { width: 100%; border-collapse: collapse; margin-top: 15px; }
     td { padding: 15px; border-bottom: 2px solid #e5e5e5; text-align: left; font-weight: bold; }
