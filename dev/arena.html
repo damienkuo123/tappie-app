@@ -1492,10 +1492,10 @@
         if (!practiceRecorder || practiceRecorder.state !== "recording") {
             document.getElementById('status').innerText = "🚨 錄音異常，請重試";
             document.getElementById('status').style.color = "#e74c3c";
-            // 🚀 確保解鎖
+            // 🛡️ 手動解開按鈕，絕對不呼叫 renderWord 洗畫面
             isGrading = false; 
-            document.getElementById('next-btn').disabled = false;
-            if (currentIndex > 0) document.getElementById('prev-btn').disabled = false;
+            rb.style.pointerEvents = "auto";
+            rb.style.opacity = "1";
             return;
         }
 
@@ -1511,7 +1511,10 @@
             if (practiceChunks.length === 0 || rawBlob.size < 500) {
                 document.getElementById('status').innerText = "🚨 錄音太短，請按住重唸";
                 document.getElementById('status').style.color = "#e74c3c";
-                renderWord(); // 🚀 發生錯誤也立刻一鍵恢復
+                // 🛡️ 關鍵修復：手動解開按鈕封印，保留錯誤字樣，禁止 renderWord 洗版！
+                isGrading = false;
+                rb.style.pointerEvents = "auto";
+                rb.style.opacity = "1";
                 return;
             }
             
@@ -1543,29 +1546,28 @@
                             fetch(`${GAS_URL}?action=evaluate_speech_azure&word=${encodeURIComponent(targetWord)}`, { 
                                 method: 'POST', body: JSON.stringify(rawAzureData) 
                             }).then(res => res.json()).then(data => {
-                                // 存入數據
                                 scores[currentIndex] = data.score; 
                                 if(!window.feedbacks) window.feedbacks = [];
                                 window.feedbacks[currentIndex] = data.feedback;
                                 
-                                // 🚀 關鍵：一鍵恢復所有按鈕觸發與樣式！
+                                // 只有在「成功拿到分數」時，才重新渲染畫面！
                                 renderWord();
                             }).catch(() => {
                                 document.getElementById('status').innerText = "⚠️ 導師寫評語失敗";
                                 document.getElementById('status').style.color = "#e74c3c";
-                                renderWord();
+                                isGrading = false; rb.style.pointerEvents = "auto"; rb.style.opacity = "1";
                             });
                         } else {
                             document.getElementById('status').innerText = "❌ 發音含糊或無關，請重唸";
                             document.getElementById('status').style.color = "#e74c3c";
-                            renderWord();
+                            isGrading = false; rb.style.pointerEvents = "auto"; rb.style.opacity = "1";
                         }
                         recognizer.close();
                     },
                     (err) => {
                         document.getElementById('status').innerText = "🚨 引擎連線錯誤";
                         document.getElementById('status').style.color = "#e74c3c";
-                        renderWord();
+                        isGrading = false; rb.style.pointerEvents = "auto"; rb.style.opacity = "1";
                         recognizer.close();
                     }
                 );
@@ -1573,7 +1575,7 @@
                 console.error(err);
                 document.getElementById('status').innerText = "🚨 音檔處理失敗，請重試";
                 document.getElementById('status').style.color = "#e74c3c";
-                renderWord(); 
+                isGrading = false; rb.style.pointerEvents = "auto"; rb.style.opacity = "1";
             }
         };
         practiceRecorder.stop();
@@ -1581,9 +1583,8 @@
 
     rb.onpointerdown = startPracticeRecord;
     rb.onpointerup = stopPracticeRecord;
-    rb.onpointerout = stopPracticeRecord; 
+    // 🛡️ 拔除 onpointerout，防止手指微動導致的強制中斷
     rb.onpointercancel = stopPracticeRecord;
-  }
 
   // 🏆 頁面 4：結算與傳送機制 3.0 版
   function showSummary() {
