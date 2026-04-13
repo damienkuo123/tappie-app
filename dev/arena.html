@@ -834,93 +834,44 @@
       });
   }
 
-  // 🚀 升級版：動態心流渲染引擎
+  // 🚀 頁面二 & 三：動態心流渲染引擎
   function renderWord() {
     const current = quizData[currentIndex];
     if (!current) return;
 
-    const progContainer = document.getElementById('progress-container');
-    if (progContainer) progContainer.style.display = 'block';
-
-    document.getElementById('idx-display').innerText = currentIndex + 1;
-    
-    // 更新進度條
+    // 更新頂部進度條
     if (quizData.length > 0) {
         const progressPercent = ((currentIndex + 1) / quizData.length) * 100;
-        document.getElementById('progress-fill').style.width = progressPercent + "%";
+        const progFill = document.getElementById('progress-fill');
+        if (progFill) progFill.style.width = progressPercent + "%";
     }
 
-    // 🎯 核心分流：這題暖身過了沒？
+    // 分流機制
     if (warmupPassed[currentIndex]) {
-        // ✅ 已暖身：直接進入開口決戰 (Production Phase)
         document.getElementById('warmup-zone').style.display = 'none';
-        document.getElementById('production-zone').style.display = 'block';
+        document.getElementById('production-zone').style.display = 'flex'; 
         setupProductionZone(current);
     } else {
-        // 🚧 未暖身：啟動破冰任務 (Warm-up Phase)
         document.getElementById('warmup-zone').style.display = 'flex';
         document.getElementById('production-zone').style.display = 'none';
         setupWarmupZone(current);
     }
-
-    // ==========================================
-    // 🎯 嚴格閘門系統：按鈕邏輯更新
-    // ==========================================
-    const prevBtn = document.getElementById('prev-btn');
-    const nextBtn = document.getElementById('next-btn');
-    const backBtn = document.getElementById('back-summary-btn');
-
-    if (isReReading) {
-        // 結算後的重唸模式
-        prevBtn.style.display = 'none'; 
-        nextBtn.style.display = 'none'; 
-        backBtn.style.display = 'inline-block';
-        backBtn.disabled = false;
-    } else {
-        backBtn.style.display = 'none'; 
-
-        // 1. 🛑 上一頁邏輯：第一題絕對不顯示 (乾淨俐落)
-        if (currentIndex === 0) {
-            prevBtn.style.display = 'none';
-        } else {
-            prevBtn.style.display = 'inline-block';
-            prevBtn.disabled = false;
-        }
-
-        // 2. 🔐 下一頁解鎖邏輯：(破冰完成) 且 (錄音有分數，即使是 0 分)
-        const hasPassedWarmup = warmupPassed[currentIndex] === true;
-        const hasRecorded = scores[currentIndex] !== null;
-
-        if (hasPassedWarmup && hasRecorded) {
-            // 🔓 條件達成：解鎖並顯示下一頁按鈕
-            nextBtn.style.display = 'inline-block';
-            nextBtn.disabled = false;
-            nextBtn.innerText = currentIndex === quizData.length - 1 ? "查看結算" : "下一題 ▶";
-        } else {
-            // 🔒 條件未滿：徹底隱藏下一頁按鈕，逼迫學生完成當下任務
-            nextBtn.style.display = 'none';
-        }
-    }
   }
-  // 🎮 建立暖身小遊戲 (五大模式智能派題引擎 - 狀態鎖定版)
+
+  // 🎮 暖身運動控制
   function setupWarmupZone(current) {
-      // 🚀 手術點 1：抓取父容器，我們準備進行實體重建
       const visualCard = document.querySelector('.warmup-visual-card');
       const audioHint = document.getElementById('warmup-audio-hint'); 
       const skeletonContainer = document.getElementById('warmup-word-skeleton');
       const optionsContainer = document.getElementById('warmup-options');
       
-      // 🚀 手術點 2：防快速切換爆版：清除上一次還沒執行的自動發音計時器
       if (window.warmupAutoPlayTimer) clearTimeout(window.warmupAutoPlayTimer);
 
-      // 每次進入前先清空容器與排版
       skeletonContainer.innerHTML = '';
       optionsContainer.removeAttribute('class');
       optionsContainer.innerHTML = '';
-      optionsContainer.className = ''; 
       audioHint.style.display = 'none'; 
 
-      // 🚀 手術點 3：暴力清場！直接清空整個視覺卡片，重新塞入乾淨的元素
       visualCard.innerHTML = `
           <img id="warmup-img" src="" alt="提示圖片" style="display: none; width: 100%; height: auto; border-radius: 16px; object-fit: cover; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
           <div id="warmup-zh" style="display: none; font-size: clamp(24px, 7vw, 32px); font-weight: 900; color: #334155; letter-spacing: 2px; word-break: break-word; overflow-wrap: break-word; text-align: center; width: 100%; line-height: 1.4; padding: 10px;"></div>
@@ -930,250 +881,129 @@
           </button>
       `;
 
-      // 重新抓取剛剛建立好的乾淨元素
       const imgEl = document.getElementById('warmup-img');
       const zhEl = document.getElementById('warmup-zh');
       const audioBtn = document.getElementById('warmup-audio-btn');
 
-      // 🧠 1. 條件判定 (Rules Engine) 與 記憶卡系統
-
-      // 如果 assignedWarmupModes 陣列還沒初始化，就先建立它
-      if (typeof assignedWarmupModes === 'undefined' || assignedWarmupModes.length === 0) {
-          window.assignedWarmupModes = new Array(quizData.length).fill(null);
-      }
-
+      if (!assignedWarmupModes || assignedWarmupModes.length === 0) assignedWarmupModes = new Array(quizData.length).fill(null);
       let warmupMode = assignedWarmupModes[currentIndex];
 
-      // 如果是 null，代表是第一次進入這題，才需要執行派題引擎
       if (warmupMode === null) {
           const hasImage = (current.img && current.img.trim() !== "");
           const wordLen = current.en.length;
           const isSentence = current.en.includes(" ");
-          // 判斷題庫中是否有足夠的其他圖片來做為干擾項 (至少要有 3 張其他的)
           const availableImages = quizData.filter(q => q.en !== current.en && q.img && q.img.trim() !== "");
           const canPlayImageChoice = hasImage && availableImages.length >= 3;
 
-          let availableModes = [0, 2]; // 絕對安全的保底模式
-          
-          if (wordLen >= 3 && !isSentence) {
-              availableModes.push(1); // 允許拼字
-              availableModes.push(4); // 允許果凍矩陣
-          }
-          if (canPlayImageChoice) {
-              availableModes.push(3); // 允許圖片四選一
-          }
+          let availableModes = [0, 2]; 
+          if (wordLen >= 3 && !isSentence) { availableModes.push(1); availableModes.push(4); }
+          if (canPlayImageChoice) availableModes.push(3); 
 
-          // 為了確保機率平均，我們直接用隨機數，一直抽到合法模式為止
-          let candidateMode;
-          let safeCounter = 0;
+          let candidateMode; let safeCounter = 0;
           do {
-              candidateMode = Math.floor(Math.random() * 5); // 隨機抽 0~4
+              candidateMode = Math.floor(Math.random() * 5); 
               safeCounter++;
-              if (safeCounter > 50) { candidateMode = availableModes[0]; break; } // 防呆：避免無限迴圈
+              if (safeCounter > 50) { candidateMode = availableModes[0]; break; } 
           } while (!availableModes.includes(candidateMode));
           
           warmupMode = candidateMode;
-
-          // 關鍵：將抽到的結果存入記憶卡，這題以後永遠鎖死這個模式！
           assignedWarmupModes[currentIndex] = warmupMode; 
-
-          console.log(`[派題引擎] 第 ${currentIndex + 1} 題首次分配模式: ${warmupMode}, 可選池: ${availableModes}`);
-      } else {
-          console.log(`[記憶卡讀取] 第 ${currentIndex + 1} 題已鎖定模式: ${warmupMode}`);
       }
 
-      // 🛡️ 2. 上方視覺區渲染
       if (warmupMode === 2) {
-          // 模式 2：純聽音
-          audioBtn.style.display = 'flex'; // 🚀 使用 flex 讓內部元素置中
-          audioHint.style.display = 'flex'; // 🚀 顯示防呆提示
-
-          audioBtn.onclick = () => {
-              // 點擊時的果凍微動畫 (不用管 scale，因為 CSS 已經寫了 :active 下沉)
-              audioBtn.style.transform = "scale(1.1)";
-              setTimeout(() => audioBtn.style.transform = "scale(1)", 150);
-              speakWordCloudCached(current.en, 1.8, null, null);
-          };
-          
-          // 進入這題時，延遲 0.3 秒「自動唸一次」，並將 timer 存起來以便能被清除
+          if(audioBtn) audioBtn.style.display = 'flex'; 
+          if(audioHint) audioHint.style.display = 'flex'; 
+          if(audioBtn) {
+              audioBtn.onclick = () => {
+                  audioBtn.style.transform = "scale(1.1)";
+                  setTimeout(() => audioBtn.style.transform = "scale(1)", 150);
+                  speakWordCloudCached(current.en, 1.8, null, null);
+              };
+          }
           window.warmupAutoPlayTimer = setTimeout(() => { 
-              if(document.getElementById('arcade-zone') && document.getElementById('arcade-zone').style.display !== 'none') audioBtn.click(); 
-              // 注意：因為我們目前沒有用 arcade-zone，我幫你加上安全的判斷
-              else if(audioBtn.style.display !== 'none') audioBtn.click();
+              if(audioBtn && audioBtn.style.display !== 'none') audioBtn.click();
           }, 300);
       } else if (warmupMode === 3) {
-          // 模式 3：圖片四選一 (上方只顯示單字/中文)
-          zhEl.innerText = current.en; // 上方顯示目標單字
-          zhEl.style.fontSize = "clamp(30px, 8vw, 45px)";
-          zhEl.style.display = 'block';
-          zhEl.style.color = "var(--primary-blue)";
+          if(zhEl) { zhEl.innerText = current.en; zhEl.style.fontSize = "clamp(30px, 8vw, 45px)"; zhEl.style.display = 'block'; zhEl.style.color = "var(--primary-blue)"; }
       } else {
-          // 模式 0, 1, 4：看圖發音 (有圖顯示圖，沒圖換中文)
           if (current.img && current.img.trim() !== "") {
-              imgEl.src = current.img.includes('sz=') ? current.img.replace(/sz=w\d+/, 'sz=w400') : current.img;
-              imgEl.style.display = 'block';
+              if(imgEl) { imgEl.src = current.img.includes('sz=') ? current.img.replace(/sz=w\d+/, 'sz=w400') : current.img; imgEl.style.display = 'block'; }
           } else {
-              zhEl.innerText = current.zh || "看字發音";
-              zhEl.style.display = 'block';
-              zhEl.style.fontSize = "clamp(24px, 7vw, 32px)";
-              zhEl.style.color = "#334155";
+              if(zhEl) { zhEl.innerText = current.zh || "看字發音"; zhEl.style.display = 'block'; zhEl.style.fontSize = "clamp(24px, 7vw, 32px)"; zhEl.style.color = "#334155"; }
           }
       }
 
-      // ==========================================
-      // 🕹️ 3. 下方互動區渲染與邏輯
-      // ==========================================
-      
+      // 🛑 設定 Dock 按鈕狀態：未完成
+      setDockButton('請回答問題', false, null);
+
       const proceedToNext = () => {
           try { const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3'); audio.volume=0.5; audio.play(); } catch(e){}
-          setTimeout(() => { warmupPassed[currentIndex] = true; renderWord(); }, 600);
+          // ✅ 設定 Dock 按鈕狀態：已完成，可點擊進入下一階段
+          setDockButton('繼續', true, () => {
+              warmupPassed[currentIndex] = true;
+              renderWord();
+          });
       };
 
-      const handleWrong = (element) => {
-          element.classList.remove('wrong');
-          void element.offsetWidth; 
-          element.classList.add('wrong');
-      };
+      const handleWrong = (element) => { element.classList.remove('wrong'); void element.offsetWidth; element.classList.add('wrong'); };
 
+      // ... 後方遊戲選項邏輯維持不變 ...
       if (warmupMode === 0 || warmupMode === 2) {
-          // 📌 模式 0/2：經典文字四選一
-          skeletonContainer.style.display = 'none';
-          optionsContainer.classList.add('list-mode');
-
+          skeletonContainer.style.display = 'none'; optionsContainer.classList.add('list-mode');
           let distractors = getWordDistractors(current.en, 3);
           let finalOptions = [current.en, ...distractors].sort(() => Math.random() - 0.5);
-
           finalOptions.forEach(opt => {
-              let btn = document.createElement('button');
-              btn.className = 'btn-choice-list'; 
-              btn.innerText = opt;
-              btn.onclick = function() {
-                  if (opt === current.en) {
-                      this.classList.add('correct'); proceedToNext();
-                  } else { handleWrong(this); }
-              };
+              let btn = document.createElement('button'); btn.className = 'btn-choice-list'; btn.innerText = opt;
+              btn.onclick = function() { if (opt === current.en) { this.classList.add('correct'); proceedToNext(); } else { handleWrong(this); } };
               optionsContainer.appendChild(btn);
           });
-
       } else if (warmupMode === 3) {
-          // 📌 模式 3：圖片四選一 (2x2 網格)
-          skeletonContainer.style.display = 'none';
-          optionsContainer.classList.add('grid-image-mode');
-
+          skeletonContainer.style.display = 'none'; optionsContainer.classList.add('grid-image-mode');
           let distractors = getImageDistractors(current.en, 3);
-          // 把正確答案的物件跟干擾圖包裝在一起
           let finalOptions = [{img: current.img, isCorrect: true}, ...distractors].sort(() => Math.random() - 0.5);
-
           finalOptions.forEach(opt => {
-              let btn = document.createElement('button');
-              btn.className = 'btn-image-choice';
-              
-              let iEl = document.createElement('img');
-              iEl.src = opt.img.includes('sz=') ? opt.img.replace(/sz=w\d+/, 'sz=w400') : opt.img;
-              btn.appendChild(iEl);
-
-              btn.onclick = function() {
-                  optionsContainer.classList.add('has-answered'); // 讓其他圖變暗
-                  if (opt.isCorrect) {
-                      this.classList.add('correct'); proceedToNext();
-                  } else { handleWrong(this); }
-              };
+              let btn = document.createElement('button'); btn.className = 'btn-image-choice';
+              let iEl = document.createElement('img'); iEl.src = opt.img.includes('sz=') ? opt.img.replace(/sz=w\d+/, 'sz=w400') : opt.img; btn.appendChild(iEl);
+              btn.onclick = function() { optionsContainer.classList.add('has-answered'); if (opt.isCorrect) { this.classList.add('correct'); proceedToNext(); } else { handleWrong(this); } };
               optionsContainer.appendChild(btn);
           });
-
       } else if (warmupMode === 1) {
-          // 📌 模式 1：填空拼字 (Tap-to-Fill)
-          skeletonContainer.style.display = 'flex'; 
-
-          const wordStr = current.en.toUpperCase();
-          let targetCharObj = extractMissingTarget(wordStr); 
-          
+          skeletonContainer.style.display = 'flex'; const wordStr = current.en.toUpperCase(); let targetCharObj = extractMissingTarget(wordStr); 
           for (let i = 0; i < wordStr.length; i++) {
               let char = wordStr[i];
-              if (char === ' ' || char === '-') {
-                  skeletonContainer.innerHTML += `<span style="width: 15px;"></span>`;
-              } else if (i === targetCharObj.index) {
-                  skeletonContainer.innerHTML += `<span class="skeleton-char" id="skel-target"></span>`;
-              } else {
-                  skeletonContainer.innerHTML += `<span class="skeleton-char filled">${char}</span>`;
-              }
+              if (char === ' ' || char === '-') skeletonContainer.innerHTML += `<span style="width: 15px;"></span>`;
+              else if (i === targetCharObj.index) skeletonContainer.innerHTML += `<span class="skeleton-char" id="skel-target"></span>`;
+              else skeletonContainer.innerHTML += `<span class="skeleton-char filled">${char}</span>`;
           }
-
           let options = generateDistractors(targetCharObj.char);
           options.forEach(opt => {
-              let btn = document.createElement('button');
-              btn.className = 'btn-tap-fill'; 
-              btn.innerText = opt;
+              let btn = document.createElement('button'); btn.className = 'btn-tap-fill'; btn.innerText = opt;
               btn.onclick = function() {
                   if (opt === targetCharObj.char) {
-                      this.classList.add('correct');
-                      document.getElementById('skel-target').innerText = opt;
-                      document.getElementById('skel-target').classList.add('filled');
-                      proceedToNext();
+                      this.classList.add('correct'); document.getElementById('skel-target').innerText = opt; document.getElementById('skel-target').classList.add('filled'); proceedToNext();
                   } else { handleWrong(this); }
               };
               optionsContainer.appendChild(btn);
           });
       } else if (warmupMode === 4) {
-          // 📌 模式 4：果凍字母陣 (Word Search)
-          skeletonContainer.style.display = 'none';
-          optionsContainer.classList.add('word-search-mode');
-          
-          const word = current.en.toUpperCase().replace(/\s+/g, ''); // 拔除空格
-          // 決定陣列大小 (至少 6x4)
-          const cols = 6;
-          const rows = Math.max(4, Math.ceil((word.length + 10) / cols)); 
+          skeletonContainer.style.display = 'none'; optionsContainer.classList.add('word-search-mode');
+          const word = current.en.toUpperCase().replace(/\s+/g, ''); const cols = 6; const rows = Math.max(4, Math.ceil((word.length + 10) / cols)); 
           optionsContainer.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
-
-          // 生成矩陣與答案路徑
-          const { matrix, path } = generateWordSearchMatrix(word, cols, rows);
-          
-          let selectedPath = []; // 玩家點擊的歷史
-
+          const { matrix, path } = generateWordSearchMatrix(word, cols, rows); let selectedPath = []; 
           matrix.forEach((row, y) => {
               row.forEach((char, x) => {
-                  let btn = document.createElement('button');
-                  btn.className = 'ws-letter';
-                  btn.innerText = char;
-                  btn.dataset.x = x; btn.dataset.y = y;
-
+                  let btn = document.createElement('button'); btn.className = 'ws-letter'; btn.innerText = char; btn.dataset.x = x; btn.dataset.y = y;
                   btn.onclick = function() {
-                      // 如果已經選了 2 個，就不給按
-                      if (selectedPath.length >= 2) return;
-                      
-                      // 記錄點擊
-                      selectedPath.push({x: x, y: y, el: this});
-                      this.classList.add('selected');
-
+                      if (selectedPath.length >= 2) return; selectedPath.push({x: x, y: y, el: this}); this.classList.add('selected');
                       if (selectedPath.length === 2) {
-                          const p1 = selectedPath[0];
-                          const p2 = selectedPath[1];
-                          
-                          // 檢查是否跟答案的起點/終點吻合 (順向或逆向都可以)
-                          const isMatch = 
-                              (p1.x === path[0].x && p1.y === path[0].y && p2.x === path[path.length-1].x && p2.y === path[path.length-1].y) ||
-                              (p1.x === path[path.length-1].x && p1.y === path[path.length-1].y && p2.x === path[0].x && p2.y === path[0].y);
-
+                          const p1 = selectedPath[0]; const p2 = selectedPath[1];
+                          const isMatch = (p1.x === path[0].x && p1.y === path[0].y && p2.x === path[path.length-1].x && p2.y === path[path.length-1].y) || (p1.x === path[path.length-1].x && p1.y === path[path.length-1].y && p2.x === path[0].x && p2.y === path[0].y);
                           if (isMatch) {
-                              // ✅ 連線成功！波浪發光動畫
-                              path.forEach((pObj, pIdx) => {
-                                  setTimeout(() => {
-                                      // 根據 x, y 找到對應的按鈕
-                                      let targetBtn = optionsContainer.children[pObj.y * cols + pObj.x];
-                                      targetBtn.classList.remove('selected');
-                                      targetBtn.classList.add('correct-path');
-                                  }, pIdx * 80); // 波浪延遲
-                              });
+                              path.forEach((pObj, pIdx) => { setTimeout(() => { let targetBtn = optionsContainer.children[pObj.y * cols + pObj.x]; targetBtn.classList.remove('selected'); targetBtn.classList.add('correct-path'); }, pIdx * 80); });
                               proceedToNext();
                           } else {
-                              // ❌ 連線錯誤，彈回原狀
-                              p1.el.classList.add('wrong-path');
-                              p2.el.classList.add('wrong-path');
-                              setTimeout(() => {
-                                  p1.el.classList.remove('selected', 'wrong-path');
-                                  p2.el.classList.remove('selected', 'wrong-path');
-                                  selectedPath = []; // 重置
-                              }, 500);
+                              p1.el.classList.add('wrong-path'); p2.el.classList.add('wrong-path');
+                              setTimeout(() => { p1.el.classList.remove('selected', 'wrong-path'); p2.el.classList.remove('selected', 'wrong-path'); selectedPath = []; }, 500);
                           }
                       }
                   };
@@ -1183,154 +1013,60 @@
       }
   }
 
-  // =======================================================
-  // 🧠 輔助演算法大集合 (必須放在 setupWarmupZone 下方)
-  // =======================================================
-
-  // 輔助：從單字中隨機挑一個字母挖空
-  function extractMissingTarget(word) {
-      let validIndices = [];
-      for(let i=0; i<word.length; i++) {
-          if(/[A-Z]/.test(word[i])) validIndices.push(i);
-      }
-      let rIdx = validIndices[Math.floor(Math.random() * validIndices.length)];
-      return { index: rIdx, char: word[rIdx] };
-  }
-
-  // 輔助：生成 2 個錯誤字母
-  function generateDistractors(correctChar) {
-      const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".replace(correctChar, "");
-      let distractors = [];
-      while(distractors.length < 2) {
-          let rChar = alphabet[Math.floor(Math.random() * alphabet.length)];
-          if(!distractors.includes(rChar)) distractors.push(rChar);
-      }
-      let finalOptions = [correctChar, ...distractors];
-      return finalOptions.sort(() => Math.random() - 0.5);
-  }
-
-  // 輔助：生成錯誤的單字干擾項
-  function getWordDistractors(correctWord, count) {
-      let distractors = [];
-      let available = quizData.filter(q => q.en !== correctWord).map(q => q.en);
-      const FALLBACK = ["Apple", "Banana", "Cat", "Dog", "Elephant", "Fish", "Grape", "Horse", "Ice", "Juice"];
-      
-      while(distractors.length < count) {
-          if (available.length > 0) {
-              let rIdx = Math.floor(Math.random() * available.length);
-              distractors.push(available[rIdx]);
-              available.splice(rIdx, 1);
-          } else {
-              let fWord = FALLBACK[Math.floor(Math.random() * FALLBACK.length)];
-              if (!distractors.includes(fWord) && fWord !== correctWord) distractors.push(fWord);
-          }
-      }
-      return distractors;
-  }
-
-  // 輔助：生成錯誤的圖片干擾項 (必須要有 img 屬性)
-  function getImageDistractors(correctWord, count) {
-      let distractors = [];
-      let available = quizData.filter(q => q.en !== correctWord && q.img && q.img.trim() !== "");
-      
-      // 如果題庫圖片真的不夠 (理論上規則引擎會擋掉，但這是保險)，用透明圖墊檔避免報錯
-      const FALLBACK_IMG = "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs="; 
-
-      while(distractors.length < count) {
-          if (available.length > 0) {
-              let rIdx = Math.floor(Math.random() * available.length);
-              distractors.push({ img: available[rIdx].img, isCorrect: false });
-              available.splice(rIdx, 1);
-          } else {
-              distractors.push({ img: FALLBACK_IMG, isCorrect: false });
-          }
-      }
-      return distractors;
-  }
-
-  // 輔助：生成 6x4 果凍字母陣，並藏入單字
-  function generateWordSearchMatrix(word, cols, rows) {
-      // 初始化空矩陣
-      let matrix = Array(rows).fill(null).map(() => Array(cols).fill(''));
-      const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-      
-      // 決定方向：0=水平右, 1=垂直下, 2=斜右下
-      const dir = Math.floor(Math.random() * 3);
-      let startX = 0, startY = 0;
-      let path = [];
-
-      // 根據方向決定合法的起點範圍
-      if (dir === 0) { // 水平
-          startX = Math.floor(Math.random() * (cols - word.length + 1));
-          startY = Math.floor(Math.random() * rows);
-      } else if (dir === 1) { // 垂直
-          startX = Math.floor(Math.random() * cols);
-          startY = Math.floor(Math.random() * (rows - word.length + 1));
-      } else { // 斜向
-          startX = Math.floor(Math.random() * (cols - word.length + 1));
-          startY = Math.floor(Math.random() * (rows - word.length + 1));
-      }
-
-      // 把答案寫進矩陣，並記錄座標路徑
-      for (let i = 0; i < word.length; i++) {
-          let cx = startX + (dir === 0 || dir === 2 ? i : 0);
-          let cy = startY + (dir === 1 || dir === 2 ? i : 0);
-          matrix[cy][cx] = word[i];
-          path.push({x: cx, y: cy});
-      }
-
-      // 剩下的空格填滿隨機字母
-      for (let y = 0; y < rows; y++) {
-          for (let x = 0; x < cols; x++) {
-              if (matrix[y][x] === '') {
-                  matrix[y][x] = alphabet[Math.floor(Math.random() * alphabet.length)];
-              }
-          }
-      }
-
-      return { matrix, path };
-  }
-
-  // 🎙️ 建立開口決戰區 (保留你原本的所有強大機制)
+  // 🎙️ 建立口說決戰區
   function setupProductionZone(current) {
       const wordDisplay = document.getElementById('word-display');
-      const rb = document.getElementById('record-btn');
-      
       const currentScore = scores[currentIndex];
       const currentFeedback = (window.feedbacks && window.feedbacks[currentIndex]) ? window.feedbacks[currentIndex] : "";
-      document.getElementById('feedback').innerHTML = currentScore !== null ? `得分：${currentScore}<br><small>${currentFeedback}</small>` : "";
-
-      // 字體智慧縮放
+      
       const charCount = current.en.length;
       if (charCount > 20) wordDisplay.style.fontSize = "32px";
       else if (charCount > 10) wordDisplay.style.fontSize = "42px";
       else wordDisplay.style.fontSize = "52px";
 
-      // 上字與染色邏輯 (維持原本的微軟法醫報告解析)
       const existingReport = azureReports[currentIndex];
-      if (existingReport) {
-          wordDisplay.innerHTML = generateColoredHTML(existingReport, current.en);
-      } else {
-          wordDisplay.innerText = current.en;
-          wordDisplay.style.color = "#0d47a1";
+      if (existingReport) { wordDisplay.innerHTML = generateColoredHTML(existingReport, current.en); } 
+      else { wordDisplay.innerText = current.en; wordDisplay.style.color = "#0d47a1"; }
+
+      const prodZh = document.getElementById('production-zh');
+      if(prodZh) prodZh.innerText = current.zh || "";
+
+      const feedbackEl = document.getElementById('prod-feedback-text');
+      const ttsText = document.getElementById('prod-tts-text');
+      const ttsBtn = document.getElementById('prod-tts-btn');
+
+      if (ttsBtn) {
+          ttsBtn.onclick = () => {
+              speakWordCloudCached(current.en, 1.8, null, null); 
+              playMascot('prod-mascot', 'thinking');
+          };
       }
 
-      // 🚀 關鍵修復：在這裡把中文印出來！
-      document.getElementById('production-zh').innerText = current.zh || "";
-      
-      // 按鈕重置
-      document.getElementById('play-btn').disabled = false;
-      if (rb) {
-          rb.style.display = 'block';
-          rb.style.pointerEvents = "auto"; 
-          rb.style.opacity = "1";
-          rb.classList.remove('active');
+      if (currentScore !== null) {
+          if (feedbackEl) {
+              feedbackEl.style.display = 'block';
+              feedbackEl.innerHTML = `<span style="color:var(--marian-green); font-weight:900;">得分：${currentScore}</span><br><small>${currentFeedback}</small>`;
+          }
+          if (ttsText) ttsText.style.display = 'none'; 
+          playMascot('prod-mascot', currentScore >= 70 ? 'success' : 'fail');
+          
+          // ✅ 設定 Dock 按鈕狀態：已錄音，解鎖進入下一題或結算
+          setDockButton(currentIndex === quizData.length - 1 ? '查看結算' : '繼續', true, () => {
+              if (currentIndex < quizData.length - 1) { currentIndex++; renderWord(); } 
+              else { showSummary(); }
+          });
+      } else {
+          if (feedbackEl) feedbackEl.style.display = 'none';
+          if (ttsText) ttsText.style.display = 'inline'; 
+          playMascot('prod-mascot', 'idle');
+          
+          // 🛑 設定 Dock 按鈕狀態：未錄音
+          setDockButton('請錄音', false, null);
       }
       
-      isGrading = false;
-      isRecording = false;
-      document.getElementById('status').innerText = "按住錄音，放開打分";
-      document.getElementById('status').style.color = "#636e72"; 
+      isGrading = false; isRecording = false;
+      const statusEl = document.getElementById('status');
+      if (statusEl) { statusEl.innerText = "按住錄音，放開打分"; statusEl.style.color = "#afafaf"; }
   }
   
   let isGrading = false; 
