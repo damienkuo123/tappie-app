@@ -124,55 +124,80 @@
     .colored-char { font-weight: bold; transition: color 0.3s ease; }
     .word-omission { color: #b2bec3 !important; text-decoration: line-through; opacity: 0.5; }
     
-    body { font-family: -apple-system, sans-serif; text-align: center; padding: 20px; background: #eaeff2; margin: 0; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
-    .main-panel { 
-      background: white; padding: 25px; border-radius: 28px; 
-      box-shadow: 0 10px 30px rgba(0,0,0,0.15); max-width: 400px; 
-      margin: 10px auto; border: 1px solid #ddd; 
-      position: relative; z-index: 100; /* 🚀 確保面板在所有東西上面 */
-    }
-    
-    /* 🚀 讓按鈕在被按下去時有明顯的觸感回饋 */
-    .btn:active, .btn-play:active { transform: scale(0.92); opacity: 0.8; }
-    #record-btn { background: var(--marian-red); width: 110px; height: 110px; border-radius: 50%; border: 8px solid white; font-size: 45px; box-shadow: 0 6px 15px rgba(214, 48, 49, 0.4); margin: 20px auto; cursor: pointer; display: none; outline: none; }
-    #record-btn.active { transform: scale(0.95); background: #333; animation: pulse 1s infinite; }
-    @keyframes pulse { 0% { box-shadow: 0 0 0 0px rgba(214, 48, 49, 0.4); } 100% { box-shadow: 0 0 0 20px rgba(214, 48, 49, 0); } }
-    .btn-play { background: var(--primary-blue); width: 45px; height: 45px; border-radius: 50%; border: none; color: white; font-size: 20px; cursor: pointer; margin-left: 10px; vertical-align: middle; box-shadow: 0 3px 6px rgba(0,0,0,0.1); }
-    .btn { padding: 12px 25px; border-radius: 12px; font-weight: bold; border: none; cursor: pointer; color: white; margin: 5px; box-shadow: 0 4px 0 rgba(0,0,0,0.2); }
-    .btn-nav { background: #4b6584; border-bottom: 4px solid #2c3e50; }
-    .btn-nav:disabled { background: #ccc; border-bottom: none; }
-    .btn-finish { width: 100%; font-size: 22px; padding: 20px; margin-top: 20px; border-bottom: 5px solid rgba(0,0,0,0.2); transition: 0.3s; }
-    .btn-finish:disabled { background: #636e72 !important; cursor: not-allowed; border-bottom: none; opacity: 0.7; }
-    .progress-bar { width: 100%; background: #dfe6e9; height: 12px; border-radius: 6px; margin-bottom: 20px; overflow: hidden; border: 1px solid #ccc; }
-    .progress-fill { 
-      background: var(--primary-blue); 
-      background-color: #0066cc; /* 🚀 備用色：確保變數失效時還是藍色 */
-      height: 100%; 
-      width: 0%; 
-      transition: 0.5s; 
-    }
-    table { width: 100%; border-collapse: collapse; margin-top: 15px; background: #fff; border-radius: 10px; overflow: hidden; }
-    td { padding: 12px; border-bottom: 1px solid #eee; text-align: left; }
-    .score-badge { float: right; font-weight: bold; color: var(--primary-blue); font-size: 18px; }
-    .btn-re { background: var(--marian-red); font-size: 13px; padding: 6px 12px; border-radius: 8px; color: white; border: none; cursor: pointer; font-weight: bold; }
-    #zh-display { font-size: 20px; color: #7f8c8d; margin: -10px 0 20px 0; font-weight: bold; }
-
-
-      /* ===================================================
-         🚀 新增：5. 今日挑戰/自由練習 (Main Panel) 放大
-         =================================================== */
-      .main-panel { max-width: 650px; padding: 50px; border-radius: 40px; margin-top: 10vh; }
-      #title-text { font-size: 32px; }
-      #word-display {
-      color: #0d47a1;
-      margin: 0;
-      text-shadow: 1px 1px 0 #fff;
-      /* 🚀 關鍵換行邏輯：不准在單字中間斷開 */
-      word-break: normal; 
-      overflow-wrap: break-word; 
-      line-height: 1.1;
-      text-align: center;
-      width: 100%;
+      /* =======================================================
+         🌟 瑪麗安 3.0：Duolingo 全螢幕畫布與厚實按鍵 (根基換皮)
+         ======================================================= */
+      *, *:before, *:after { box-sizing: inherit; }
+      
+      body { 
+        font-family: 'Nunito', -apple-system, sans-serif; text-align: center; margin: 0; padding: 0; 
+        user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; 
+        background: #ffffff; color: #4b4b4b; height: 100vh; height: 100dvh; overflow: hidden; 
+        box-sizing: border-box;
+      }
+      
+      /* 🚀 畫布重構：移除白底與寬度限制 */
+      .main-panel { 
+        background: transparent; width: 100%; max-width: 600px; margin: 0 auto; 
+        height: 100%; display: flex; flex-direction: column; position: relative; z-index: 10; 
+        border: none; box-shadow: none; padding: 0; border-radius: 0;
+      }
+      
+      /* 🚀 頂部導航與進度條 */
+      .top-nav-bar { display: flex; align-items: center; padding: max(15px, env(safe-area-inset-top)) 20px 10px; gap: 15px; flex-shrink: 0; z-index: 1000; width: 100%; box-sizing: border-box; }
+      .btn-close-app { background: none; border: none; font-size: 28px; color: #afafaf; cursor: pointer; padding: 5px; font-weight: bold; line-height: 1; }
+      .progress-bar-container { flex: 1; background: #e5e5e5; height: 16px; border-radius: 10px; overflow: hidden; }
+      .progress-fill { background: #58cc02; height: 100%; width: 0%; transition: width 0.5s ease-out; border-radius: 10px; }
+  
+      /* 🚀 內容滾動區 (避免被底部擋住) */
+      .content-scroll-area { 
+        flex: 1; overflow-y: auto; overflow-x: hidden; padding: 10px 20px 140px; 
+        display: flex; flex-direction: column; align-items: center; width: 100%; box-sizing: border-box; 
+      }
+  
+      /* 🚀 底部固定 Dock (防遮擋設定) */
+      .bottom-dock { 
+        position: fixed; bottom: 0; left: 0; width: 100%; 
+        padding: 15px 20px max(20px, env(safe-area-inset-bottom)); 
+        background: #ffffff; border-top: 2px solid #e5e5e5; 
+        display: flex; justify-content: center; z-index: 500; box-sizing: border-box; 
+      }
+      .btn-dock { width: 100%; max-width: 500px; padding: 16px; font-size: 20px; font-weight: 800; letter-spacing: 2px; border-radius: 16px; cursor: pointer; text-transform: uppercase; border: none; transition: background 0.1s, transform 0.1s, box-shadow 0.1s; }
+      .btn-dock.disabled { background: #e5e5e5; color: #afafaf; pointer-events: none; }
+      .btn-dock.active { background: #58cc02; color: white; box-shadow: 0 5px 0 #58a700; }
+      .btn-dock.active:active { transform: translateY(5px); box-shadow: 0 0px 0 #58a700; }
+  
+      /* 🎭 2D 精靈與對話框 */
+      .avatar-bubble-row { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 25px; flex-shrink: 0; width: 100%; }
+      .speech-bubble { background: #ffffff; border: 2px solid #e5e5e5; border-radius: 20px; padding: 15px 20px; position: relative; max-width: 65%; text-align: left; box-shadow: 0 4px 0 #e5e5e5; color: #4b4b4b; font-weight: bold; font-size: 16px; line-height: 1.5; }
+      .speech-bubble.left-tail::before { content: ''; position: absolute; left: -12px; top: 20px; border-top: 10px solid transparent; border-bottom: 10px solid transparent; border-right: 12px solid #e5e5e5; }
+      .speech-bubble.left-tail::after { content: ''; position: absolute; left: -8px; top: 20px; border-top: 10px solid transparent; border-bottom: 10px solid transparent; border-right: 10px solid #ffffff; }
+  
+      /* 🕹️ Duolingo 級氣墊按鈕 (強制鎖死寬度防爆出) */
+      #warmup-options { width: 100%; max-width: 100%; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+      #warmup-options.grid-image-mode { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+      .btn-choice-list, .btn-tap-fill, .btn-image-choice, .ws-letter { background: #ffffff; border: 2px solid #e5e5e5; border-bottom-width: 4px; border-radius: 16px; color: #4b4b4b; cursor: pointer; user-select: none; font-weight: 800; text-align: center; transition: background 0.1s, transform 0.1s, border-bottom-width 0.1s; width: 100%; max-width: 400px; padding: 16px 20px; box-sizing: border-box; }
+      .btn-image-choice { padding: 0; aspect-ratio: 1; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+      .btn-choice-list:active, .btn-tap-fill:active, .btn-image-choice:active, .ws-letter:active { border-bottom-width: 0px; transform: translateY(4px); background: #f7f7f7; }
+      .btn-choice-list.correct, .btn-tap-fill.correct, .btn-image-choice.correct, .ws-letter.correct-path { background: #d7ffb8 !important; border-color: #58cc02 !important; border-bottom-color: #58cc02 !important; color: #58a700 !important; pointer-events: none; }
+      .btn-choice-list.wrong, .btn-tap-fill.wrong { background: #ffdfe0 !important; border-color: #ff4b4b !important; border-bottom-color: #ff4b4b !important; color: #ea1537 !important; animation: shake-soft 0.4s ease-in-out; }
+  
+      /* 單元與排版微調 (圖片防爆設定) */
+      .warmup-visual-card { background: white; border: 2px solid #e5e5e5; border-radius: 20px; padding: 10px; margin-bottom: 25px; width: 100%; max-width: 320px; box-sizing: border-box; flex-shrink: 0; }
+      #warmup-img { border-radius: 14px; width: 100%; max-width: 100%; max-height: 220px; object-fit: contain; display: none; margin: 0 auto; }
+      #warmup-zh { font-size: 26px; font-weight: 900; color: #4b4b4b; display: none; text-align: center; width: 100%; padding: 10px; }
+      #word-display { font-size: clamp(35px, 8vw, 45px) !important; color: #4b4b4b; text-shadow: none; margin-bottom: 5px; }
+      #production-zh { font-size: 18px; color: #afafaf; font-weight: bold; margin-bottom: 20px; }
+      
+      /* 🎤 新版錄音按鈕 (提升層級防遮擋) */
+      #record-btn { background: #1cb0f6; width: 110px; height: 110px; border-radius: 50%; border: none; font-size: 45px; box-shadow: 0 6px 0 #1899d6; margin: 10px auto; color: white; cursor: pointer; outline: none; transition: transform 0.1s, box-shadow 0.1s, background 0.1s; position: relative; z-index: 1000; flex-shrink: 0; }
+      #record-btn:active, #record-btn.active { transform: translateY(6px); box-shadow: 0 0px 0 #1899d6; background: #1480b3; }
+      
+      table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+      td { padding: 15px; border-bottom: 2px solid #e5e5e5; text-align: left; font-weight: bold; color: #4b4b4b; }
+      .score-badge { float: right; font-weight: bold; color: var(--primary-blue); font-size: 18px; }
+      .btn-re { background: #e5e5e5; font-size: 13px; padding: 8px 14px; border-radius: 8px; color: #4b4b4b; border: none; cursor: pointer; font-weight: bold; margin-top: 8px; transition: background 0.2s; }
+      .btn-re:active { background: #dcdcdc; }
 
       /* ===================================================
          🚀 新增：6. 小燈泡導讀視窗 (Phonic Helper) 放大
