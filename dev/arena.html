@@ -1037,14 +1037,6 @@
       const statusEl = document.getElementById('status');
       if (statusEl) { statusEl.innerText = "按住錄音，放開打分"; statusEl.style.color = "#afafaf"; }
   }
-  
-  let isGrading = false; 
-  let tooQuietFlag = false; 
-
-  const rb = document.getElementById('record-btn');
-  let practiceRecorder;
-  let practiceChunks = [];
-  let isRecording = false;
 
   if(rb) {
     const startPracticeRecord = (e) => { 
