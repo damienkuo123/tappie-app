@@ -224,9 +224,17 @@
       .btn-choice-list, .btn-tap-fill, .btn-image-choice, .ws-letter { background: #ffffff; border: 2px solid #e5e5e5; border-bottom-width: 4px; border-radius: 16px; font-weight: 800; width: 100%; box-sizing: border-box; }
       .btn-choice-list.correct, .btn-tap-fill.correct, .btn-image-choice.correct, .ws-letter.correct-path { background: #d7ffb8; border-color: #58cc02; color: #58a700; }
       
-      /* 🚀 錄音按鈕適當縮小，並保持層級 */
-      #record-btn { position: relative; z-index: 1500; background: #1cb0f6; width: 85px; height: 85px; border-radius: 50%; border: none; font-size: 35px; box-shadow: 0 6px 0 #1899d6; color: white; cursor: pointer; flex-shrink: 0; margin-top: 10px; }
-      #record-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #1899d6; }
+      /* 4. 錄音麥克風按鈕 (縮小並立體化) */
+      #record-btn { 
+        background: #1cb0f6; border: 2px solid #1899d6; border-bottom-width: 8px; 
+        width: 85px; height: 85px; border-radius: 50%; font-size: 35px; color: white; 
+        cursor: pointer; flex-shrink: 0; outline: none; transition: all 0.1s ease-in-out; 
+        position: relative; z-index: 1500; display: flex; align-items: center; justify-content: center;
+        margin: 10px auto; padding: 0;
+      }
+      #record-btn:active, #record-btn.active { 
+        border-bottom-width: 2px; transform: translateY(6px); margin-top: 16px; background: #1480b3; 
+      }
   
       /* 2. 選擇題與拼字按鈕 */
       #warmup-options { width: 100%; max-width: 100%; display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 10px; }
