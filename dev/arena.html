@@ -645,8 +645,10 @@
               }
               quizData = data.words; 
               scores = new Array(quizData.length).fill(null);
-              warmupPassed = new Array(quizData.length).fill(false);
-              assignedWarmupModes = new Array(quizData.length).fill(null);
+              warmupPassed = new Array(quizData.length).fill(false); 
+              assignedWarmupModes = new Array(quizData.length).fill(null); // 🚀 確實初始化題型記憶體
+              
+              document.getElementById('total-display').innerText = quizData.length;
               
               document.getElementById('setup-zone').style.display = 'none';
               document.getElementById('top-nav-bar').style.display = 'flex';
