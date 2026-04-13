@@ -1341,18 +1341,14 @@
       return { matrix, path };
   }
 
-  // 🎙️ 升級版：開口決戰區 (對接隨機精靈)
+  // 🎙️ 升級版：開口決戰區 (對話框 3秒切換 & 分數獨立)
   function setupProductionZone(current) {
       const wordDisplay = document.getElementById('word-display');
       const rb = document.getElementById('record-btn');
+      const scoreEl = document.getElementById('score-display'); // 🚀 抓取分數預留區
       const currentScore = scores[currentIndex];
       const currentFeedback = (window.feedbacks && window.feedbacks[currentIndex]) ? window.feedbacks[currentIndex] : "";
       
-      const charCount = current.en.length;
-      if (charCount > 20) wordDisplay.style.fontSize = "32px";
-      else if (charCount > 10) wordDisplay.style.fontSize = "42px";
-      else wordDisplay.style.fontSize = "52px";
-
       const existingReport = azureReports[currentIndex];
       if (existingReport) { wordDisplay.innerHTML = generateColoredHTML(existingReport, current.en); } 
       else { wordDisplay.innerText = current.en; wordDisplay.style.color = "#0d47a1"; }
@@ -1361,25 +1357,37 @@
       if(prodZh) prodZh.innerText = current.zh || "";
 
       const feedbackEl = document.getElementById('prod-feedback-text');
-      const ttsText = document.getElementById('prod-tts-text');
+      const ttsBtnWrap = document.getElementById('prod-tts-btn'); // 整個播放按鈕容器
 
-      // 🚀 智慧隨機精靈指派：這題有精靈了嗎？沒有就抽一隻！
+      // 防呆：清除上一次可能還在跑的 3 秒計時器
+      if (window.bubbleTimeout) clearTimeout(window.bubbleTimeout);
+
       if (!assignedMascots[currentIndex]) {
           assignedMascots[currentIndex] = AVAILABLE_MASCOTS[Math.floor(Math.random() * AVAILABLE_MASCOTS.length)];
       }
       const currentMascot = assignedMascots[currentIndex];
 
       if (currentScore !== null) {
+          // 🚀 1. 分數獨立顯示在單字上方
+          const fbColor = currentScore >= 70 ? 'var(--marian-green)' : '#ea1537';
+          scoreEl.innerHTML = `<span style="color:${fbColor};">得分：${currentScore}</span>`;
+          scoreEl.style.opacity = "1"; // 浮現分數
+
+          // 🚀 2. 對話框只顯示導師純文字回饋
           if (feedbackEl) {
               feedbackEl.style.display = 'block';
-              // 依據分數給予不同顏色的文字回饋
-              const fbColor = currentScore >= 70 ? 'var(--marian-green)' : '#ea1537';
-              feedbackEl.innerHTML = `<span style="color:${fbColor}; font-weight:900;">得分：${currentScore}</span><br><small>${currentFeedback}</small>`;
+              feedbackEl.innerHTML = currentFeedback;
           }
-          if (ttsText) ttsText.style.display = 'none'; 
+          if (ttsBtnWrap) ttsBtnWrap.style.display = 'none'; // 先隱藏播放鍵
+          
           playMascot('prod-mascot', currentScore >= 70 ? 'success' : 'fail', currentMascot); 
           
-          // 🚀 依據分數變換底部顏色 (>=70亮綠色，<70亮紅色)
+          // 🚀 3. 三秒後，對話框變回「我來唸一次」
+          window.bubbleTimeout = setTimeout(() => {
+              if (feedbackEl) feedbackEl.style.display = 'none';
+              if (ttsBtnWrap) ttsBtnWrap.style.display = 'flex';
+          }, 3000);
+
           const isPass = currentScore >= 70;
           setDockButton(
               currentIndex === quizData.length - 1 ? '查看結算' : '繼續', 
@@ -1391,15 +1399,19 @@
               isPass ? 'correct' : 'wrong'
           );
       } else {
+          // 狀態初始化：沒分數時
+          scoreEl.style.opacity = "0"; // 隱藏分數區但保留空間
+          scoreEl.innerHTML = "";
+          
           if (feedbackEl) feedbackEl.style.display = 'none';
-          if (ttsText) ttsText.style.display = 'inline'; 
+          if (ttsBtnWrap) ttsBtnWrap.style.display = 'flex'; 
           playMascot('prod-mascot', 'idle', currentMascot); 
           
-          setDockButton('請錄音', false, null); // 預設白底
+          setDockButton('請錄音', false, null);
       }
       
       if (rb) {
-          rb.style.display = 'block';
+          rb.style.display = 'flex';
           rb.style.pointerEvents = "auto"; 
           rb.style.opacity = "1";
           rb.classList.remove('active');
