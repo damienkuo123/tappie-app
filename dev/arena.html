@@ -640,36 +640,56 @@
   }
 
   const originalOnload = async () => {
-    if(MODE === 'review') document.getElementById('title-text').innerText = "📖 自由練習模式";
-    try {
-      // 🚀 啟動並永久保溫麥克風，不再關閉！
-      globalMicStream = await navigator.mediaDevices.getUserMedia({ audio: true }); 
+      hideLoadingScreen();
       
-      document.getElementById('info-text').innerText = "麥克風已就緒";
-      document.getElementById('start-btn').style.display = 'inline-block';
-    } catch (e) { 
-      alert("請開啟麥克風權限"); 
-    }
-    hideLoadingScreen();
-  };
+      // 🚀 頁面一：設定開始畫面對話
+      const speechText = document.getElementById('setup-speech-text');
+      if (speechText) {
+          speechText.innerText = "嗨～我們來增進英語口說吧！";
+          setTimeout(() => { speechText.innerText = `今天挑戰：${TARGET_UNIT || '新單元'}`; }, 2000);
+          setTimeout(() => { speechText.innerText = "準備好了嗎！Here we go~"; }, 4000);
+      }
+      playMascot('setup-mascot', 'idle');
 
-  document.getElementById('start-btn').onclick = () => {
-    document.getElementById('info-text').innerText = "正在載入題目...";
-    fetch(`${GAS_URL}?id=${STUDENT_ID}&action=get_data&unit=${encodeURIComponent(TARGET_UNIT)}`)
-      .then(res => res.json()).then(data => {
-        if (!data.words || data.words.length === 0) { alert("題目為空"); return; }
-        quizData = data.words; 
-        scores = new Array(quizData.length).fill(null);
-        warmupPassed = new Array(quizData.length).fill(false); // 🚀 補上這行：初始化暖身記憶體
-        
-        document.getElementById('total-display').innerText = quizData.length;
-        document.getElementById('setup-zone').style.display = 'none';
-        document.getElementById('progress-container').style.display = 'block';
-        document.getElementById('studio').style.display = 'block';
-        
-        // 🚀 關鍵：先綁定監聽器，再畫出第一題，按鈕才不會失效！
-        attachButtonListeners(); 
-        renderWord();
+      // 綁定底部 Dock 按鈕：「開始」
+      setDockButton('開始', true, async () => {
+          setDockButton('連線中...', false, null);
+          try {
+              globalMicStream = await navigator.mediaDevices.getUserMedia({ audio: true }); 
+          } catch (e) { 
+              alert("請開啟麥克風權限才能進行口說練習！");
+              setDockButton('重試', true, handleDockClick);
+              return; 
+          }
+          
+          const fetchUrl = TARGET_UNIT 
+              ? `${GAS_URL}?id=${STUDENT_ID}&action=get_data&unit=${encodeURIComponent(TARGET_UNIT)}`
+              : `${GAS_URL}?id=${STUDENT_ID}&action=get_data`;
+
+          fetch(fetchUrl)
+            .then(res => res.json())
+            .then(data => {
+              if (!data.words || data.words.length === 0) { 
+                  alert("題目為空"); 
+                  setDockButton('重試', true, handleDockClick);
+                  return; 
+              }
+              quizData = data.words; 
+              scores = new Array(quizData.length).fill(null);
+              warmupPassed = new Array(quizData.length).fill(false);
+              assignedWarmupModes = new Array(quizData.length).fill(null);
+              
+              document.getElementById('setup-zone').style.display = 'none';
+              document.getElementById('top-nav-bar').style.display = 'flex';
+              document.getElementById('studio').style.display = 'block';
+              
+              renderWord(); // 直接進入渲染，拋棄舊的按鈕監聽器
+            })
+            .catch(err => {
+              console.error("載入失敗", err);
+              alert("題目載入失敗，請檢查網路連線");
+              setDockButton('重試', true, handleDockClick);
+            });
       });
   };
   
