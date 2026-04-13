@@ -140,9 +140,10 @@
       .progress-bar-container { flex: 1; background: #e5e5e5; height: 16px; border-radius: 10px; overflow: hidden; }
       .progress-fill { background: #58cc02; height: 100%; width: 0%; transition: width 0.5s ease-out; border-radius: 10px; }
   
-      /* 🚀 內容滾動區 (避免被底部擋住) */
+      /* 🚀 內容區 (禁止滾動，完美貼合螢幕大小) */
       .content-scroll-area { 
-        flex: 1; overflow-y: auto; overflow-x: hidden; padding: 10px 20px 140px; 
+        flex: 1; overflow: hidden; /* 徹底封殺上下滑動 */
+        padding: 10px 20px 100px; 
         display: flex; flex-direction: column; align-items: center; width: 100%; box-sizing: border-box; 
       }
   
@@ -172,47 +173,56 @@
       .btn-dock.active:active { border-bottom-width: 2px; transform: translateY(4px); margin-top: 4px; }
       .btn-dock.wrong-btn { background: #ff4b4b; border-color: #ea1537; color: white; }
       .btn-dock.wrong-btn:active { border-bottom-width: 2px; transform: translateY(4px); margin-top: 4px; }
-  
-      /* 🚀 修正排版：精靈與標題靠左對齊，緊湊對話流 */
+
+      /* 🚀 修正排版：精靈與標題完美靠左，並將頂部對齊鎖死 */
       .avatar-bubble-row { 
-          display: flex; align-items: flex-end; 
-          justify-content: flex-start; /* 強制靠左 */
-          gap: 10px; margin-bottom: 20px; flex-shrink: 0; width: 100%; 
-          padding: 0 15px; box-sizing: border-box;
+          display: flex; align-items: flex-start; /* 頂部對齊，泡泡長大時精靈不會被往下擠 */
+          justify-content: flex-start; 
+          gap: 12px; margin-bottom: 10px; flex-shrink: 0; width: 100%; 
+          padding: 0; /* 移除 padding，完美切齊左側標題 */
+          box-sizing: border-box;
       }
       
-      /* 🌟 2D 實體陰影：絕對定位貼合腳底，無模糊純色 */
+      /* 🌟 實體 2D 陰影：容器固定大小，鎖死精靈位置 */
       .mascot-container {
           position: relative;
-          display: inline-flex;
-          flex-direction: column;
-          align-items: center;
-          width: 140px; /* 對齊精靈的寬度 */
+          width: 120px; height: 120px; /* 固定占位大小，不管動畫怎麼動都不影響排版 */
+          flex-shrink: 0;
+          display: flex; justify-content: center;
       }
       .mascot-shadow {
           position: absolute;
-          bottom: 6px; /* 絕對定位，緊貼精靈腳底 */
+          bottom: 0px; /* 死死釘在容器最底部 */
           left: 50%;
           transform: translateX(-50%);
-          width: 75px; height: 22px; /* 比例完美的橢圓，不會過扁 */
-          background: #e5e5e5; /* 純色實體灰，沒有漸層！ */
+          width: 75px; height: 16px; 
+          background: #e5e5e5; 
           border-radius: 50%;
-          z-index: -1; /* 藏在精靈圖層後方 */
+          z-index: 1; /* 陰影層級 */
+      }
+      /* 讓 Lottie 絕對定位在容器裡，確保換動作不會影響外部排版 */
+      #prod-mascot {
+          position: absolute;
+          bottom: 6px; /* 站在陰影上方一點點 */
+          left: 50%;
+          transform: translateX(-50%);
+          width: 140px !important; height: 140px !important; /* 視覺放大，但不撐開容器 */
+          z-index: 2;
       }
 
-      /* 💬 動態彈性對話框與全站字體統一 (Extra Bold) */
+      /* 💬 動態彈性對話框 */
       .speech-bubble { 
           background: #ffffff; border: 2px solid #e5e5e5; border-radius: 20px; 
           padding: 12px 18px; position: relative; 
           max-width: 65%; width: fit-content; min-height: 50px; 
           text-align: left; box-shadow: 0 4px 0 #e5e5e5; 
-          color: #4b4b4b; font-weight: 800; /* 統一粗體 */
-          font-size: 16px; line-height: 1.4; 
+          color: #4b4b4b; font-weight: 800; font-size: 16px; line-height: 1.4; 
           display: flex; flex-direction: column; justify-content: center; 
-          word-break: break-word; margin-bottom: 12px; 
+          word-break: break-word; margin-top: 5px; /* 稍微往下移一點對齊精靈頭部 */
       }
-      .speech-bubble.left-tail::before { content: ""; position: absolute; left: -14px; bottom: 25px; border-top: 10px solid transparent; border-bottom: 10px solid transparent; border-right: 14px solid #e5e5e5; }
-      .speech-bubble.left-tail::after { content: ""; position: absolute; left: -10px; bottom: 25px; border-top: 10px solid transparent; border-bottom: 10px solid transparent; border-right: 12px solid #ffffff; }
+      /* 尾巴改為距離上方 25px，這樣對話框長高時尾巴才不會跑位 */
+      .speech-bubble.left-tail::before { content: ""; position: absolute; left: -14px; top: 25px; border-top: 10px solid transparent; border-bottom: 10px solid transparent; border-right: 14px solid #e5e5e5; }
+      .speech-bubble.left-tail::after { content: ""; position: absolute; left: -10px; top: 25px; border-top: 10px solid transparent; border-bottom: 10px solid transparent; border-right: 12px solid #ffffff; }
       
       /* 確保單字與中文翻譯的字體也統一粗細 */
       #word-display { font-size: clamp(35px, 8vw, 45px) !important; color: #4b4b4b; font-weight: 900 !important; margin-bottom: 5px; }
