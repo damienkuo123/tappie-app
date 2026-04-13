@@ -1210,7 +1210,7 @@
       return { matrix, path };
   }
 
-  // 🎙️ 升級版：開口決戰區 (對接精靈與 Dock)
+  // 🎙️ 升級版：開口決戰區 (對接隨機精靈)
   function setupProductionZone(current) {
       const wordDisplay = document.getElementById('word-display');
       const rb = document.getElementById('record-btn');
@@ -1232,27 +1232,29 @@
       const feedbackEl = document.getElementById('prod-feedback-text');
       const ttsText = document.getElementById('prod-tts-text');
 
+      // 🚀 智慧隨機精靈指派：這題有精靈了嗎？沒有就抽一隻！
+      if (!assignedMascots[currentIndex]) {
+          assignedMascots[currentIndex] = AVAILABLE_MASCOTS[Math.floor(Math.random() * AVAILABLE_MASCOTS.length)];
+      }
+      const currentMascot = assignedMascots[currentIndex];
+
       if (currentScore !== null) {
-          // 有分數：顯示回饋、隱藏「我來唸一次」文字、精靈給出表情
           if (feedbackEl) {
               feedbackEl.style.display = 'block';
               feedbackEl.innerHTML = `<span style="color:var(--marian-green); font-weight:900;">得分：${currentScore}</span><br><small>${currentFeedback}</small>`;
           }
           if (ttsText) ttsText.style.display = 'none'; 
-          playMascot('prod-mascot', currentScore >= 70 ? 'success' : 'fail'); // 🎭 3.0 精靈
+          playMascot('prod-mascot', currentScore >= 70 ? 'success' : 'fail', currentMascot); 
           
-          // ✅ 解鎖 Dock 按鈕，允許前往下一題或結算
           setDockButton(currentIndex === quizData.length - 1 ? '查看結算' : '繼續', true, () => {
               if (currentIndex < quizData.length - 1) { currentIndex++; renderWord(); } 
               else { showSummary(); }
           });
       } else {
-          // 沒分數：初始狀態，精靈閒置
           if (feedbackEl) feedbackEl.style.display = 'none';
           if (ttsText) ttsText.style.display = 'inline'; 
-          playMascot('prod-mascot', 'idle'); // 🎭 3.0 精靈
+          playMascot('prod-mascot', 'idle', currentMascot); 
           
-          // 🛑 鎖死 Dock 按鈕
           setDockButton('請錄音', false, null);
       }
       
