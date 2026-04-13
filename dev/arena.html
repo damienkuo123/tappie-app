@@ -167,11 +167,44 @@
       .btn-dock.active { background: #58cc02; color: white; box-shadow: 0 5px 0 #58a700; }
       .btn-dock.active:active { transform: translateY(5px); box-shadow: 0 0px 0 #58a700; }
   
-      /* 🚀 修正排版：固定對話框列高度，防止被文字撐開往下壓 */
-      .avatar-bubble-row { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 10px; flex-shrink: 0; width: 100%; height: 170px; }
-      .speech-bubble { background: #ffffff; border: 2px solid #e5e5e5; border-radius: 20px; padding: 12px 18px; position: relative; max-width: 65%; width: 100%; height: 120px; overflow-y: auto; text-align: left; box-shadow: 0 4px 0 #e5e5e5; color: #4b4b4b; font-weight: bold; display: flex; flex-direction: column; justify-content: center; }
-      .speech-bubble.left-tail::before { content: ""; position: absolute; left: -12px; top: 20px; border-top: 10px solid transparent; border-bottom: 10px solid transparent; border-right: 12px solid #e5e5e5; }
-      .speech-bubble.left-tail::after { content: ""; position: absolute; left: -8px; top: 20px; border-top: 10px solid transparent; border-bottom: 10px solid transparent; border-right: 10px solid #ffffff; }
+      /* 🚀 修正排版：精靈靠左對齊，建立對話流動感 */
+      .avatar-bubble-row { 
+          display: flex; align-items: flex-end; /* 讓精靈與對話框底部對齊 */
+          justify-content: flex-start; /* 靠左排列 */
+          gap: 15px; margin-bottom: 20px; flex-shrink: 0; width: 100%; 
+          padding: 0 10px; box-sizing: border-box;
+      }
+      
+      /* 🌟 實體陰影產生器：利用外層容器製造地面陰影 */
+      .mascot-container {
+          position: relative;
+          display: inline-flex;
+          flex-direction: column;
+          align-items: center;
+      }
+      .mascot-shadow {
+          width: 60%; height: 12px;
+          background: radial-gradient(ellipse at center, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0) 70%);
+          border-radius: 50%;
+          margin-top: -10px; /* 稍微往上提，貼合腳底 */
+      }
+
+      /* 💬 動態彈性對話框 */
+      .speech-bubble { 
+          background: #ffffff; border: 2px solid #e5e5e5; border-radius: 20px; 
+          padding: 15px 20px; position: relative; 
+          max-width: 65%; /* 限制最大寬度，避免文字貼邊 */
+          width: fit-content; /* 內容多寬就多寬 */
+          min-height: 50px; /* 給予基本高度 */
+          text-align: left; box-shadow: 0 4px 0 #e5e5e5; 
+          color: #4b4b4b; font-weight: bold; 
+          display: flex; flex-direction: column; justify-content: center; 
+          word-break: break-word; /* 允許長文字換行 */
+          margin-bottom: 15px; /* 把對話框往上提一點，對齊精靈嘴巴 */
+      }
+      /* 調整小尾巴的位置 */
+      .speech-bubble.left-tail::before { content: ""; position: absolute; left: -14px; bottom: 25px; border-top: 10px solid transparent; border-bottom: 10px solid transparent; border-right: 14px solid #e5e5e5; }
+      .speech-bubble.left-tail::after { content: ""; position: absolute; left: -10px; bottom: 25px; border-top: 10px solid transparent; border-bottom: 10px solid transparent; border-right: 12px solid #ffffff; }
   
       .btn-choice-list, .btn-tap-fill, .btn-image-choice, .ws-letter { background: #ffffff; border: 2px solid #e5e5e5; border-bottom-width: 4px; border-radius: 16px; font-weight: 800; width: 100%; box-sizing: border-box; }
       .btn-choice-list.correct, .btn-tap-fill.correct, .btn-image-choice.correct, .ws-letter.correct-path { background: #d7ffb8; border-color: #58cc02; color: #58a700; }
