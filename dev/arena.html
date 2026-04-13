@@ -1357,21 +1357,30 @@
       if (currentScore !== null) {
           if (feedbackEl) {
               feedbackEl.style.display = 'block';
-              feedbackEl.innerHTML = `<span style="color:var(--marian-green); font-weight:900;">得分：${currentScore}</span><br><small>${currentFeedback}</small>`;
+              // 依據分數給予不同顏色的文字回饋
+              const fbColor = currentScore >= 70 ? 'var(--marian-green)' : '#ea1537';
+              feedbackEl.innerHTML = `<span style="color:${fbColor}; font-weight:900;">得分：${currentScore}</span><br><small>${currentFeedback}</small>`;
           }
           if (ttsText) ttsText.style.display = 'none'; 
           playMascot('prod-mascot', currentScore >= 70 ? 'success' : 'fail', currentMascot); 
           
-          setDockButton(currentIndex === quizData.length - 1 ? '查看結算' : '繼續', true, () => {
-              if (currentIndex < quizData.length - 1) { currentIndex++; renderWord(); } 
-              else { showSummary(); }
-          });
+          // 🚀 依據分數變換底部顏色 (>=70亮綠色，<70亮紅色)
+          const isPass = currentScore >= 70;
+          setDockButton(
+              currentIndex === quizData.length - 1 ? '查看結算' : '繼續', 
+              true, 
+              () => {
+                  if (currentIndex < quizData.length - 1) { currentIndex++; renderWord(); } 
+                  else { showSummary(); }
+              }, 
+              isPass ? 'correct' : 'wrong'
+          );
       } else {
           if (feedbackEl) feedbackEl.style.display = 'none';
           if (ttsText) ttsText.style.display = 'inline'; 
           playMascot('prod-mascot', 'idle', currentMascot); 
           
-          setDockButton('請錄音', false, null);
+          setDockButton('請錄音', false, null); // 預設白底
       }
       
       if (rb) {
