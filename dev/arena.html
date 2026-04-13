@@ -1174,14 +1174,18 @@
             let reward = (avg >= 90) ? 30 : (avg >= 80 ? 10 : 0);
             rewardHint.innerText = reward > 0 ? `🎁 可獲得：${reward} 點` : `✅ 挑戰成功！`;
             
+            // 在 showSummary 函數內，setDockButton('領取獎勵'...) 的部分
             setDockButton('領取獎勵', true, () => {
                 document.getElementById('summary').style.display = 'none';
                 document.querySelector('.bottom-dock').style.display = 'none'; 
                 document.getElementById('epic-reward-zone').style.display = 'flex';
                 document.getElementById('reward-points-display').innerText = reward;
                 
+                // 🚀 3.0 對接：播放史詩級慶祝動作
                 playMascot('epic-mascot', 'epic'); 
-                handleClaimReward(avg, reward); // 背景傳送
+                
+                // 傳送成績
+                handleClaimReward(avg, reward);
             });
         } else {
             rewardHint.innerText = `❌ 平均需達 70 分才能領獎`;
