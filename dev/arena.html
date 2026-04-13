@@ -928,23 +928,24 @@
         fetch(fetchUrl)
           .then(res => res.json())
           .then(data => {
-            if (!data || !data.words || data.words.length === 0) { alert("題目為空"); return; }
-            
+            if (!data.words || data.words.length === 0) { alert("題目為空"); return; }
             quizData = data.words; 
             scores = new Array(quizData.length).fill(null);
             warmupPassed = new Array(quizData.length).fill(false);
             assignedWarmupModes = new Array(quizData.length).fill(null);
             
+            document.getElementById('total-display').innerText = quizData.length;
+            
+            // 🚀 隱藏開始畫面，顯示練習區 (拔除已不存在的 progress-container)
             document.getElementById('setup-zone').style.display = 'none';
-            document.getElementById('progress-container').style.display = 'block';
             document.getElementById('studio').style.display = 'block';
             
             attachButtonListeners(); 
             renderWord();
           })
           .catch(err => {
-            console.error("Quiz Fetch Error:", err);
-            alert("載入失敗！請確認網路連線。");
+            console.error("載入失敗詳細原因:", err);
+            alert("題目載入發生錯誤！(已排除網路問題，請確認 console 報錯)");
           });
     });
   };
