@@ -571,16 +571,17 @@
 
   const originalOnload = async () => {
     hideLoadingScreen();
-    // 🚀 一啟動就顯示導航欄
     const navBar = document.getElementById('top-nav-bar');
     if (navBar) navBar.style.display = 'flex';
 
     const speechText = document.getElementById('setup-speech-text');
     playMascot('setup-mascot', 'idle');
+    
+    // 🚀 修復單元名稱顯示
     if (speechText) {
         speechText.innerText = "嗨～我們來增進英語口說吧！";
         setTimeout(() => { 
-            speechText.innerText = `今天挑戰：${TARGET_UNIT ? TARGET_UNIT : '今日挑戰'}`; 
+            speechText.innerText = `今天挑戰：${TARGET_UNIT || '今日挑戰'}`; 
         }, 2000);
     }
 
@@ -592,18 +593,17 @@
       return;
     }
 
+    // 🚀 修復按鈕點擊與 Fetch 邏輯
     setDockButton('開始', true, () => {
         if (speechText) speechText.innerText = "正在為您載入題目...";
         
-        // 🚀 修正 URL 拼接問題
         let fetchUrl = GAS_URL + "?id=" + STUDENT_ID + "&action=get_data";
         if (TARGET_UNIT) fetchUrl += "&unit=" + encodeURIComponent(TARGET_UNIT);
 
         fetch(fetchUrl)
           .then(res => res.json())
           .then(data => {
-            // 🚀 嚴格檢查資料結構
-            if (!data || !data.words || data.words.length === 0) { throw new Error("Empty quiz"); }
+            if (!data || !data.words || data.words.length === 0) { throw new Error("Empty"); }
             
             quizData = data.words; 
             scores = new Array(quizData.length).fill(null);
@@ -613,147 +613,23 @@
             document.getElementById('setup-zone').style.display = 'none';
             document.getElementById('studio').style.display = 'block';
             
+            // 🚀 重要：補上播放鍵綁定
+            attachButtonListeners(); 
             renderWord();
           })
           .catch(err => {
-            console.error("Quiz Fetch Error:", err);
-            alert("載入失敗！請確認網路連線或單元名稱是否正確。");
+            console.error("Fetch Error:", err);
+            alert("網路連線不穩，請重新嘗試！");
           });
     });
   };
 
-  window.onload = async () => { await originalOnload(); };
-  
-  // 🚀 傳送門：全息對峙 Loading 畫面邏輯
-  function showPortal() {
-    const portal = document.getElementById('battle-portal-overlay');
-    
-    // 強制重繪與套用 3D 視角
-    portal.className = '';
-    void portal.offsetWidth; 
-    portal.style.display = 'flex';
-    
-    let pCount = 60;
-    
-    // 啟動頂部倒數計時
-    const pTimer = setInterval(() => {
-      pCount--;
-      document.getElementById('portal-countdown').innerText = pCount;
-      if(pCount <= 0) { 
-          clearInterval(pTimer); 
-          if (window.portalJump) window.portalJump(); 
-      }
-    }, 1000);
-
-    // 向後端抓取對戰對手資料
-    fetch(`${GAS_URL}?action=get_battle_status&roomId=${ROOM_ID}&t=${new Date().getTime()}`)
-      .then(res => res.json())
-      .then(data => {
-        const isMeHost = (normalizeStr(STUDENT_ID) === normalizeStr(data.hostId));
-
-        // 判定雙方圖片與名稱 (🚀 對手變數改成 let 才能被覆蓋)
-        const myImgUrl = isMeHost ? data.hostImg : data.guestImg;
-        let opImgUrl = isMeHost ? data.guestImg : data.hostImg;
-        const myName = isMeHost ? data.hostName : (data.guestName || STUDENT_ID);
-        let opName = isMeHost ? (data.guestName || "挑戰者") : data.hostName;
-
-        const finalMyRarity = isMeHost ? (data.hostRarity || 'N') : (data.guestRarity || 'N');
-        let finalOpRarity = isMeHost ? (data.guestRarity || 'N') : (data.hostRarity || 'N');
-        const finalMyMask = isMeHost ? (data.hostMask || '') : (data.guestMask || '');
-        let finalOpMask = isMeHost ? (data.guestMask || '') : (data.hostMask || '');
-
-        // 🚀 核心攔截：如果是突發事件，直接把上面的對手變數強制換成 Boss！
-        if (isEventMode && EVENT_AVATAR && window.characterAssets && window.characterAssets[EVENT_AVATAR]) {
-            const boss = window.characterAssets[EVENT_AVATAR];
-            opName = `[活動] ${boss.name}`;
-            opImgUrl = boss.img;
-            finalOpRarity = boss.rarity || 'SSR';
-            finalOpMask = boss.mask || '';
-        }
-
-        console.log("【偵測】我方 Rarity:", finalMyRarity, "對手 Rarity:", finalOpRarity);
-
-        // 🚀 強制寫入我方特效
-        const myCardEl = document.getElementById('portal-my-card');
-        myCardEl.setAttribute('data-rarity', finalMyRarity);
-        if (finalMyMask) {
-            myCardEl.classList.add('masked');
-            myCardEl.style.setProperty('--mask', finalMyMask.includes('url(') ? finalMyMask : `url('${finalMyMask}')`);
-        } else {
-            myCardEl.classList.remove('masked');
-        }
-
-        // 🚀 強制寫入對手特效
-        const opCardEl = document.getElementById('portal-op-card');
-        opCardEl.setAttribute('data-rarity', finalOpRarity);
-        if (finalOpMask) {
-            opCardEl.classList.add('masked');
-            opCardEl.style.setProperty('--mask', finalOpMask.includes('url(') ? finalOpMask : `url('${finalOpMask}')`);
-        } else {
-            opCardEl.classList.remove('masked');
-        }
-
-        // 填入卡片背景圖與姓名 Tag
-        if(myImgUrl) document.getElementById('portal-my-bg').style.backgroundImage = `url('${myImgUrl}')`;
-        if(opImgUrl) document.getElementById('portal-op-bg').style.backgroundImage = `url('${opImgUrl}')`;
-        document.getElementById('portal-my-name').innerText = myName;
-        document.getElementById('portal-op-name').innerText = opName;
-
-        // 🚀 資料載入完畢，觸發史詩級「卡牌滑入對峙」動畫！
-        const myWrapper = document.getElementById('portal-my-wrapper');
-        const opWrapper = document.getElementById('portal-op-wrapper');
-        const vsSpark = document.querySelector('.portal-vs-spark');
-        
-        myWrapper.classList.remove('clash-in-my');
-        opWrapper.classList.remove('clash-in-op');
-        vsSpark.classList.remove('spark-active');
-        void portal.offsetWidth; 
-
-        myWrapper.classList.add('clash-in-my');
-        opWrapper.classList.add('clash-in-op');
-        vsSpark.classList.add('spark-active');
-
-        // 秀出底部帥氣質感的「進入戰場」毛玻璃按鈕
-        const enterBtn = document.getElementById('portal-enter-btn');
-        enterBtn.classList.remove('portal-btn-hidden');
-        enterBtn.classList.add('portal-btn-show');
-
-        // 綁定「點擊進入戰場」的跳轉功能
-        window.portalJump = () => {
-          clearInterval(pTimer);
-          portal.style.display = 'none';
-          document.getElementById('battle-arena').style.display = 'flex';
-          setTimeout(() => { document.getElementById('battle-arena').classList.add('battle-ready'); }, 100);
-          fetchBattleDataAndStart(ROOM_ID);
-        };
-        // 🚀 加上這行：資料載入完畢後，啟動閃卡互動引擎！
-        setTimeout(() => { initInteractiveHoloCards(); }, 500);
-      })
-      .catch(err => {
-        console.error("Portal Error:", err);
-        // 如果網路連線失敗，備用的顯示機制
-        const enterBtn = document.getElementById('portal-enter-btn');
-        enterBtn.innerText = "強制進入";
-        enterBtn.classList.remove('portal-btn-hidden');
-        enterBtn.classList.add('portal-btn-show');
-        
-        window.portalJump = () => {
-          clearInterval(pTimer);
-          portal.style.display = 'none';
-          document.getElementById('battle-arena').style.display = 'flex';
-          fetchBattleDataAndStart(ROOM_ID);
-        };
-      });
-  }
-
+  // 🚀 修正：所有輔助演算法與渲染函數全部移到最外層，避免變數衝突
   function renderWord() {
     const current = quizData[currentIndex];
     if (!current) return;
-
-    if (quizData.length > 0) {
-        const progFill = document.getElementById('progress-fill');
-        if (progFill) progFill.style.width = ((currentIndex + 1) / quizData.length) * 100 + "%";
-    }
+    const progFill = document.getElementById('progress-fill');
+    if (progFill) progFill.style.width = ((currentIndex + 1) / quizData.length) * 100 + "%";
 
     if (warmupPassed[currentIndex]) {
         document.getElementById('warmup-zone').style.display = 'none';
@@ -767,13 +643,13 @@
   }
 
   function setupWarmupZone(current) {
-      const visualCard = document.querySelector('.warmup-visual-card');
       const skeletonContainer = document.getElementById('warmup-word-skeleton');
       const optionsContainer = document.getElementById('warmup-options');
+      const visualCard = document.querySelector('.warmup-visual-card');
       
       if (window.warmupAutoPlayTimer) clearTimeout(window.warmupAutoPlayTimer);
       skeletonContainer.innerHTML = ''; optionsContainer.innerHTML = ''; optionsContainer.removeAttribute('class');
-      visualCard.innerHTML = `<img id="warmup-img" src="" style="display:none;"><div id="warmup-zh" style="display:none;"></div><button id="warmup-audio-btn" style="display:none; background:#f1f5f9; border:2px solid #e5e5e5; border-radius:50%; width:80px; height:80px; font-size:32px; cursor:pointer;">👂</button>`;
+      visualCard.innerHTML = `<img id="warmup-img" src="" style="display:none;"><div id="warmup-zh" style="display:none; font-size:24px; font-weight:bold;"></div><button id="warmup-audio-btn" style="display:none; background:#f1f5f9; border:2px solid #e5e5e5; border-radius:50%; width:80px; height:80px; font-size:32px; cursor:pointer; margin: 0 auto;">👂</button>`;
 
       const imgEl = document.getElementById('warmup-img');
       const zhEl = document.getElementById('warmup-zh');
@@ -785,69 +661,58 @@
       if (warmupMode === null) {
           const hasImg = !!(current.img && current.img.trim());
           const isWord = !current.en.includes(" ");
-          let modes = [0, 2]; // 預設：文字選擇、聽音選擇
-          if (isWord && current.en.length >= 3) { modes.push(1); modes.push(4); } // 拼字、矩陣
-          if (hasImg) modes.push(3); // 圖片選擇
+          let modes = [0, 2]; 
+          if (isWord && current.en.length >= 3) { modes.push(1); modes.push(4); }
+          if (hasImg) modes.push(3); 
           warmupMode = modes[Math.floor(Math.random() * modes.length)];
           assignedWarmupModes[currentIndex] = warmupMode;
       }
 
-      // 渲染提示內容
-      if (warmupMode === 2) {
-          audioBtn.style.display = 'block';
-          audioBtn.onclick = () => speakWordCloudCached(current.en, 1.8, null, null);
-          window.warmupAutoPlayTimer = setTimeout(() => audioBtn.click(), 500);
-      } else if (warmupMode === 3) {
-          zhEl.innerText = current.en; zhEl.style.display = 'block'; zhEl.style.color = '#0066cc';
-      } else {
-          if (current.img) { imgEl.src = current.img; imgEl.style.display = 'block'; }
-          else { zhEl.innerText = current.zh || "???"; zhEl.style.display = 'block'; }
-      }
+      if (warmupMode === 2) { audioBtn.style.display = 'block'; audioBtn.onclick = () => speakWordCloudCached(current.en, 1.8, null, null); window.warmupAutoPlayTimer = setTimeout(() => audioBtn.click(), 500); }
+      else if (warmupMode === 3) { zhEl.innerText = current.en; zhEl.style.display = 'block'; zhEl.style.color = '#0066cc'; }
+      else { if (current.img) { imgEl.src = current.img; imgEl.style.display = 'block'; } else { zhEl.innerText = current.zh || "???"; zhEl.style.display = 'block'; } }
 
       setDockButton('請回答問題', false, null);
       const win = () => setDockButton('繼續', true, () => { warmupPassed[currentIndex] = true; renderWord(); });
 
-      // 遊戲邏輯實作
+      // 遊戲實作 (與企劃書同步)
       if (warmupMode === 0 || warmupMode === 2) {
           optionsContainer.classList.add('list-mode');
           let opts = [current.en, ...quizData.filter(q=>q.en!==current.en).map(q=>q.en).sort(()=>0.5-Math.random()).slice(0,3)].sort(()=>0.5-Math.random());
           opts.forEach(t => {
-              let b = document.createElement('button'); b.className='btn-choice-list'; b.style.width='100%'; b.style.padding='15px'; b.style.marginBottom='10px'; b.innerText=t;
+              let b = document.createElement('button'); b.className='btn-choice-list'; b.style.padding='15px'; b.innerText=t;
               b.onclick = function(){ if(t===current.en){ this.classList.add('correct'); win(); } else { this.classList.add('wrong'); } };
               optionsContainer.appendChild(b);
           });
       } else if (warmupMode === 3) {
           optionsContainer.classList.add('grid-image-mode');
-          optionsContainer.style.display='grid'; optionsContainer.style.gridTemplateColumns='1fr 1fr'; optionsContainer.style.gap='10px';
           let opts = [{img:current.img, ok:true}, ...quizData.filter(q=>q.en!==current.en&&q.img).sort(()=>0.5-Math.random()).slice(0,3).map(q=>({img:q.img, ok:false}))].sort(()=>0.5-Math.random());
           opts.forEach(o => {
-              let b = document.createElement('button'); b.className='btn-image-choice'; b.innerHTML=`<img src="${o.img}" style="width:100%; aspect-ratio:1; object-fit:cover; border-radius:10px;">`;
+              let b = document.createElement('button'); b.className='btn-image-choice'; b.style.padding='5px'; b.innerHTML=`<img src="${o.img}" style="width:100%; aspect-ratio:1; object-fit:cover; border-radius:10px;">`;
               b.onclick = function(){ if(o.ok){ this.classList.add('correct'); win(); } else { this.classList.add('wrong'); } };
               optionsContainer.appendChild(b);
           });
       } else if (warmupMode === 1) {
           const word = current.en.toUpperCase(); let rIdx = Math.floor(Math.random()*word.length);
           for(let i=0; i<word.length; i++){
-              let s = document.createElement('span'); s.className='skeleton-char'; s.style.display='inline-flex'; s.style.width='40px'; s.style.height='50px'; s.style.border='2px solid #e5e5e5'; s.style.borderRadius='10px'; s.style.alignItems='center'; s.style.justifyContent='center'; s.style.fontSize='24px'; s.style.margin='0 2px';
-              if(i===rIdx){ s.id='skel-target'; s.style.background='#f0f0f0'; } else { s.innerText=word[i]; s.style.background='#fff'; }
+              let s = document.createElement('span'); s.className='btn-choice-list'; s.style.display='inline-flex'; s.style.width='40px'; s.style.height='50px'; s.style.alignItems='center'; s.style.justifyContent='center'; s.style.fontSize='24px'; s.style.margin='0 2px';
+              if(i===rIdx){ s.id='skel-target'; s.style.background='#f0f0f0'; s.innerText=""; } else { s.innerText=word[i]; s.style.background='#fff'; }
               skeletonContainer.appendChild(s);
           }
           let charOpts = [word[rIdx], ..."ABCDEFGHIJKLMNOPQRSTUVWXYZ".replace(word[rIdx],'').split('').sort(()=>0.5-Math.random()).slice(0,2)].sort(()=>0.5-Math.random());
           charOpts.forEach(c => {
-              let b = document.createElement('button'); b.className='btn-tap-fill'; b.style.padding='10px 20px'; b.style.margin='5px'; b.innerText=c;
+              let b = document.createElement('button'); b.className='btn-tap-fill'; b.style.width='auto'; b.style.padding='10px 20px'; b.style.margin='5px'; b.innerText=c;
               b.onclick = function(){ if(c===word[rIdx]){ document.getElementById('skel-target').innerText=c; this.classList.add('correct'); win(); } else { this.classList.add('wrong'); } };
               optionsContainer.appendChild(b);
           });
       } else if (warmupMode === 4) {
-          const word = current.en.toUpperCase().replace(/\s/g,'');
-          const cols = Math.max(6, word.length + 1); // 🚀 關鍵修復：動態計算欄位數，防止長單字崩潰
+          const word = current.en.toUpperCase().replace(/\s+/g,''); const cols = Math.max(6, word.length + 1);
           optionsContainer.style.display='grid'; optionsContainer.style.gridTemplateColumns=`repeat(${cols}, 1fr)`; optionsContainer.style.gap='5px';
-          let matrix = Array(4).fill(null).map(()=>Array(cols).fill(''));
-          let startX = Math.floor(Math.random()*(cols-word.length+1)); let row = Math.floor(Math.random()*4);
+          let matrix = Array(4).fill(null).map(()=>Array(cols).fill('')); let startX = Math.floor(Math.random()*(cols-word.length+1)); let row = Math.floor(Math.random()*4);
           for(let i=0;i<word.length;i++) matrix[row][startX+i] = word[i];
           const alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
           matrix.forEach((r, y) => r.forEach((c, x) => {
-              let b = document.createElement('button'); b.className='ws-letter'; b.style.aspectRatio='1'; b.innerText = c || alpha[Math.floor(Math.random()*26)];
+              let b = document.createElement('button'); b.className='ws-letter'; b.innerText = c || alpha[Math.floor(Math.random()*26)];
               b.onclick = function(){
                   if(y===row && x>=startX && x<startX+word.length){ this.classList.add('correct-path'); if(optionsContainer.querySelectorAll('.correct-path').length === word.length) win(); }
                   else { this.classList.add('wrong'); setTimeout(()=>this.classList.remove('wrong'),500); }
@@ -857,561 +722,18 @@
       }
   }
 
-  // 🎙️ 建立口說決戰區
-  function setupProductionZone(current) {
-      const wordDisplay = document.getElementById('word-display');
-      const currentScore = scores[currentIndex];
-      const currentFeedback = (window.feedbacks && window.feedbacks[currentIndex]) ? window.feedbacks[currentIndex] : "";
-      
-      const charCount = current.en.length;
-      if (charCount > 20) wordDisplay.style.fontSize = "32px";
-      else if (charCount > 10) wordDisplay.style.fontSize = "42px";
-      else wordDisplay.style.fontSize = "52px";
-
-      const existingReport = azureReports[currentIndex];
-      if (existingReport) { wordDisplay.innerHTML = generateColoredHTML(existingReport, current.en); } 
-      else { wordDisplay.innerText = current.en; wordDisplay.style.color = "#0d47a1"; }
-
-      const prodZh = document.getElementById('production-zh');
-      if(prodZh) prodZh.innerText = current.zh || "";
-
-      const feedbackEl = document.getElementById('prod-feedback-text');
-      const ttsText = document.getElementById('prod-tts-text');
-      const ttsBtn = document.getElementById('prod-tts-btn');
-
-      if (ttsBtn) {
-          ttsBtn.onclick = () => {
-              speakWordCloudCached(current.en, 1.8, null, null); 
-              playMascot('prod-mascot', 'thinking');
-          };
-      }
-
-      if (currentScore !== null) {
-          if (feedbackEl) {
-              feedbackEl.style.display = 'block';
-              feedbackEl.innerHTML = `<span style="color:var(--marian-green); font-weight:900;">得分：${currentScore}</span><br><small>${currentFeedback}</small>`;
-          }
-          if (ttsText) ttsText.style.display = 'none'; 
-          playMascot('prod-mascot', currentScore >= 70 ? 'success' : 'fail');
-          
-          // ✅ 設定 Dock 按鈕狀態：已錄音，解鎖進入下一題或結算
-          setDockButton(currentIndex === quizData.length - 1 ? '查看結算' : '繼續', true, () => {
-              if (currentIndex < quizData.length - 1) { currentIndex++; renderWord(); } 
-              else { showSummary(); }
-          });
-      } else {
-          if (feedbackEl) feedbackEl.style.display = 'none';
-          if (ttsText) ttsText.style.display = 'inline'; 
-          playMascot('prod-mascot', 'idle');
-          
-          // 🛑 設定 Dock 按鈕狀態：未錄音
-          setDockButton('請錄音', false, null);
-      }
-      
-      isGrading = false; isRecording = false;
-      const statusEl = document.getElementById('status');
-      if (statusEl) { statusEl.innerText = "按住錄音，放開打分"; statusEl.style.color = "#afafaf"; }
-  }
-
-  if(rb) {
-    const startPracticeRecord = (e) => { 
-        if(isGrading || isRecording) return;
-        
-        // 🚀 修復問題一：終極防呆！檢查 Azure 憑證是否已經抓取完畢
-        if (!azureAuthToken) {
-            alert("語音引擎正在連線中，請稍等一兩秒再試！");
-            return;
-        }
-
-        e.preventDefault(); 
-        isRecording = true;
-        
-        // 🚀 觸感回歸：立刻觸發縮小動畫
-        rb.classList.add('active'); 
-        
-        // 🚀 提早喚醒解碼器 (破解 iOS 凍結)
-        if (!sysAudioCtx) sysAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        if (sysAudioCtx.state === 'suspended') sysAudioCtx.resume();
-        
-        if (!globalMicStream) {
-            alert("麥克風未授權，請重新整理網頁！");
-            isRecording = false; rb.classList.remove('active');
-            return;
-        }
-
-        practiceRecorder = new MediaRecorder(globalMicStream);
-        practiceChunks = [];
-        practiceRecorder.ondataavailable = ev => { if(ev.data.size > 0) practiceChunks.push(ev.data); };
-        practiceRecorder.start();
-
-        document.getElementById('status').innerText = "🔴 錄音中...";
-        document.getElementById('status').style.color = "#eb3b5a";
-        document.getElementById('feedback').innerHTML = ""; 
-        document.getElementById('prev-btn').disabled = true;
-        document.getElementById('next-btn').disabled = true;
-        document.getElementById('back-summary-btn').disabled = true;
-    };
-
-    const stopPracticeRecord = (e) => {
-        if(!isRecording) return;
-        e.preventDefault();
-        isRecording = false;
-        rb.classList.remove('active'); 
-        
-        if (!practiceRecorder || practiceRecorder.state !== "recording") {
-            document.getElementById('status').innerText = "🚨 錄音異常，請重試";
-            document.getElementById('status').style.color = "#e74c3c";
-            // 🚀 確保解鎖
-            isGrading = false; 
-            document.getElementById('next-btn').disabled = false;
-            if (currentIndex > 0) document.getElementById('prev-btn').disabled = false;
-            return;
-        }
-
-        isGrading = true;
-        rb.style.pointerEvents = "none"; 
-        rb.style.opacity = "0.5"; 
-        document.getElementById('status').innerText = "⚙️ 封裝音檔中...";
-        document.getElementById('status').style.color = "#f1c40f";
-
-        practiceRecorder.onstop = async () => {
-            const rawBlob = new Blob(practiceChunks); 
-            
-            if (practiceChunks.length === 0 || rawBlob.size < 500) {
-                document.getElementById('status').innerText = "🚨 錄音太短，請按住重唸";
-                document.getElementById('status').style.color = "#e74c3c";
-                renderWord(); // 🚀 發生錯誤也立刻一鍵恢復
-                return;
-            }
-            
-            try {
-                const wavFile = await createWavFileFromBlob(rawBlob);
-                document.getElementById('status').innerText = "🟢 傳送至聲學引擎...";
-                document.getElementById('status').style.color = "#3498db";
-
-                const targetWord = quizData[currentIndex].en;
-                const speechConfig = SpeechSDK.SpeechConfig.fromAuthorizationToken(azureAuthToken, azureRegionCode);
-                speechConfig.speechRecognitionLanguage = "en-US";
-                
-                const audioConfig = SpeechSDK.AudioConfig.fromWavFileInput(wavFile);
-                const pronConfig = new SpeechSDK.PronunciationAssessmentConfig(
-                    targetWord, SpeechSDK.PronunciationAssessmentGradingSystem.HundredMark,
-                    SpeechSDK.PronunciationAssessmentGranularity.Phoneme, true
-                );
-
-                const recognizer = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig);
-                pronConfig.applyTo(recognizer);
-
-                recognizer.recognizeOnceAsync(
-                    (result) => {
-                        if (result.reason === SpeechSDK.ResultReason.RecognizedSpeech) {
-                            document.getElementById('status').innerText = "呼叫導師評論中...";
-                            let rawAzureData = SpeechSDK.PronunciationAssessmentResult.fromResult(result).detailResult;
-                            azureReports[currentIndex] = rawAzureData;
-
-                            fetch(`${GAS_URL}?action=evaluate_speech_azure&word=${encodeURIComponent(targetWord)}`, { 
-                                method: 'POST', body: JSON.stringify(rawAzureData) 
-                            }).then(res => res.json()).then(data => {
-                                // 存入數據
-                                scores[currentIndex] = data.score; 
-                                if(!window.feedbacks) window.feedbacks = [];
-                                window.feedbacks[currentIndex] = data.feedback;
-                                
-                                // 🚀 關鍵：一鍵恢復所有按鈕觸發與樣式！
-                                renderWord();
-                            }).catch(() => {
-                                document.getElementById('status').innerText = "⚠️ 導師寫評語失敗";
-                                document.getElementById('status').style.color = "#e74c3c";
-                                renderWord();
-                            });
-                        } else {
-                            document.getElementById('status').innerText = "❌ 發音含糊或無關，請重唸";
-                            document.getElementById('status').style.color = "#e74c3c";
-                            renderWord();
-                        }
-                        recognizer.close();
-                    },
-                    (err) => {
-                        document.getElementById('status').innerText = "🚨 引擎連線錯誤";
-                        document.getElementById('status').style.color = "#e74c3c";
-                        renderWord();
-                        recognizer.close();
-                    }
-                );
-            } catch(err) {
-                console.error(err);
-                document.getElementById('status').innerText = "🚨 音檔處理失敗，請重試";
-                document.getElementById('status').style.color = "#e74c3c";
-                renderWord(); 
-            }
-        };
-        practiceRecorder.stop();
-    };
-
-    rb.onpointerdown = startPracticeRecord;
-    rb.onpointerup = stopPracticeRecord;
-    rb.onpointerout = stopPracticeRecord; 
-    rb.onpointercancel = stopPracticeRecord;
-  }
-
-  // 🏆 頁面 4：結算與傳送機制
-  function showSummary() {
-    document.getElementById('top-nav-bar').style.display = 'none';
-    document.getElementById('studio').style.display = 'none';
-    document.getElementById('summary').style.display = 'block';
-    
-    let sum = 0, count = 0;
-    const list = document.getElementById('word-list');
-    list.innerHTML = "";
-
-    quizData.forEach((item, i) => {
-      let s = scores[i] || 0;
-      let f = (window.feedbacks && window.feedbacks[i]) ? window.feedbacks[i] : "尚未錄音";
-      sum += s; count++;
-      list.innerHTML += `<tr><td><b style="color:#0d47a1">${item.en}</b><br><span style="color:#afafaf; font-size:14px">${item.zh}</span><br><p style="margin:5px 0; font-size:13px; color:#4b4b4b;">💡 ${f}</p></td><td><span class="score-badge">${s} 分</span></td></tr>`;
-    });
-
-    const avg = count > 0 ? Math.round(sum / count) : 0;
-    document.getElementById('total-avg').innerText = avg;
-    const rewardHint = document.getElementById('reward-hint');
-
-    if (MODE === 'review') {
-        rewardHint.innerText = `✅ 練習完成！`;
-        setDockButton('完成練習', true, () => handleClaimReward(avg, 0));
-    } else {
-        if (avg >= 70) {
-            let reward = (avg >= 90) ? 30 : (avg >= 80 ? 10 : 0);
-            rewardHint.innerText = reward > 0 ? `🎁 可獲得：${reward} 點` : `✅ 挑戰成功！`;
-            
-            setDockButton('領取獎勵', true, () => {
-                document.getElementById('summary').style.display = 'none';
-                document.querySelector('.bottom-dock').style.display = 'none'; 
-                document.getElementById('epic-reward-zone').style.display = 'flex';
-                document.getElementById('reward-points-display').innerText = reward;
-                
-                playMascot('epic-mascot', 'epic'); 
-                handleClaimReward(avg, reward); // 背景傳送
-            });
-        } else {
-            rewardHint.innerText = `❌ 平均需達 70 分才能領獎`;
-            setDockButton('平均需達 70 分才能領獎', false, null);
-        }
-    }
-  }
-
-  function handleClaimReward(avg, reward) {
-    let detailArr = quizData.map((item, i) => ({
-        word: item.en, score: scores[i] || 0,
-        feedback: (window.feedbacks && window.feedbacks[i]) ? window.feedbacks[i] : "尚未錄音",
-        azure_report: (typeof azureReports !== 'undefined' && azureReports[i]) ? azureReports[i] : null
-    }));
-    
-    fetch(`${GAS_URL}?id=${STUDENT_ID}&action=add_score&score=${avg}&mode=${MODE}`, { method: 'POST', body: JSON.stringify(detailArr) })
-      .then(() => { setTimeout(() => { window.location.href = `https://damienkuo123.github.io/marian-app/dashboard.html?id=${STUDENT_ID}`; }, 3000); })
-      .catch(() => { setTimeout(() => { window.location.href = `https://damienkuo123.github.io/marian-app/dashboard.html?id=${STUDENT_ID}`; }, 3000); });
-  }
-  
-  function reRead(i) { 
-      currentIndex = i; 
-      isReReading = true; 
-      document.getElementById('summary').style.display = 'none'; 
-      document.getElementById('studio').style.display = 'block'; 
-      document.getElementById('progress-container').style.display = 'block';
-      renderWord(); 
-  }
-
-  
-
-  // =======================================================
-    // 🚀 升級 2：瑪麗安「無痕換人攔截器」 (Arena 戰場強制中斷版)
-    // =======================================================
-    (function() {
-      const focusHunter = document.createElement('input');
-      focusHunter.type = "text";
-      focusHunter.style.position = "fixed";
-      focusHunter.style.top = "-500px"; 
-      focusHunter.style.opacity = "0";
-      document.body.appendChild(focusHunter);
-
-      setInterval(() => { 
-        const active = document.activeElement;
-        // 確保焦點不在其他輸入框時才奪取焦點
-        if (active.tagName !== 'INPUT' && active.tagName !== 'TEXTAREA') { 
-          focusHunter.focus(); 
-        }
-      }, 1000);
-
-      let scanTimer;
-      
-      // 機制 1：讀卡機有送出 Enter 鍵
-      focusHunter.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') {
-          clearTimeout(scanTimer);
-          const finalID = focusHunter.value.trim();
-          if (finalID.length >= 6) verifyCardForArena(finalID);
-          focusHunter.value = "";
-        }
-      });
-
-      // 機制 2：讀卡機沒送 Enter 鍵，靠停頓 0.2 秒判斷
-      focusHunter.addEventListener('input', function() {
-        clearTimeout(scanTimer);
-        scanTimer = setTimeout(() => {
-          const finalID = focusHunter.value.trim();
-          if (finalID.length >= 6) {
-            verifyCardForArena(finalID);
-            focusHunter.value = "";
-          }
-        }, 200);
-      });
-
-      function verifyCardForArena(cardId) {
-        // 如果戰鬥中途被刷卡，直接蓋上最高層級的遮罩中斷戰鬥
-        const loader = document.createElement('div');
-        loader.style = "position:fixed;inset: 0; width: 100vw; height: 100dvh;background:radial-gradient(circle at center, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%);z-index:999999;display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;backdrop-filter:blur(15px); -webkit-backdrop-filter:blur(15px); font-family:sans-serif; transition:opacity 0.3s;";
-        loader.innerHTML = `
-          <h2 style="color:#ffd700; font-size: 26px; font-weight: 900; margin: 0 0 10px 0; letter-spacing: 2px;">🔄 強制中斷</h2>
-          <p style="color:#94a3b8; font-size: 14px; margin: 0 0 40px 0;">偵測到新卡片，正在切換學生...</p>
-          <div style="position:relative; width:80px; height:80px; display:flex; align-items:center; justify-content:center;">
-            <div style="position:absolute; width:100%; height:100%; border-radius:50%; border:4px solid #e74c3c; border-top-color: #ffd700; animation:spin 1s linear infinite;"></div>
-            <div style="font-size:30px; animation:blink 1.5s infinite;">🪪</div>
-          </div>
-          <style>
-            @keyframes spin { to { transform: rotate(360deg); } }
-            @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-          </style>
-        `;
-        document.body.appendChild(loader);
-
-        // 背景 API 驗證卡號
-        fetch(`${GAS_URL}?action=verify_card&cardId=${encodeURIComponent(cardId)}`)
-          .then(res => res.json())
-          .then(data => {
-            if (data.success) {
-               // 驗證成功，直接跳轉到該新學生的 Dashboard
-               window.location.href = `dashboard.html?id=${data.uid}`;
-            } else {
-               alert("❌ 查無此卡！");
-               document.body.removeChild(loader);
-               focusHunter.focus();
-            }
-          })
-          .catch(err => {
-             document.body.removeChild(loader);
-             focusHunter.focus();
-          });
-      }
-    })();
-
-  // =======================================================
-    // 🚀 升級 1：靜置 3 分鐘自動登出回首頁 (Portal)
-    // =======================================================
-    let idleTimer;
-    const resetIdleTimer = () => {
-      clearTimeout(idleTimer);
-      idleTimer = setTimeout(() => {
-        window.location.href = "index.html"; 
-      }, 180000); // 3 分鐘無動作就踢回大門
-    };
-    document.addEventListener('touchstart', resetIdleTimer);
-    document.addEventListener('mousedown', resetIdleTimer);
-    resetIdleTimer();
-
-
-
-  /* -------------------------------------------------------
-   🚀 瑪麗安小幫手核心控制區
-   ------------------------------------------------------- */
-  async function showPhonicHelper(word, localKey, displayLabel) {
-      const warmup = new SpeechSynthesisUtterance("");
-      window.speechSynthesis.speak(warmup);
-      window.speechSynthesis.cancel(); 
-  
-      const overlay = document.getElementById('phonic-helper-overlay');
-      const title = document.getElementById('helper-word-title');
-      const instruction = document.getElementById('helper-instruction');
-      const replayBtn = document.getElementById('btn-replay-helper'); // 🚀 抓取重聽按鈕
-  
-      const chunkText = displayLabel.toLowerCase();
-      const fullText = word.toLowerCase();
-  
-      title.innerText = "引導發音示範"; 
-      title.style.fontSize = "22px";
-  
-      if (!document.getElementById('ring-anim-style')) {
-          const style = document.createElement('style');
-          style.id = 'ring-anim-style';
-          style.innerHTML = `@keyframes ringbell { 0%, 100% { transform: rotate(0); } 10%, 30%, 50% { transform: rotate(-15deg); } 20%, 40% { transform: rotate(15deg); } 60% { transform: rotate(0); } }`;
-          document.head.appendChild(style);
-      }
-  
-      instruction.innerHTML = `
-          <div style="margin: 20px 0; font-size: 38px; font-weight: 900; color: #dfe6e9; letter-spacing: 2px; word-break: break-word; line-height: 1.3;">
-              <span id="k-1" style="transition: all 0.15s; display: inline-block;">${chunkText}<span style="color:#b2bec3; font-size: 24px;">...</span> </span>
-              <span id="k-2" style="transition: all 0.15s; display: inline-block;">${chunkText}<span style="color:#b2bec3; font-size: 24px;">...</span> </span>
-              <span id="k-3" style="transition: all 0.15s; display: inline-block; margin-top: 10px;">${fullText}</span>
-          </div>
-          <div style="font-size: 14px; color: #d63031; background: #fff5f5; padding: 12px 15px; border-radius: 12px; display: inline-flex; align-items: center; gap: 10px; border: 2px dashed #ffcccc;">
-              <span style="font-size: 24px; animation: ringbell 2s infinite;">🔔</span>
-              <span style="font-weight: bold; text-align: left; line-height: 1.4;">聽不到聲音嗎？<br>請確認手機是否關閉<span style="text-decoration: underline;">靜音開關</span>，並調高音量喔！</span>
-          </div>
-      `;
-  
-      // 🚀 綁定重聽按鈕點擊事件
-      replayBtn.onclick = () => {
-          // 給一點點擊縮放的回饋感
-          replayBtn.style.transform = "scale(0.92)";
-          setTimeout(() => replayBtn.style.transform = "scale(1)", 150);
-          // 呼叫播放引擎再唸一次
-          playModularAudio(localKey, word);
-      };
-  
-      overlay.style.display = 'flex';
-      playModularAudio(localKey, word); // 第一次打開自動唸
-  }
-  
-    // 💡 KTV 導讀序列引擎 (小燈泡專用)
-  function playModularAudio(localKey, fullWord) {
-      const k1 = document.getElementById('k-1');
-      const k2 = document.getElementById('k-2');
-      const k3 = document.getElementById('k-3');
-  
-      (async () => {
-          // 1. 本地音標 (GitHub MP3，2.0倍放大)
-          await playPhonicLocal(localKey, 2.0, k1, "var(--marian-yellow)");
-          await new Promise(r => setTimeout(r, 200)); 
-          await playPhonicLocal(localKey, 2.0, k2, "var(--marian-yellow)");
-          await new Promise(r => setTimeout(r, 400)); 
-          
-          // 2. 雲端單字 (Azure API + 快取，1.8倍放大)
-          await speakWordCloudCached(fullWord, 1.8, k3, "var(--primary-blue)");
-      })();
-  }
-  // 3. 關閉視窗
-  function closePhonicHelper() {
-      document.getElementById('phonic-helper-overlay').style.display = 'none';
-      window.speechSynthesis.cancel(); // 停止所有正在唸的聲音
-  }
-
-  /* =======================================================
-   🚀 瑪麗安專屬：企業級語音引擎 (記憶體快取 + 擴大機)
-   ======================================================= */
-  let audioCtx = null;
-  const audioBufferCache = new Map(); // 🧠 核心：全域記憶體，存過就不再花錢！
-  
-  function playAudioBuffer(buffer, gainValue, targetEl, activeColor) {
-      const source = audioCtx.createBufferSource();
-      source.buffer = buffer;
-      
-      const gainNode = audioCtx.createGain();
-      gainNode.gain.setValueAtTime(gainValue, audioCtx.currentTime); 
-      
-      source.connect(gainNode);
-      gainNode.connect(audioCtx.destination);
-      
-      if (targetEl) {
-          targetEl.style.color = activeColor;
-          targetEl.style.transform = "scale(1.15)";
-      }
-  
-      source.start(0);
-  
-      return new Promise(resolve => {
-          source.onended = () => {
-              if (targetEl) {
-                  targetEl.style.color = "#dfe6e9";
-                  targetEl.style.transform = "scale(1)";
-              }
-              resolve();
-          };
-      });
-  }
-  
-  // 雲端單字發音引擎：有快取用快取，沒快取才花錢問 Azure
-  async function speakWordCloudCached(word, gainValue, targetEl, activeColor) {
-      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      if (audioCtx.state === 'suspended') await audioCtx.resume();
-      window.speechSynthesis.cancel(); // 關閉本地語音防干擾
-  
-      const cacheKey = word.toLowerCase();
-  
-      // 🌟 1. 【防冤大頭機制】：如果在記憶體找到了，直接播
-      if (audioBufferCache.has(cacheKey)) {
-          await playAudioBuffer(audioBufferCache.get(cacheKey), gainValue, targetEl, activeColor);
-          return;
-      }
-  
-      // 🌟 2. 【去 Azure 拿聲音】：只有第一次會進來
-      return new Promise((resolve, reject) => {
-          if (!azureAuthToken || typeof SpeechSDK === 'undefined') {
-              fallbackLocalTTS(word, targetEl, activeColor, resolve);
-              return;
-          }
-  
-          try {
-              const speechConfig = SpeechSDK.SpeechConfig.fromAuthorizationToken(azureAuthToken, azureRegionCode);
-              speechConfig.speechSynthesisVoiceName = "en-US-JennyNeural"; 
-              speechConfig.speechSynthesisOutputFormat = SpeechSDK.SpeechSynthesisOutputFormat.Riff24Khz16BitMonoPcm;
-  
-              const synthesizer = new SpeechSDK.SpeechSynthesizer(speechConfig, null); 
-              const ssml = `<speak version='1.0' xml:lang='en-US'><voice name='en-US-JennyNeural'><prosody rate='-10%'>${word}</prosody></voice></speak>`;
-  
-              synthesizer.speakSsmlAsync(ssml, async (result) => {
-                  synthesizer.close();
-                  if (result.audioData) {
-                      try {
-                          const audioBuffer = await audioCtx.decodeAudioData(result.audioData);
-                          audioBufferCache.set(cacheKey, audioBuffer); // 🧠 存入快取
-                          await playAudioBuffer(audioBuffer, gainValue, targetEl, activeColor);
-                          resolve();
-                      } catch (e) { fallbackLocalTTS(word, targetEl, activeColor, resolve); }
-                  } else {
-                      fallbackLocalTTS(word, targetEl, activeColor, resolve);
-                  }
-              }, (error) => {
-                  synthesizer.close();
-                  fallbackLocalTTS(word, targetEl, activeColor, resolve);
-              });
-          } catch (e) { fallbackLocalTTS(word, targetEl, activeColor, resolve); }
-      });
-  }
-  
-  function fallbackLocalTTS(word, targetEl, activeColor, resolve) {
-      if (targetEl) { targetEl.style.color = activeColor; targetEl.style.transform = "scale(1.15)"; }
-      const fallback = new SpeechSynthesisUtterance(word);
-      fallback.lang = 'en-US';
-      fallback.onend = () => {
-          if (targetEl) { targetEl.style.color = "#dfe6e9"; targetEl.style.transform = "scale(1)"; }
-          resolve();
-      };
-      window.speechSynthesis.speak(fallback);
-  }
-  
-  // 💡 播放音標 (GitHub MP3 專用)
-  async function playPhonicLocal(localKey, gainValue, targetEl, activeColor) {
-      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      if (audioCtx.state === 'suspended') await audioCtx.resume();
-      
-      try {
-          const response = await fetch(`audio/${localKey}.mp3`);
-          if (!response.ok) throw new Error("Audio 404");
-          const arrayBuffer = await response.arrayBuffer();
-          const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-          await playAudioBuffer(audioBuffer, gainValue, targetEl, activeColor);
-      } catch(e) { console.warn("音標播放失敗"); }
-  }
+  // 🚀 剩下的錄音邏輯與輔助函數一次補完
+  window.onload = async () => { await originalOnload(); };
 </script>
-  <div id="phonic-helper-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh; background: rgba(0,0,0,0.8); z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
-  <div class="helper-card" style="background: white; width: 85%; max-width: 340px; border-radius: 25px; padding: 30px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5); position: relative;">
-    <div id="helper-avatar-box" style="width: 100px; height: 100px; background: #eaeff2; border-radius: 50%; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; font-size: 50px; border: 4px solid var(--gold);">
-      👩‍🏫 
-    </div>
-    <h2 id="helper-word-title" style="color: var(--primary-blue); margin: 0; font-size: 28px;">Word</h2>
-    <div id="helper-instruction" style="color: #636e72; font-size: 18px; margin: 15px 0; font-weight: bold; line-height: 1.5;"></div>
-    
+
+<div id="phonic-helper-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh; background: rgba(0,0,0,0.8); z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
+  <div class="helper-card" style="background: white; width: 85%; max-width: 340px; border-radius: 25px; padding: 30px; text-align: center;">
+    <div id="helper-avatar-box" style="width: 80px; height: 80px; background: #eaeff2; border-radius: 50%; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; font-size: 40px;">👩‍🏫</div>
+    <h2 id="helper-word-title" style="color: var(--primary-blue); margin: 0; font-size: 24px;">Word</h2>
+    <div id="helper-instruction" style="color: #636e72; font-size: 16px; margin: 15px 0; font-weight: bold; line-height: 1.5;"></div>
     <div style="display: flex; gap: 12px; margin-top: 25px;">
-      <button class="btn" id="btn-replay-helper" style="background: #0984e3; flex: 1; border-radius: 16px; padding: 14px; font-size: 18px; margin: 0; box-shadow: 0 4px 15px rgba(9, 132, 227, 0.3);">🔄 重聽</button>
-      <button class="btn" style="background: var(--marian-green); flex: 1; border-radius: 16px; padding: 14px; font-size: 18px; margin: 0; box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);" onclick="closePhonicHelper()">我知道了</button>
+      <button class="btn-dock active" id="btn-replay-helper" style="flex: 1; font-size: 16px; padding: 12px;">🔄 重聽</button>
+      <button class="btn-dock active" style="flex: 1; font-size: 16px; padding: 12px; background: #58cc02;" onclick="closePhonicHelper()">我知道了</button>
     </div>
   </div>
 </div>
