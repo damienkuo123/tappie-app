@@ -605,25 +605,28 @@
          
          <div class="avatar-bubble-row">
             <div class="mascot-container">
-                <lottie-player id="prod-mascot" src="" background="transparent" speed="1" style="width: 140px; height: 140px; flex-shrink: 0;" loop autoplay></lottie-player>
+                <lottie-player id="prod-mascot" src="" background="transparent" speed="1" style="width: 140px; height: 140px; flex-shrink: 0; margin-bottom: -5px;" loop autoplay></lottie-player>
                 <div class="mascot-shadow"></div>
             </div>
             <div class="speech-bubble left-tail" id="prod-bubble">
-               <div id="prod-feedback-text" style="display:none; font-size: 15px; color:#4b4b4b; margin-bottom: 8px;"></div>
+               <div id="prod-feedback-text" style="display:none; font-size: 15px; color:#4b4b4b; font-weight: 800;"></div>
                <div id="prod-tts-btn" style="cursor:pointer; display:flex; align-items:center; justify-content: flex-start; gap:5px; color:#1cb0f6;">
-                 <span style="font-size:24px;">🔊</span> <span id="prod-tts-text" style="font-weight:bold;">我來唸一次</span>
+                 <span style="font-size:24px;">🔊</span> <span id="prod-tts-text" style="font-weight:900;">我來唸一次</span>
                </div>
             </div>
          </div>
          
          <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; min-height: 250px;">
-             <div style="margin-bottom: 20px;">
+             
+             <div id="score-display" style="min-height: 35px; font-size: 26px; font-weight: 900; margin-bottom: 5px; opacity: 0; transition: opacity 0.3s; letter-spacing: 1px;"></div>
+
+             <div style="margin-bottom: 10px;">
                <h1 id="word-display" style="margin:0;">載入中...</h1>
-               <div id="production-zh" style="font-size: 18px; color: #afafaf; font-weight: bold; margin-top: 5px;"></div>
+               <div id="production-zh"></div>
              </div>
 
              <button type="button" id="record-btn" oncontextmenu="return false;">🎤</button>
-             <p id="status" style="font-weight:bold; color:#afafaf; margin-top: 15px; font-size:14px;">按住錄音，放開打分</p>
+             <p id="status" style="font-weight:800; color:#afafaf; margin-top: 15px; font-size:14px;">按住錄音，放開打分</p>
          </div>
       </div>
     </div>
