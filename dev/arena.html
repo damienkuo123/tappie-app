@@ -500,24 +500,20 @@
                               }
                           }
 
+                          // 在 generateColoredHTML 裡面的 foundMatch 分支處
                           if (foundMatch) {
-                              // 🌟 找到發音組合：切下這塊，放上專屬燈泡！
                               let chunkOrigin = originalCasing.substr(0, bestLen);
                               let safeToken = token.replace(/'/g, "\\'");
                               let safeDisplay = displayStr.toUpperCase().replace(/'/g, "\\'");
                               
-                              coloredWord += `<span class="char-help-wrapper colored-char" style="color: ${blockColor}">${chunkOrigin}<button class="helper-bulb" onclick="showPhonicHelper('${safeToken}', '${localKey}', '${safeDisplay}')">💡</button></span>`;
+                              // 🚀 補回燈泡 HTML，並確保 z-index 足夠高
+                              coloredWord += `<span class="char-help-wrapper colored-char" style="color: ${blockColor}">
+                                  ${chunkOrigin}
+                                  <button class="helper-bulb" style="z-index: 1000;" onclick="showPhonicHelper('${safeToken}', '${localKey}', '${safeDisplay}')">💡</button>
+                              </span>`;
                               
-                              // 把已經配對的字切掉，繼續處理剩下的字尾
                               remainText = remainText.substring(bestLen);
                               originalCasing = originalCasing.substring(bestLen);
-                          } else {
-                              // ❌ 找不到任何發音組合 (例如遇到奇怪的標點符號或沒有錄音檔的生僻子音)
-                              // 單純印出紅字，不加燈泡，並繼續往下切 1 個字元
-                              let chunkOrigin = originalCasing.substr(0, 1);
-                              coloredWord += `<span class="colored-char" style="color: ${blockColor}">${chunkOrigin}</span>`;
-                              remainText = remainText.substring(1);
-                              originalCasing = originalCasing.substring(1);
                           }
                       }
                   }
