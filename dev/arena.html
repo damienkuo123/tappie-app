@@ -124,326 +124,88 @@
     .colored-char { font-weight: bold; transition: color 0.3s ease; }
     .word-omission { color: #b2bec3 !important; text-decoration: line-through; opacity: 0.5; }
     
-    body { font-family: -apple-system, sans-serif; text-align: center; padding: 20px; background: #eaeff2; margin: 0; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+    /* =======================================================
+       🌟 瑪麗安 3.0：Duolingo 全螢幕畫布與厚實按鍵
+       ======================================================= */
+    body { 
+      font-family: 'Nunito', -apple-system, sans-serif; text-align: center; margin: 0; padding: 0; 
+      user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; 
+      background: #ffffff; color: #4b4b4b; height: 100vh; height: 100dvh; overflow: hidden; 
+    }
+    
     .main-panel { 
-      background: white; padding: 25px; border-radius: 28px; 
-      box-shadow: 0 10px 30px rgba(0,0,0,0.15); max-width: 400px; 
-      margin: 10px auto; border: 1px solid #ddd; 
-      position: relative; z-index: 100; /* 🚀 確保面板在所有東西上面 */
+      background: transparent; width: 100%; max-width: 600px; margin: 0 auto; 
+      height: 100%; display: flex; flex-direction: column; position: relative; z-index: 100; 
+      border: none; box-shadow: none; padding: 0; border-radius: 0;
     }
     
-    /* 🚀 讓按鈕在被按下去時有明顯的觸感回饋 */
-    .btn:active, .btn-play:active { transform: scale(0.92); opacity: 0.8; }
-    #record-btn { background: var(--marian-red); width: 110px; height: 110px; border-radius: 50%; border: 8px solid white; font-size: 45px; box-shadow: 0 6px 15px rgba(214, 48, 49, 0.4); margin: 20px auto; cursor: pointer; display: none; outline: none; }
-    #record-btn.active { transform: scale(0.95); background: #333; animation: pulse 1s infinite; }
-    @keyframes pulse { 0% { box-shadow: 0 0 0 0px rgba(214, 48, 49, 0.4); } 100% { box-shadow: 0 0 0 20px rgba(214, 48, 49, 0); } }
-    .btn-play { background: var(--primary-blue); width: 45px; height: 45px; border-radius: 50%; border: none; color: white; font-size: 20px; cursor: pointer; margin-left: 10px; vertical-align: middle; box-shadow: 0 3px 6px rgba(0,0,0,0.1); }
-    .btn { padding: 12px 25px; border-radius: 12px; font-weight: bold; border: none; cursor: pointer; color: white; margin: 5px; box-shadow: 0 4px 0 rgba(0,0,0,0.2); }
-    .btn-nav { background: #4b6584; border-bottom: 4px solid #2c3e50; }
-    .btn-nav:disabled { background: #ccc; border-bottom: none; }
-    .btn-finish { width: 100%; font-size: 22px; padding: 20px; margin-top: 20px; border-bottom: 5px solid rgba(0,0,0,0.2); transition: 0.3s; }
-    .btn-finish:disabled { background: #636e72 !important; cursor: not-allowed; border-bottom: none; opacity: 0.7; }
-    .progress-bar { width: 100%; background: #dfe6e9; height: 12px; border-radius: 6px; margin-bottom: 20px; overflow: hidden; border: 1px solid #ccc; }
-    .progress-fill { 
-      background: var(--primary-blue); 
-      background-color: #0066cc; /* 🚀 備用色：確保變數失效時還是藍色 */
-      height: 100%; 
-      width: 0%; 
-      transition: 0.5s; 
+    /* 🚀 頂部導航與進度條 */
+    .top-nav-bar { display: flex; align-items: center; padding: max(15px, env(safe-area-inset-top)) 20px 10px; gap: 15px; }
+    .btn-close-app { background: none; border: none; font-size: 24px; color: #afafaf; cursor: pointer; padding: 5px; font-weight: bold; }
+    .progress-bar-container { flex: 1; background: #e5e5e5; height: 16px; border-radius: 10px; overflow: hidden; }
+    .progress-fill { background: #58cc02; height: 100%; width: 0%; transition: width 0.5s ease-out; border-radius: 10px; }
+
+    /* 🚀 內容滾動區 (避免被底部擋住) */
+    .content-scroll-area { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 10px 20px 140px; display: flex; flex-direction: column; }
+
+    /* 🚀 底部固定 Dock */
+    .bottom-dock { 
+      position: fixed; bottom: 0; left: 0; width: 100%; 
+      padding: 15px 20px max(20px, env(safe-area-inset-bottom)); 
+      background: #ffffff; border-top: 2px solid #e5e5e5; 
+      display: flex; justify-content: center; z-index: 500; box-sizing: border-box; 
     }
-    table { width: 100%; border-collapse: collapse; margin-top: 15px; background: #fff; border-radius: 10px; overflow: hidden; }
-    td { padding: 12px; border-bottom: 1px solid #eee; text-align: left; }
+    .btn-dock { 
+      width: 100%; max-width: 500px; padding: 16px; font-size: 20px; font-weight: 800; letter-spacing: 2px; 
+      border-radius: 16px; cursor: pointer; text-transform: uppercase; border: none; 
+      transition: background 0.1s, transform 0.1s, box-shadow 0.1s; 
+    }
+    .btn-dock.disabled { background: #e5e5e5; color: #afafaf; box-shadow: none; pointer-events: none; }
+    .btn-dock.active { background: #58cc02; color: white; box-shadow: 0 5px 0 #58a700; }
+    .btn-dock.active:active { transform: translateY(5px); box-shadow: 0 0px 0 #58a700; }
+
+    /* 🎭 2D 精靈與對話框 */
+    .avatar-bubble-row { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 25px; }
+    .speech-bubble { 
+      background: #ffffff; border: 2px solid #e5e5e5; border-radius: 20px; padding: 15px 20px; 
+      position: relative; max-width: 65%; text-align: left; box-shadow: 0 4px 0 #e5e5e5; 
+      color: #4b4b4b; font-weight: bold; font-size: 16px; line-height: 1.5; 
+    }
+    .speech-bubble.left-tail::before { content: absolute; left: -12px; top: 20px; border-top: 10px solid transparent; border-bottom: 10px solid transparent; border-right: 12px solid #e5e5e5; }
+    .speech-bubble.left-tail::after { content: absolute; left: -8px; top: 20px; border-top: 10px solid transparent; border-bottom: 10px solid transparent; border-right: 10px solid #ffffff; }
+
+    /* 🕹️ Duolingo 級氣墊按鈕 */
+    .btn-choice-list, .btn-tap-fill, .btn-image-choice, .ws-letter {
+      background: #ffffff; border: 2px solid #e5e5e5; border-bottom-width: 4px; border-radius: 16px;
+      color: #4b4b4b; cursor: pointer; user-select: none; font-weight: 800; text-align: center;
+      transition: background 0.1s, transform 0.1s, border-bottom-width 0.1s;
+    }
+    .btn-choice-list:active, .btn-tap-fill:active, .btn-image-choice:active, .ws-letter:active {
+      border-bottom-width: 0px; transform: translateY(4px); background: #f7f7f7;
+    }
+    .btn-choice-list.correct, .btn-tap-fill.correct, .btn-image-choice.correct, .ws-letter.correct-path {
+      background: #d7ffb8; border-color: #58cc02; border-bottom-color: #58cc02; color: #58a700; pointer-events: none;
+    }
+    .btn-choice-list.wrong, .btn-tap-fill.wrong {
+      background: #ffdfe0; border-color: #ff4b4b; border-bottom-color: #ff4b4b; color: #ea1537; animation: shake-soft 0.4s ease-in-out;
+    }
+    @keyframes shake-soft { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 50% { transform: translateX(6px); } 75% { transform: translateX(-6px); } }
+
+    /* 單元與排版微調 */
+    .warmup-visual-card { background: white; border: 2px solid #e5e5e5; border-radius: 20px; padding: 10px; margin-bottom: 25px; width: 100%; max-width: 320px; }
+    #warmup-img { border-radius: 14px; width: 100%; height: auto; object-fit: cover; display: none; }
+    #warmup-zh { font-size: 26px; font-weight: 900; color: #4b4b4b; display: none; text-align: center; width: 100%; padding: 10px; }
+    #word-display { font-size: clamp(35px, 8vw, 45px) !important; color: #4b4b4b; text-shadow: none; margin-bottom: 5px; }
+    #production-zh { font-size: 18px; color: #afafaf; font-weight: bold; margin-bottom: 20px; }
+    
+    /* 🎤 新版錄音按鈕 */
+    #record-btn { background: #1cb0f6; width: 110px; height: 110px; border-radius: 50%; border: none; font-size: 45px; box-shadow: 0 6px 0 #1899d6; margin: 10px auto; color: white; cursor: pointer; outline: none; transition: transform 0.1s, box-shadow 0.1s, background 0.1s; }
+    #record-btn:active, #record-btn.active { transform: translateY(6px); box-shadow: 0 0px 0 #1899d6; background: #1480b3; }
+    
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    td { padding: 15px; border-bottom: 2px solid #e5e5e5; text-align: left; font-weight: bold; }
     .score-badge { float: right; font-weight: bold; color: var(--primary-blue); font-size: 18px; }
-    .btn-re { background: var(--marian-red); font-size: 13px; padding: 6px 12px; border-radius: 8px; color: white; border: none; cursor: pointer; font-weight: bold; }
-    #zh-display { font-size: 20px; color: #7f8c8d; margin: -10px 0 20px 0; font-weight: bold; }
-
-
-      /* ===================================================
-         🚀 新增：5. 今日挑戰/自由練習 (Main Panel) 放大
-         =================================================== */
-      .main-panel { max-width: 650px; padding: 50px; border-radius: 40px; margin-top: 10vh; }
-      #title-text { font-size: 32px; }
-      #word-display {
-      color: #0d47a1;
-      margin: 0;
-      text-shadow: 1px 1px 0 #fff;
-      /* 🚀 關鍵換行邏輯：不准在單字中間斷開 */
-      word-break: normal; 
-      overflow-wrap: break-word; 
-      line-height: 1.1;
-      text-align: center;
-      width: 100%;
-
-      /* ===================================================
-         🚀 新增：6. 小燈泡導讀視窗 (Phonic Helper) 放大
-         =================================================== */
-      /* 蓋掉 HTML 裡的 inline style，讓平板與電腦版視窗更大氣 */
-      .helper-card { max-width: 500px !important; padding: 45px !important; border-radius: 35px !important; }
-      #helper-avatar-box { width: 130px !important; height: 130px !important; font-size: 65px !important; margin-bottom: 25px !important; }
-      #helper-word-title { font-size: 36px !important; }
-      
-      /* 讓雙按鈕更好點擊 */
-      #btn-replay-helper, .helper-card .btn { 
-          font-size: 22px !important; 
-          padding: 18px !important; 
-          border-radius: 20px !important; 
-      }
-
-      /* ===================================================
-         🚀 新增：7. 戰場兩側計分 UI 防貼邊
-         =================================================== */
-      /* 在大螢幕上，讓左右計分柱往內縮，不要死死貼著螢幕邊緣 */
-      .vertical-score-track { left: 4vw; padding: 30px 18px; }
-      .vertical-round-track { right: 4vw; padding: 30px 12px; }
-      #round-num { font-size: 20px !important; letter-spacing: 6px; }
-      .round-dot { width: 24px; height: 24px; }
-    }
-
-    /* 🚀 橫式播放按鈕 (膠囊型) */
-    .btn-play-pill {
-      background: var(--primary-blue);
-      color: white;
-      border: none;
-      padding: 6px 18px;
-      border-radius: 20px;
-      font-size: 14px;
-      font-weight: bold;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      box-shadow: 0 4px 10px rgba(0, 102, 204, 0.2);
-      transition: transform 0.2s;
-    }
-    .btn-play-pill:active { transform: scale(0.95); }
-      #zh-display { font-size: 26px; margin-bottom: 30px; }
-      
-      /* 錄音麥克風放大，讓小朋友超好按！ */
-      #record-btn { width: 160px; height: 160px; font-size: 70px; border-width: 10px; margin: 40px auto; }
-      #status { font-size: 20px; }
-      #feedback { font-size: 32px !important; margin-top: 20px; }
-      
-      /* 底部切換按鈕放大 */
-      .btn { font-size: 20px; padding: 18px 35px; border-radius: 16px; }
-      .btn-play { width: 60px; height: 60px; font-size: 30px; margin-left: 20px; }
-      
-      /* 總結畫面放大 */
-      #total-avg { font-size: 100px !important; margin: 20px 0; }
-      td { font-size: 22px; padding: 20px; }
-      .score-badge { font-size: 26px; }
-      .btn-re { font-size: 18px; padding: 10px 20px; }
-      .btn-finish { font-size: 26px; padding: 25px; border-radius: 20px; margin-top: 30px; }
-    }
-
-    /* =======================================================
-       🔥 瑪麗安 3.0：頂級果凍質感「動態心流」UI 
-       ======================================================= */
-    
-    /* 暖身區容器 */
-    #warmup-zone {
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      min-height: 250px; animation: fadeIn 0.4s ease-out;
-    }
-
-    /* 🖼️ 精緻拍立得相框 (視覺卡片) */
-    .warmup-visual-card {
-      background: #ffffff; border-radius: 24px; padding: 12px;
-      margin-bottom: 30px; 
-      box-shadow: 0 12px 35px rgba(0,0,0,0.08), 0 2px 5px rgba(0,0,0,0.04); 
-      width: 100%; max-width: 260px;
-      display: flex; justify-content: center; align-items: center; 
-      min-height: 140px; border: 1px solid #f1f5f9;
-      transition: transform 0.3s;
-    }
-    .warmup-visual-card:hover { transform: translateY(-3px); }
-    #warmup-img { width: 100%; height: auto; border-radius: 16px; object-fit: cover; display: none; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-    
-    #warmup-zh { 
-      font-size: clamp(24px, 7vw, 32px); font-weight: 900; color: #334155; display: none; 
-      letter-spacing: 2px; word-break: break-word; overflow-wrap: break-word;
-      text-align: center; width: 100%; line-height: 1.4; padding: 10px;
-    }
-
-    /* 🧩 磁吸內凹積木槽 (拼字骨架) */
-    #warmup-word-skeleton {
-      display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; 
-      width: 100%; margin-bottom: 35px;
-    }
-    .skeleton-char { 
-      display: flex; align-items: center; justify-content: center;
-      min-width: 45px; height: 55px; padding: 0 5px;
-      font-size: 32px; font-weight: 900; font-family: 'Varela Round', 'PingFang TC', sans-serif;
-      border-radius: 14px;
-      /* 內凹的陰影營造出「凹槽」的實體感 */
-      background: #f1f5f9; color: transparent; 
-      box-shadow: inset 0 4px 8px rgba(0,0,0,0.06);
-      border: 2px solid #e2e8f0;
-      text-transform: uppercase;
-      transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-    
-    /* 拼字正確瞬間：方塊彈出、發光、變綠 */
-    .skeleton-char.filled { 
-      background: #ffffff; color: var(--marian-green); 
-      border-color: #2ecc71; 
-      box-shadow: 0 8px 20px rgba(46, 204, 113, 0.25), 0 5px 0 #27ae60; 
-      transform: translateY(-6px) scale(1.05); 
-    }
-
-    /* 🎮 互動按鈕區 */
-    #warmup-options { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; width: 100%; }
-    #warmup-options.list-mode { flex-direction: column; align-items: stretch; gap: 12px; }
-
-    /* 🕹️ 共用：3D 氣墊厚度按鈕 */
-    .btn-choice-list, .btn-tap-fill {
-      background: #ffffff; border: 2px solid #cbd5e1; border-radius: 18px; 
-      color: #334155; cursor: pointer; user-select: none;
-      box-shadow: 0 6px 0 #cbd5e1, 0 10px 20px rgba(0,0,0,0.05); 
-      transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-      -webkit-tap-highlight-color: transparent;
-    }
-    
-    /* 按下去的物理下沉感 */
-    .btn-choice-list:active, .btn-tap-fill:active { 
-      transform: translateY(6px); 
-      box-shadow: 0 0px 0 #cbd5e1, 0 2px 5px rgba(0,0,0,0.05); 
-      background: #f8fafc;
-    }
-
-    /* 四選一按鈕專屬：置中、文字適應 */
-    .btn-choice-list {
-      padding: 16px 20px; font-size: 20px; font-weight: 800; text-align: center;
-      word-break: break-word; line-height: 1.3; width: 100%; box-sizing: border-box;
-    }
-    /* 移除掉那顆醜醜的表單藍色圓點 */
-    .btn-choice-list::before { display: none; }
-
-    /* 拼字按鈕專屬：大方塊 */
-    .btn-tap-fill {
-      padding: 16px 28px; font-size: 28px; font-weight: 900; text-transform: uppercase;
-    }
-
-    /* 🌟 果凍彈跳動畫 (答對時) */
-    .btn-choice-list.correct, .btn-tap-fill.correct { 
-      background: #2ecc71; border-color: #27ae60; color: white; 
-      box-shadow: 0 6px 0 #27ae60, 0 12px 25px rgba(46, 204, 113, 0.4); 
-      animation: jelly-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      pointer-events: none; 
-    }
-    @keyframes jelly-pop {
-      0% { transform: scale(1); }
-      40% { transform: scale(1.08) translateY(-4px); }
-      60% { transform: scale(0.96) translateY(2px); }
-      80% { transform: scale(1.02) translateY(-1px); }
-      100% { transform: scale(1) translateY(0); }
-    }
-
-    /* ❌ 輕柔震動動畫 (答錯時) */
-    .btn-choice-list.wrong, .btn-tap-fill.wrong { 
-      background: #fff0f0; border-color: #ff7675; color: #d63031; 
-      box-shadow: 0 6px 0 #d63031; 
-      animation: shake-soft 0.4s ease-in-out; 
-    }
-    @keyframes shake-soft {
-      0%, 100% { transform: translateX(0); }
-      25% { transform: translateX(-6px); }
-      50% { transform: translateX(6px); }
-      75% { transform: translateX(-6px); }
-    }
-    
-    /* 🎧 聽音辨字專屬大按鈕 (拔除多餘白框，純粹實體感) */
-    .btn-listen-huge {
-      background: linear-gradient(135deg, var(--primary-blue), #2980b9);
-      color: white; border: none; border-radius: 50%;
-      width: 120px; height: 120px; display: none; /* 預設隱藏，靠 JS 控制 flex */
-      flex-direction: column; align-items: center; justify-content: center;
-      cursor: pointer; box-shadow: 0 10px 25px rgba(0, 102, 204, 0.4), inset 0 2px 5px rgba(255,255,255,0.3);
-      transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); margin: 15px 0;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .btn-listen-huge:active { transform: scale(0.9) translateY(4px); box-shadow: 0 4px 10px rgba(0, 102, 204, 0.4); }
-    .btn-listen-huge .icon { font-size: 50px; margin-bottom: 5px; line-height: 1; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
-    .btn-listen-huge .text { font-size: 16px; font-weight: 900; letter-spacing: 2px; }
-
-    /* 🔔 靜音開關防呆提示框 */
-    .audio-hint-box {
-      background: #fff5f5; border: 2px dashed #ffcccc; border-radius: 16px;
-      padding: 10px 15px; display: none; /* 預設隱藏 */
-      align-items: center; justify-content: center; gap: 8px;
-      color: #d63031; font-size: 13px; font-weight: bold; width: 100%; max-width: 250px;
-      margin-bottom: 15px; animation: pulse-border 2s infinite;
-    }
-    @keyframes pulse-border { 0%, 100% { border-color: #ffcccc; } 50% { border-color: #ff7675; } }
-
-    /* 開口決戰區進場動畫 (平滑上浮) */
-    #production-zone { animation: slideUpFade 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-    @keyframes slideUpFade { from { opacity: 0; transform: translateY(30px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
-    
-    /* =======================================================
-       🎮 新增遊戲 UI：圖片四選一 & 果凍字母陣
-       ======================================================= */
-    
-    /* 🖼️ 圖片四選一 (2x2 網格) */
-    #warmup-options.grid-image-mode { 
-      display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; 
-      width: 100%; max-width: 320px; margin: 0 auto;
-    }
-    .btn-image-choice {
-      background: white; border: 3px solid #cbd5e1; border-radius: 16px; 
-      overflow: hidden; cursor: pointer; box-shadow: 0 6px 0 #cbd5e1; 
-      transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-      aspect-ratio: 1; padding: 0; position: relative;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .btn-image-choice img { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .btn-image-choice:active { transform: translateY(6px); box-shadow: 0 0px 0 #cbd5e1; }
-    
-    .btn-image-choice.correct { 
-      border-color: #2ecc71; box-shadow: 0 6px 0 #27ae60, 0 10px 25px rgba(46,204,113,0.4); 
-      transform: scale(1.05); z-index: 10; pointer-events: none;
-    }
-    .btn-image-choice.wrong { 
-      border-color: #e74c3c; box-shadow: 0 6px 0 #c0392b; 
-      animation: shake-soft 0.4s ease-in-out;
-    }
-    .btn-image-choice.wrong::after {
-      content: ''; position: absolute; inset: 0; background: rgba(231, 76, 60, 0.3);
-    }
-    .grid-image-mode.has-answered .btn-image-choice:not(.correct) {
-      opacity: 0.5; transform: scale(0.9); filter: grayscale(0.8);
-    }
-
-    /* 🔍 果凍字母陣 (Word Search) */
-    #warmup-options.word-search-mode {
-      display: grid; gap: 8px; width: 100%; justify-content: center;
-      /* 欄數會透過 JS 動態設定 grid-template-columns */
-    }
-    .ws-letter {
-      width: clamp(40px, 10vw, 55px); height: clamp(40px, 10vw, 55px);
-      display: flex; align-items: center; justify-content: center;
-      background: #ffffff; border: 2px solid #cbd5e1; border-radius: 12px;
-      font-size: clamp(20px, 5vw, 26px); font-weight: 900; color: #334155;
-      cursor: pointer; box-shadow: 0 4px 0 #cbd5e1; transition: all 0.1s;
-      user-select: none; -webkit-tap-highlight-color: transparent;
-    }
-    .ws-letter:active { transform: translateY(4px); box-shadow: 0 0px 0 #cbd5e1; }
-    
-    /* 字母陣選中狀態 */
-    .ws-letter.selected {
-      background: #fdfbf7; border-color: var(--marian-yellow); color: #d35400;
-      box-shadow: 0 4px 0 #d35400, 0 0 15px rgba(241,196,15,0.4); transform: translateY(2px);
-    }
-    /* 字母陣連線成功狀態 */
-    .ws-letter.correct-path {
-      background: #2ecc71; border-color: #27ae60; color: white;
-      box-shadow: 0 4px 0 #27ae60, 0 0 20px rgba(46,204,113,0.5);
-      animation: jelly-pop 0.4s; pointer-events: none;
-    }
-    /* 字母陣連線失敗狀態 */
-    .ws-letter.wrong-path {
-      background: #fff5f5; border-color: #ff7675; color: #d63031;
-      animation: shake-soft 0.4s ease-in-out;
-    }
+    .btn-re { background: #e5e5e5; font-size: 13px; padding: 6px 12px; border-radius: 8px; color: #4b4b4b; border: none; cursor: pointer; font-weight: bold; margin-top: 5px; }
     
   </style>
 </head>
