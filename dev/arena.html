@@ -950,19 +950,18 @@
     });
   };
   
+  // 🚀 升級版：接通 3.0 專屬按鈕神經
   function attachButtonListeners() {
-    document.getElementById('play-btn').onclick = () => { 
-        const btn = document.getElementById('play-btn');
-        btn.style.transform = "scale(0.9)";
-        setTimeout(() => btn.style.transform = "scale(1)", 150);
-        
-        // 🚀 呼叫雲端快取發音，放大 1.8 倍！
-        speakWordCloudCached(quizData[currentIndex].en, 1.8, null, null); 
-    };
-    
-    document.getElementById('prev-btn').onclick = () => { if(currentIndex > 0){ currentIndex--; renderWord(); } };
-    document.getElementById('next-btn').onclick = () => { if (currentIndex < quizData.length - 1) { currentIndex++; renderWord(); } else { showSummary(); } };
-    document.getElementById('back-summary-btn').onclick = () => { isReReading = false; showSummary(); };
+      // 1. 接通 3.0 對話框裡的「🔊 我來唸一次」播放鍵
+      const playBtn = document.getElementById('prod-tts-btn');
+      if (playBtn) {
+          playBtn.onclick = () => { 
+              speakWordCloudCached(quizData[currentIndex].en, 1.8, null, null); 
+              playMascot('prod-mascot', 'thinking'); // 🎭 播放時讓精靈思考
+          };
+      }
+      
+      // (舊版 prev/next 按鈕的邏輯已廢棄，由 Dock 統一接管，這裡保持乾淨)
   }
   
   window.onload = async () => {
