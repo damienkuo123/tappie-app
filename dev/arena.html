@@ -1447,13 +1447,6 @@
   if(rb) {
     const startPracticeRecord = (e) => { 
         if(isGrading || isRecording) return;
-        
-        // 🚀 修復問題一：終極防呆！檢查 Azure 憑證是否已經抓取完畢
-        if (!azureAuthToken) {
-            alert("語音引擎正在連線中，請稍等一兩秒再試！");
-            return;
-        }
-
         e.preventDefault(); 
         isRecording = true;
         
