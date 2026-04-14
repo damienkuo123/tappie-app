@@ -197,26 +197,27 @@
           box-sizing: border-box;
       }
 
-      /* 🚀 2. 精靈與對話框的橫向排列列 */
+      /* 🚀 1. 橫向排列列：拔除多餘 padding，直接對齊父容器邊緣 */
       .avatar-bubble-row { 
           display: flex; 
           align-items: flex-start; /* 對齊頂部，讓對話框往下長 */
           justify-content: flex-start; /* 內部元素從左開始排 */
           gap: 15px; 
           width: 100%;
-          min-height: 150px; /* 🛡️ 保留一點空間，不要去壓到下面的字 */
+          min-height: 150px; /* 🛡️ 保留高度，不壓迫下方單字 */
           margin-bottom: 20px; 
+          box-sizing: border-box;
       }
       
-      /* 🌟 3. 精靈與陰影的物理定錨 (解決浮空) */
+      /* 🌟 2. 精靈與陰影的物理定錨 */
       .mascot-container {
           position: relative;
-          width: 110px; height: 110px; /* 給一個固定的地基 */
+          width: 110px; height: 110px; /* 固定地基 */
           flex-shrink: 0; /* 絕對不允許被壓縮 */
       }
       .mascot-shadow {
           position: absolute;
-          bottom: 0px; /* 陰影死死貼在容器最底層 */
+          bottom: 0px; 
           left: 50%;
           transform: translateX(-50%);
           width: 65px; height: 14px; 
@@ -226,15 +227,15 @@
       }
       lottie-player#prod-mascot, lottie-player#setup-mascot {
           position: absolute;
-          bottom: -15px; /* 🚀 往下硬拉 15px，抵銷透明白邊，踩穩陰影！ */
+          bottom: -15px; /* 🚀 往下硬拉踩穩陰影 */
           left: 50%;
           transform: translateX(-50%);
-          width: 145px !important; height: 145px !important; /* 視覺放大 */
+          width: 145px !important; height: 145px !important; 
           z-index: 2;
           pointer-events: none;
       }
 
-      /* 💬 4. 動態對話框：往右自由長大 */
+      /* 💬 3. 動態對話框：往右自由長大 */
       .speech-bubble { 
           background: #ffffff; border: 2px solid #e5e5e5; border-radius: 20px; 
           padding: 14px 18px; position: relative; 
@@ -248,7 +249,7 @@
       .speech-bubble.left-tail::before { content: ""; position: absolute; left: -14px; top: 25px; border-top: 10px solid transparent; border-bottom: 10px solid transparent; border-right: 14px solid #e5e5e5; }
       .speech-bubble.left-tail::after { content: ""; position: absolute; left: -10px; top: 25px; border-top: 10px solid transparent; border-bottom: 10px solid transparent; border-right: 12px solid #ffffff; }
       
-      /* 5. 單字區字體統一 */
+      /* 4. 單字區字體統一 */
       #word-display { font-size: clamp(35px, 8vw, 45px) !important; color: #4b4b4b; font-weight: 900 !important; margin-bottom: 5px; }
       #production-zh { font-size: 18px; color: #afafaf; font-weight: 800; margin-bottom: 15px; }
   
@@ -635,7 +636,7 @@
 
       <div id="production-zone" style="display:none; flex-direction: column; width: 100%; height: 100%; padding-top: 15px; box-sizing: border-box;">
          
-         <div class="top-zone-container" style="width: 100%; max-width: 450px; margin: 0 auto; display: flex; flex-direction: column; align-items: flex-start; padding: 0 20px; box-sizing: border-box;">
+         <div style="width: 100%; display: flex; flex-direction: column; align-items: flex-start; box-sizing: border-box;">
              <h3 style="color:#afafaf; font-size:16px; margin: 0 0 15px 0; text-transform: uppercase; letter-spacing: 1px; text-align: left;">🎙️ 口說錄音</h3>
              
              <div class="avatar-bubble-row">
