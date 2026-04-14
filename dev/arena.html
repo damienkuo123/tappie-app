@@ -186,45 +186,59 @@
           box-sizing: border-box;
       }
 
-      /* 🚀 上半部橫向排列：精靈與對話框 */
-      .avatar-bubble-row { 
-          display: flex; align-items: flex-start; 
-          justify-content: flex-start; 
-          gap: 15px; margin-bottom: 20px; flex-shrink: 0; width: 100%; 
+      /* 🚀 1. 上半部專用容器 (Top Zone) - 強制靠左 */
+      .top-zone-container {
+          width: 100%;
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start; /* 標題和精靈都乖乖靠左 */
+          padding-left: 20px; /* 留一點左側邊距，不要死貼螢幕 */
+          padding-right: 20px;
           box-sizing: border-box;
       }
+
+      /* 🚀 2. 精靈與對話框的橫向排列列 */
+      .avatar-bubble-row { 
+          display: flex; 
+          align-items: flex-start; /* 對齊頂部，讓對話框往下長 */
+          justify-content: flex-start; /* 內部元素從左開始排 */
+          gap: 15px; 
+          width: 100%;
+          min-height: 150px; /* 🛡️ 保留一點空間，不要去壓到下面的字 */
+          margin-bottom: 20px; 
+      }
       
-      /* 🌟 實體陰影與精靈容器：絕對定位鎖死，解決浮空問題 */
+      /* 🌟 3. 精靈與陰影的物理定錨 (解決浮空) */
       .mascot-container {
           position: relative;
-          width: 110px; height: 110px; /* 固定佔位 */
-          flex-shrink: 0;
+          width: 110px; height: 110px; /* 給一個固定的地基 */
+          flex-shrink: 0; /* 絕對不允許被壓縮 */
       }
       .mascot-shadow {
           position: absolute;
-          bottom: 0px; /* 陰影永遠在容器最底層 */
+          bottom: 0px; /* 陰影死死貼在容器最底層 */
           left: 50%;
           transform: translateX(-50%);
           width: 65px; height: 14px; 
-          background: #e5e5e5; /* 純平實心灰 */
+          background: #e5e5e5; 
           border-radius: 50%;
           z-index: 1;
       }
-      #prod-mascot {
+      lottie-player#prod-mascot, lottie-player#setup-mascot {
           position: absolute;
-          bottom: -15px; /* 🚀 關鍵：把 Lottie 往下硬拉，抵銷它的透明留白，踩在陰影上 */
+          bottom: -15px; /* 🚀 往下硬拉 15px，抵銷透明白邊，踩穩陰影！ */
           left: 50%;
           transform: translateX(-50%);
-          width: 145px !important; height: 145px !important;
+          width: 145px !important; height: 145px !important; /* 視覺放大 */
           z-index: 2;
           pointer-events: none;
       }
 
-      /* 💬 動態對話框：限制最大寬度，往右邊長大，絕對不推擠精靈 */
+      /* 💬 4. 動態對話框：往右自由長大 */
       .speech-bubble { 
           background: #ffffff; border: 2px solid #e5e5e5; border-radius: 20px; 
-          padding: 12px 18px; position: relative; 
-          max-width: calc(100% - 130px); /* 留空間給左邊的精靈 */
+          padding: 14px 18px; position: relative; 
+          max-width: calc(100% - 130px); /* 限制最大寬度，防爆版 */
           width: fit-content; min-height: 50px; 
           text-align: left; box-shadow: 0 4px 0 #e5e5e5; 
           color: #4b4b4b; font-weight: 800; font-size: 15px; line-height: 1.4; 
@@ -234,7 +248,7 @@
       .speech-bubble.left-tail::before { content: ""; position: absolute; left: -14px; top: 25px; border-top: 10px solid transparent; border-bottom: 10px solid transparent; border-right: 14px solid #e5e5e5; }
       .speech-bubble.left-tail::after { content: ""; position: absolute; left: -10px; top: 25px; border-top: 10px solid transparent; border-bottom: 10px solid transparent; border-right: 12px solid #ffffff; }
       
-      /* 單字區字級 */
+      /* 5. 單字區字體統一 */
       #word-display { font-size: clamp(35px, 8vw, 45px) !important; color: #4b4b4b; font-weight: 900 !important; margin-bottom: 5px; }
       #production-zh { font-size: 18px; color: #afafaf; font-weight: 800; margin-bottom: 15px; }
   
@@ -619,9 +633,9 @@
          <div id="warmup-options" style="display:flex; justify-content:center; gap:15px; flex-wrap:wrap; width:100%;"></div>
       </div>
 
-      <div id="production-zone" style="display:none; flex-direction: column; width: 100%; height: 100%; box-sizing: border-box;">
+      <div id="production-zone" style="display:none; flex-direction: column; width: 100%; height: 100%; padding-top: 15px; box-sizing: border-box;">
          
-         <div style="width: 100%; display: flex; flex-direction: column; align-items: flex-start; padding-left: 20px; padding-right: 20px; padding-top: 10px; box-sizing: border-box;">
+         <div class="top-zone-container" style="width: 100%; max-width: 450px; margin: 0 auto; display: flex; flex-direction: column; align-items: flex-start; padding: 0 20px; box-sizing: border-box;">
              <h3 style="color:#afafaf; font-size:16px; margin: 0 0 15px 0; text-transform: uppercase; letter-spacing: 1px; text-align: left;">🎙️ 口說錄音</h3>
              
              <div class="avatar-bubble-row">
@@ -636,9 +650,7 @@
                    </div>
                 </div>
              </div>
-         </div>
-         
-         <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; padding-bottom: 20px; box-sizing: border-box;">
+         </div> <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%;">
              
              <div id="score-display" style="height: 30px; font-size: 26px; font-weight: 900; margin-bottom: 5px; opacity: 0; transition: opacity 0.3s; letter-spacing: 1px;"></div>
 
@@ -649,9 +661,8 @@
 
              <button type="button" id="record-btn" oncontextmenu="return false;">🎤</button>
              <p id="status" style="font-weight: 800; color:#afafaf; margin-top: 5px; margin-bottom: 0; font-size:15px;">按住錄音，放開打分</p>
-         </div>
-         
-      </div>
+             
+         </div> </div>
     </div>
 
     <div id="summary" style="display:none;">
