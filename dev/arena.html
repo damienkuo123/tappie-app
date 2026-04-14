@@ -1063,13 +1063,15 @@
     const speechText = document.getElementById('setup-speech-text');
     playMascot('setup-mascot', 'idle');
     
-    // 🚀 三段式引導文案切換 (安全版)
+    // 🚀 三段式引導文案切換 (完美語法版)
     if (speechText) {
         speechText.innerText = "嗨！我們來練習口說吧";
-        // 2秒後換第二句
-        setTimeout(() => { speechText.innerText = `今天我們來練習，${TARGET_UNIT ? TARGET_UNIT : '新單元'}`; }, 2000);
-        // 總共 4.5秒 (2 + 2.5) 後換第三句
-        setTimeout(() => { speechText.innerText = "點擊下方開始"; }, 4500);
+        setTimeout(() => { 
+            speechText.innerText = `今天我們來練習，${TARGET_UNIT ? TARGET_UNIT : '新單元'}`; 
+            setTimeout(() => {
+                speechText.innerText = "點擊下方開始";
+            }, 2500);
+        }, 2000);
     }
 
     try {
@@ -1096,8 +1098,11 @@
             scores = new Array(quizData.length).fill(null);
             warmupPassed = new Array(quizData.length).fill(false);
             assignedWarmupModes = new Array(quizData.length).fill(null);
-            assignedMascots = new Array(quizData.length).fill(null); 
+            assignedMascots = new Array(quizData.length).fill(null); // 🚀 初始化精靈記憶體
             
+            document.getElementById('total-display').innerText = quizData.length;
+            
+            // 🚀 隱藏開始畫面，顯示練習區
             document.getElementById('setup-zone').style.display = 'none';
             document.getElementById('studio').style.display = 'block';
             
