@@ -260,52 +260,41 @@
       .btn-choice-list, .btn-tap-fill, .btn-image-choice, .ws-letter { background: #ffffff; border: 2px solid #e5e5e5; border-bottom-width: 4px; border-radius: 16px; font-weight: 800; width: 100%; box-sizing: border-box; }
       .btn-choice-list.correct, .btn-tap-fill.correct, .btn-image-choice.correct, .ws-letter.correct-path { background: #d7ffb8; border-color: #58cc02; color: #58a700; }
       
-      /* 🎤 錄音麥克風按鈕 (改為長方形「行動條」風格) */
+      /* 🎤 錄音麥克風按鈕 (長方形行動條風格) */
       #record-btn { 
         background: #1cb0f6;
         border: none; 
-        border-bottom: 6px solid #1899d6; /* 底部厚度 */
-        width: 100%; max-width: 250px; /* 變成長方形 */
-        height: 60px; /* 高度縮小 */
-        border-radius: 20px; /* 圓角長方形 */
-        font-size: 30px; /* 麥克風稍微縮小 */
+        border-bottom: 6px solid #1899d6; /* 底部 6px 厚度 */
+        width: 100%; max-width: 250px; 
+        height: 60px; 
+        border-radius: 20px; 
+        font-size: 30px; 
         color: white; 
         cursor: pointer; 
         flex-shrink: 0; 
         outline: none; 
-        transition: all 0.1s ease-in-out; /* 加快動畫反應 */
+        transition: all 0.1s ease-in-out; 
         position: relative; 
         z-index: 1500; 
         display: flex; align-items: center; justify-content: center;
-        margin: 0 auto; padding: 0;
+        margin: 0 auto; /* 乾淨的預設邊距 */
       }
       
-      /* 🚀 按壓物理效果：純用 transform 處理，不改變佈局空間！ */
+      /* 🚀 按壓物理效果：視覺下沉，不影響上方排版！ */
       #record-btn:active, #record-btn.active { 
-        transform: translateY(6px); /* 往下沉，抵銷原本的 border-bottom 厚度 */
-        border-bottom-width: 0px; /* 底部厚度消失 */
-        /* ⚠️ 絕對不要在這裡加 margin，會造成版面抖動！ */
+        transform: translateY(6px); /* 視覺上往下沉 6px */
+        border-bottom-width: 0px; /* 實體高度少 6px */
+        margin-bottom: 6px; /* 補回下方失去的 6px 空間，確保底下的文字不跟著亂跳 */
         background: #1899d6; 
       }
       
-      /* 🚀 按下去的物理下沉感 (果凍彈性) */
-      #record-btn:active, #record-btn.active { 
-        border-bottom-width: 0px; 
-        transform: translateY(6px); 
-        margin-top: 26px; /* 微調維持位置 */
-        margin-bottom: 14px; 
-        background: #1899d6; 
-        box-shadow: 0 0px 0 rgba(28, 176, 246, 0); 
-      }
-      
-      /* 🛑 評分中/停用狀態 (Duolingo 灰色實體感，不使用透明度) */
+      /* 🛑 評分中/停用狀態 (灰色實體積木) */
       #record-btn.grading-state {
         background: #e5e5e5;
         border-bottom-color: #e5e5e5;
         border-bottom-width: 0px;
-        transform: translateY(6px); /* 保持被壓扁的狀態 */
-        margin-top: 26px;
-        margin-bottom: 14px;
+        transform: translateY(6px); /* 維持被壓扁的狀態 */
+        margin-bottom: 6px; /* 一樣補回 6px 下方空間 */
         color: #afafaf;
         pointer-events: none;
         box-shadow: none;
