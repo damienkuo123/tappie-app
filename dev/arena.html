@@ -174,23 +174,26 @@
       .btn-dock.wrong-btn { background: #ff4b4b; border-color: #ea1537; color: white; }
       .btn-dock.wrong-btn:active { border-bottom-width: 2px; transform: translateY(4px); margin-top: 4px; }
 
-      /* 🚀 修正排版：精靈完美靠左定錨，建立高度結界防止單字跳動 */
+      /* 🚀 修正排版：徹底靠左定錨！對話框往右長，絕對不會推擠精靈 */
       .avatar-bubble-row { 
-          display: flex; align-items: flex-start; 
-          justify-content: flex-start; 
-          gap: 10px; margin-bottom: 20px; flex-shrink: 0; width: 100%; 
-          min-height: 140px; /* 🛡️ 鎖死最小高度，對話框長大也不會把下方單字擠下去 */
+          display: flex; align-items: flex-start; /* 頂部對齊，確保對話框長高時精靈不動 */
+          justify-content: flex-start; /* 💯 絕對靠左，沒有任何置中！ */
+          gap: 10px; /* 精靈與對話框的距離 */
+          margin-bottom: 20px; flex-shrink: 0; width: 100%; 
+          padding-left: 25px; /* 🛡️ 給精靈一個左側安全邊距，對齊標題 */
+          box-sizing: border-box;
+          min-height: 140px; /* 撐開高度，保護下方單字不被對話框往下壓 */
       }
       
-      /* 🌟 實體 2D 陰影：容器絕對定位鎖死 */
+      /* 🌟 實體 2D 陰影：容器固定，陰影釘死在最底部 */
       .mascot-container {
           position: relative;
-          width: 110px; height: 110px; /* 固定的物理佔位 */
-          flex-shrink: 0;
+          width: 120px; height: 120px; /* 固定的物理佔位 */
+          flex-shrink: 0; /* 💯 絕對不允許被壓縮 */
       }
       .mascot-shadow {
           position: absolute;
-          bottom: 0px; /* 釘死在底部 */
+          bottom: 0px; /* 釘死在容器最底部 */
           left: 50%;
           transform: translateX(-50%);
           width: 70px; height: 14px; 
@@ -200,23 +203,25 @@
       }
       #prod-mascot {
           position: absolute;
-          bottom: -8px; /* 🚀 往下沉，讓腳完美踩在陰影上 */
+          bottom: -5px; /* 🚀 往下沉，讓腳完美踩在陰影上 (依 Lottie 透明邊距微調) */
           left: 50%;
           transform: translateX(-50%);
-          width: 150px !important; height: 150px !important; /* Lottie內部有透明留白，稍微放大 */
+          width: 145px !important; height: 145px !important; /* 視覺放大 */
           z-index: 2;
       }
 
-      /* 💬 動態彈性對話框 */
+      /* 💬 動態彈性對話框：往右自由延伸，不推擠左邊 */
       .speech-bubble { 
           background: #ffffff; border: 2px solid #e5e5e5; border-radius: 20px; 
-          padding: 14px 18px; position: relative; 
-          max-width: 65%; width: fit-content; min-height: 50px; 
+          padding: 12px 18px; position: relative; 
+          max-width: calc(100% - 130px); /* 限制最大寬度為「螢幕寬度減去精靈寬度」，防止爆版 */
+          width: fit-content; min-height: 50px; 
           text-align: left; box-shadow: 0 4px 0 #e5e5e5; 
           color: #4b4b4b; font-weight: 800; font-size: 15px; line-height: 1.4; 
           display: flex; flex-direction: column; justify-content: center; 
-          word-break: break-word; margin-top: 10px; 
+          word-break: break-word; margin-top: 10px; /* 微調對齊精靈頭部 */
       }
+      /* 小尾巴固定在距離頂部 25px 的地方 */
       .speech-bubble.left-tail::before { content: ""; position: absolute; left: -14px; top: 25px; border-top: 10px solid transparent; border-bottom: 10px solid transparent; border-right: 14px solid #e5e5e5; }
       .speech-bubble.left-tail::after { content: ""; position: absolute; left: -10px; top: 25px; border-top: 10px solid transparent; border-bottom: 10px solid transparent; border-right: 12px solid #ffffff; }
       
@@ -606,10 +611,9 @@
          <div id="warmup-options" style="display:flex; justify-content:center; gap:15px; flex-wrap:wrap; width:100%;"></div>
       </div>
 
-      <div id="production-zone" style="display:none; flex-direction: column; align-items: center; width: 100%; height: 100%;">
+      <div id="production-zone" style="display:none; flex-direction: column; align-items: flex-start; width: 100%; height: 100%;">
          
-         <div style="width: 100%; max-width: 450px; padding: 0 20px; box-sizing: border-box; display: flex; flex-direction: column; align-items: flex-start;">
-             <h3 style="color:#afafaf; font-size:16px; margin: 0 0 15px 0; text-transform: uppercase; letter-spacing: 1px;">🎙️ 口說錄音</h3>
+         <h3 style="color:#afafaf; font-size:16px; margin: 0 0 15px 0; text-transform: uppercase; letter-spacing: 1px; width: 100%; text-align: left; padding-left: 25px; box-sizing: border-box;">🎙️ 口說錄音</h3>
              
              <div class="avatar-bubble-row">
                 <div class="mascot-container">
