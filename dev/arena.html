@@ -127,9 +127,9 @@
         box-sizing: border-box;
       }
       
-      /* 🚀 畫布重構：移除白底與寬度限制 */
+      /* 🚀 畫布重構：徹底釋放寬度限制，讓內容能真正貼齊螢幕邊緣 */
       .main-panel { 
-        background: transparent; width: 100%; max-width: 600px; margin: 0 auto; 
+        background: transparent; width: 100%; /* 拔除 max-width 與 margin: 0 auto */
         height: 100%; display: flex; flex-direction: column; position: relative; z-index: 10; 
         border: none; box-shadow: none; padding: 0; border-radius: 0;
       }
@@ -140,11 +140,11 @@
       .progress-bar-container { flex: 1; background: #e5e5e5; height: 16px; border-radius: 10px; overflow: hidden; }
       .progress-fill { background: #58cc02; height: 100%; width: 0%; transition: width 0.5s ease-out; border-radius: 10px; }
   
-      /* 🚀 內容區 (禁止滾動，完美貼合螢幕大小) */
+      /* 🚀 內容區：拔除強制置中，交給內部子容器自行決定！ */
       .content-scroll-area { 
         flex: 1; overflow: hidden; /* 徹底封殺上下滑動 */
-        padding: 10px 20px 100px; 
-        display: flex; flex-direction: column; align-items: center; width: 100%; box-sizing: border-box; 
+        padding: 10px 0 100px; /* 拔除左右 padding，讓子元素能碰到邊界 */
+        display: flex; flex-direction: column; width: 100%; box-sizing: border-box; 
       }
   
       /* =======================================================
@@ -634,9 +634,9 @@
          <div id="warmup-options" style="display:flex; justify-content:center; gap:15px; flex-wrap:wrap; width:100%;"></div>
       </div>
 
-      <div id="production-zone" style="display:none; flex-direction: column; width: 100%; height: 100%; padding-top: 15px; box-sizing: border-box;">
+      <div id="production-zone" style="display:none; flex-direction: column; width: 100%; height: 100%; box-sizing: border-box;">
          
-         <div class="top-zone-container" style="align-self: flex-start; width: 100%; max-width: 450px; display: flex; flex-direction: column; align-items: flex-start; padding-left: 20px; padding-right: 20px; box-sizing: border-box;">
+         <div style="width: 100%; display: flex; flex-direction: column; align-items: flex-start; padding-left: 20px; padding-top: 10px; box-sizing: border-box;">
              <h3 style="color:#afafaf; font-size:16px; margin: 0 0 15px 0; text-transform: uppercase; letter-spacing: 1px; text-align: left;">🎙️ 口說錄音</h3>
              
              <div class="avatar-bubble-row">
@@ -651,7 +651,9 @@
                    </div>
                 </div>
              </div>
-         </div> <div style="flex: 1; align-self: center; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%;">
+         </div>
+         
+         <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; padding-bottom: 20px; box-sizing: border-box;">
              
              <div id="score-display" style="height: 30px; font-size: 26px; font-weight: 900; margin-bottom: 5px; opacity: 0; transition: opacity 0.3s; letter-spacing: 1px;"></div>
 
@@ -663,7 +665,9 @@
              <button type="button" id="record-btn" oncontextmenu="return false;">🎤</button>
              <p id="status" style="font-weight: 800; color:#afafaf; margin-top: 5px; margin-bottom: 0; font-size:15px;">按住錄音，放開打分</p>
              
-         </div> </div>
+         </div>
+         
+      </div>
     </div>
 
     <div id="summary" style="display:none;">
