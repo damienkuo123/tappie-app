@@ -174,18 +174,18 @@
       .btn-dock.wrong-btn { background: #ff4b4b; border-color: #ea1537; color: white; }
       .btn-dock.wrong-btn:active { border-bottom-width: 2px; transform: translateY(4px); margin-top: 4px; }
 
-      /* 🚀 修正排版：徹底靠左定錨！對話框往右長，絕對不會推擠精靈 */
+      /* 🚀 修正排版：內部完美靠左，對話框往右延伸 */
       .avatar-bubble-row { 
           display: flex; align-items: flex-start; /* 頂部對齊，確保對話框長高時精靈不動 */
-          justify-content: flex-start; /* 💯 絕對靠左，沒有任何置中！ */
+          justify-content: flex-start; /* 內部元素靠左 */
           gap: 10px; /* 精靈與對話框的距離 */
           margin-bottom: 20px; flex-shrink: 0; width: 100%; 
-          padding-left: 25px; /* 🛡️ 給精靈一個左側安全邊距，對齊標題 */
+          padding-left: 20px; /* 🛡️ 與標題一致的左側邊距 */
           box-sizing: border-box;
           min-height: 140px; /* 撐開高度，保護下方單字不被對話框往下壓 */
       }
       
-      /* 🌟 實體 2D 陰影：容器固定，陰影釘死在最底部 */
+      /* 🌟 實體 2D 陰影：容器固定，陰影絕對定位在最底部 */
       .mascot-container {
           position: relative;
           width: 120px; height: 120px; /* 固定的物理佔位 */
@@ -210,11 +210,11 @@
           z-index: 2;
       }
 
-      /* 💬 動態彈性對話框：往右自由延伸，不推擠左邊 */
+      /* 💬 動態彈性對話框：往右自由延伸 */
       .speech-bubble { 
           background: #ffffff; border: 2px solid #e5e5e5; border-radius: 20px; 
           padding: 12px 18px; position: relative; 
-          max-width: calc(100% - 130px); /* 限制最大寬度為「螢幕寬度減去精靈寬度」，防止爆版 */
+          max-width: calc(100% - 130px); /* 限制最大寬度，防止爆版 */
           width: fit-content; min-height: 50px; 
           text-align: left; box-shadow: 0 4px 0 #e5e5e5; 
           color: #4b4b4b; font-weight: 800; font-size: 15px; line-height: 1.4; 
@@ -611,24 +611,24 @@
          <div id="warmup-options" style="display:flex; justify-content:center; gap:15px; flex-wrap:wrap; width:100%;"></div>
       </div>
 
-      <div id="production-zone" style="display:none; flex-direction: column; align-items: flex-start; width: 100%; height: 100%;">
+      <div id="production-zone" style="display:none; flex-direction: column; align-items: center; width: 100%; height: 100%;">
          
-         <h3 style="color:#afafaf; font-size:16px; margin: 0 0 15px 0; text-transform: uppercase; letter-spacing: 1px; width: 100%; text-align: left; padding-left: 25px; box-sizing: border-box;">🎙️ 口說錄音</h3>
+         <div style="width: 100%; max-width: 450px; display: flex; flex-direction: column; align-items: flex-start; box-sizing: border-box;">
+             <h3 style="color:#afafaf; font-size:16px; margin: 0 0 15px 0; text-transform: uppercase; letter-spacing: 1px; width: 100%; text-align: left; padding-left: 20px; box-sizing: border-box;">🎙️ 口說錄音</h3>
              
-         <div class="avatar-bubble-row">
-            <div class="mascot-container">
-                <lottie-player id="prod-mascot" src="" background="transparent" speed="1" loop autoplay></lottie-player>
-                <div class="mascot-shadow"></div>
-            </div>
-            <div class="speech-bubble left-tail" id="prod-bubble">
-               <div id="prod-feedback-text" style="display:none; font-size: 15px; color:#4b4b4b; margin-bottom: 8px;"></div>
-               <div id="prod-tts-btn" style="cursor:pointer; display:flex; align-items:center; justify-content: flex-start; gap:5px; color:#1cb0f6;">
-                 <span style="font-size:24px;">🔊</span> <span id="prod-tts-text" style="font-weight:bold;">我來唸一次</span>
-               </div>
-            </div>
-         </div>
-         
-         <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%;">
+             <div class="avatar-bubble-row">
+                <div class="mascot-container">
+                    <lottie-player id="prod-mascot" src="" background="transparent" speed="1" loop autoplay></lottie-player>
+                    <div class="mascot-shadow"></div>
+                </div>
+                <div class="speech-bubble left-tail" id="prod-bubble">
+                   <div id="prod-feedback-text" style="display:none; font-size: 15px; color:#4b4b4b; margin-bottom: 8px;"></div>
+                   <div id="prod-tts-btn" style="cursor:pointer; display:flex; align-items:center; justify-content: flex-start; gap:5px; color:#1cb0f6;">
+                     <span style="font-size:24px;">🔊</span> <span id="prod-tts-text" style="font-weight:bold;">我來唸一次</span>
+                   </div>
+                </div>
+             </div>
+         </div> <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%;">
              
              <div id="score-display" style="height: 30px; font-size: 26px; font-weight: 900; margin-bottom: 5px; opacity: 0; transition: opacity 0.3s; letter-spacing: 1px;"></div>
 
