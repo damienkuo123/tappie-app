@@ -1063,9 +1063,15 @@
     const speechText = document.getElementById('setup-speech-text');
     playMascot('setup-mascot', 'idle');
     
+    // 🚀 三段式引導文案切換
     if (speechText) {
-        speechText.innerText = "嗨～我們來增進英語口說吧！";
-        setTimeout(() => { speechText.innerText = `今天挑戰：${TARGET_UNIT ? TARGET_UNIT : '今日挑戰'}`; }, 2000);
+        speechText.innerText = "嗨！我們來練習口說吧";
+        setTimeout(() => { 
+            speechText.innerText = `今天我們來練習：${TARGET_UNIT ? TARGET_UNIT : '新單元'}`; 
+            setTimeout(() => {
+                speechText.innerText = "點擊下方開始";
+            }, 2500); // 再等 2.5 秒顯示第三句
+        }, 2000); // 2 秒後顯示第二句
     }
 
     try {
@@ -1092,11 +1098,9 @@
             scores = new Array(quizData.length).fill(null);
             warmupPassed = new Array(quizData.length).fill(false);
             assignedWarmupModes = new Array(quizData.length).fill(null);
-            assignedMascots = new Array(quizData.length).fill(null); // 🚀 初始化精靈記憶體
+            assignedMascots = new Array(quizData.length).fill(null); 
             
-            document.getElementById('total-display').innerText = quizData.length;
-            
-            // 🚀 隱藏開始畫面，顯示練習區 (拔除已不存在的 progress-container)
+            // 🚀 拔除尋找舊元素的代碼，直接切換畫面
             document.getElementById('setup-zone').style.display = 'none';
             document.getElementById('studio').style.display = 'block';
             
@@ -1125,20 +1129,16 @@
       await originalOnload();
   };
 
-  // 🚀 升級版：動態心流渲染引擎
+  // 🚀 升級版：動態心流渲染引擎 (拔除幽靈元素)
   function renderWord() {
     const current = quizData[currentIndex];
     if (!current) return;
 
-    const progContainer = document.getElementById('progress-container');
-    if (progContainer) progContainer.style.display = 'block';
-
-    document.getElementById('idx-display').innerText = currentIndex + 1;
-    
-    // 更新進度條
+    // 🚀 更新進度條 (安全寫法)
     if (quizData.length > 0) {
         const progressPercent = ((currentIndex + 1) / quizData.length) * 100;
-        document.getElementById('progress-fill').style.width = progressPercent + "%";
+        const pFill = document.getElementById('progress-fill');
+        if (pFill) pFill.style.width = progressPercent + "%";
     }
 
     // 隱藏舊版按鈕防呆
