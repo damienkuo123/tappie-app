@@ -626,10 +626,9 @@
          <div id="warmup-options" style="display:flex; justify-content:center; gap:15px; flex-wrap:wrap; width:100%;"></div>
       </div>
 
-      <div id="production-zone" style="display:none; flex-direction: column; width: 100%; height: 100%;">
+      <div id="production-zone" style="display:none; flex-direction: column; width: 100%; height: 100%; padding-top: 10px; box-sizing: border-box;">
          
-         <div style="width: 100%; padding-left: 25px; box-sizing: border-box; margin-bottom: 10px;">
-             
+         <div class="top-section-container" style="width: 100%; max-width: 400px; margin: 0 auto; display: flex; flex-direction: column; align-items: flex-start; padding: 0 25px; box-sizing: border-box;">
              <h3 style="color:#afafaf; font-size:16px; margin: 0 0 15px 0; text-transform: uppercase; letter-spacing: 1px; text-align: left;">🎙️ 口說錄音</h3>
              
              <div class="avatar-bubble-row">
@@ -644,10 +643,7 @@
                    </div>
                 </div>
              </div>
-         </div>
-         
-         <div style="flex: 1; display: flex; flex-direction: column; justify-content: flex-start; align-items: center; width: 100%; margin-top: 10px;">
-             
+         </div> <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%;">
              <div id="score-display" style="height: 30px; font-size: 26px; font-weight: 900; margin-bottom: 5px; opacity: 0; transition: opacity 0.3s; letter-spacing: 1px;"></div>
 
              <div style="margin-bottom: 5px; text-align: center;">
@@ -655,11 +651,9 @@
                <div id="production-zh" style="font-size: 18px; color: #afafaf; font-weight: bold; margin-top: 5px;"></div>
              </div>
 
-             <button type="button" id="record-btn" oncontextmenu="return false;" style="margin-top: 15px;">🎤</button>
-             <p id="status" style="font-weight: 800; color:#afafaf; margin-top: 10px; margin-bottom: 0; font-size:15px;">按住錄音，放開打分</p>
-         </div>
-         
-      </div>
+             <button type="button" id="record-btn" oncontextmenu="return false;">🎤</button>
+             <p id="status" style="font-weight: 800; color:#afafaf; margin-top: 5px; margin-bottom: 0; font-size:15px;">按住錄音，放開打分</p>
+         </div> </div>
     </div>
 
     <div id="summary" style="display:none;">
