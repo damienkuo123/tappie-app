@@ -256,16 +256,35 @@
       .btn-choice-list, .btn-tap-fill, .btn-image-choice, .ws-letter { background: #ffffff; border: 2px solid #e5e5e5; border-bottom-width: 4px; border-radius: 16px; font-weight: 800; width: 100%; box-sizing: border-box; }
       .btn-choice-list.correct, .btn-tap-fill.correct, .btn-image-choice.correct, .ws-letter.correct-path { background: #d7ffb8; border-color: #58cc02; color: #58a700; }
       
-      /* 4. 錄音麥克風按鈕 (縮小並立體化) */
+      /* 🎤 錄音麥克風按鈕 (Duolingo 果凍積木風格) */
       #record-btn { 
-        background: #1cb0f6; border: 2px solid #1899d6; border-bottom-width: 8px; 
-        width: 85px; height: 85px; border-radius: 50%; font-size: 35px; color: white; 
-        cursor: pointer; flex-shrink: 0; outline: none; transition: all 0.1s ease-in-out; 
-        position: relative; z-index: 1500; display: flex; align-items: center; justify-content: center;
-        margin: 10px auto; padding: 0;
+        background: #1cb0f6; /* Duolingo 經典亮藍色 */
+        border: none; /* 拔除生硬的邊框線 */
+        border-bottom: 8px solid #1899d6; /* 底部深色加厚，創造實體積木感 */
+        width: 140px; height: 140px; /* 稍微調整比例讓它更圓潤 */
+        border-radius: 50%; 
+        font-size: 60px; /* 麥克風 Emoji 大小 */
+        color: white; 
+        cursor: pointer; 
+        flex-shrink: 0; 
+        outline: none; 
+        transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1); /* 彈性動畫曲線 */
+        position: relative; 
+        z-index: 1500; 
+        display: flex; align-items: center; justify-content: center;
+        margin: 20px auto; padding: 0;
+        /* 加上一點柔和的陰影，讓它看起來像浮在畫面上 */
+        box-shadow: 0 4px 10px rgba(28, 176, 246, 0.3);
       }
+      
+      /* 🚀 按下去的物理下沉感 (果凍彈性) */
       #record-btn:active, #record-btn.active { 
-        border-bottom-width: 2px; transform: translateY(6px); margin-top: 16px; background: #1480b3; 
+        border-bottom-width: 0px; /* 底部厚度消失 */
+        transform: translateY(8px); /* 往下沉 8px 補齊厚度 */
+        margin-top: 28px; /* 上方邊距增加，保持整體位置不動 */
+        margin-bottom: 12px; /* 下方邊距減少 */
+        background: #1899d6; /* 顏色變深 */
+        box-shadow: 0 0px 0 rgba(28, 176, 246, 0); /* 陰影消失 */
       }
   
       /* 2. 選擇題與拼字按鈕 */
