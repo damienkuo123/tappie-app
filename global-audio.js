@@ -210,6 +210,9 @@ const GlobalAudio = {
     }
 };
 
+// 🚀 強制將 GlobalAudio 暴露為全域變數，讓其他 HTML 檔案可以輕易呼叫它
+window.GlobalAudio = GlobalAudio;
+
 document.addEventListener('DOMContentLoaded', () => {
     GlobalAudio.init();
 });
