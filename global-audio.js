@@ -21,7 +21,7 @@ const GlobalAudio = {
         lobby: new Audio('https://damienkuo123.github.io/marian-app/audio/決戦へ.mp3'),     // 替換為你的 Lobby 音樂
         arenaNormal: new Audio('https://damienkuo123.github.io/marian-app/audio/wind_feelings.mp3'), // 一般練習音樂
         arenaBattle: new Audio('https://damienkuo123.github.io/marian-app/audio/Devil_Disaster.mp3'), // 熱血對戰音樂
-        gacha: new Audio('https://damienkuo123.github.io/marian-app/audio/wind_feelings.mp3')        // 抽卡專屬史詩音樂
+        gacha: new Audio('https://damienkuo123.github.io/marian-app/audio/Battle_in_the_Moonlight.mp3')        // 抽卡專屬史詩音樂
     },
 
     currentBGM: null,       // 紀錄目前正在播放的主 BGM
