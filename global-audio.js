@@ -152,22 +152,6 @@ const GlobalAudio = {
                         }
                     }
 
-                    // 2. 🚀 處理抽卡畫面 (Epic Reward Zone) 的專屬 BGM 覆蓋
-                    if (target.matches('#epic-reward-zone')) { // 🚀 修復：對準 Arena 的實際抽卡 ID
-                        const displayStyle = window.getComputedStyle(target).display;
-                        if (displayStyle !== 'none' && !target.dataset.gachaBgmPlaying) {
-                            // 暫停原本的 BGM，改播抽卡史詩音樂
-                            if (this.currentBGM) this.currentBGM.pause();
-                            this.bgm.gacha.currentTime = 0;
-                            this.bgm.gacha.play().catch(e=>{});
-                            target.dataset.gachaBgmPlaying = "true";
-                        } else if (displayStyle === 'none' && target.dataset.gachaBgmPlaying) {
-                            // 抽卡結束，恢復原本的 BGM
-                            this.bgm.gacha.pause();
-                            if (this.currentBGM) this.currentBGM.play().catch(e=>{});
-                            delete target.dataset.gachaBgmPlaying;
-                        }
-                    }
                 }
 
                 // 處理榮譽榜等 class 變化
