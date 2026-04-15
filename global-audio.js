@@ -27,6 +27,29 @@ const GlobalAudio = {
     currentBGM: null,       // 紀錄目前正在播放的主 BGM
     isDucking: false,       // 紀錄是否正在錄音靜音中
 
+    // 🚀 專門給 Arena 呼叫：切換到抽卡音樂
+    playGachaBGM: function() {
+        if (this.currentBGM) {
+            this.currentBGM.pause();
+        }
+        this.bgm.gacha.currentTime = 0;
+        this.bgm.gacha.play().catch(e => console.warn("Gacha BGM failed:", e));
+        document.body.dataset.gachaBgmPlaying = "true";
+        console.log("🎲 切換至抽卡音樂");
+    },
+
+    // 🚀 專門給 Arena 呼叫：恢復原本的背景音樂
+    resumeNormalBGM: function() {
+        if (document.body.dataset.gachaBgmPlaying) {
+            this.bgm.gacha.pause();
+            if (this.currentBGM) {
+                this.currentBGM.play().catch(e => console.warn("Resume BGM failed:", e));
+            }
+            delete document.body.dataset.gachaBgmPlaying;
+            console.log("🎵 恢復原本音樂");
+        }
+    },
+
     init: function() {
         this.sounds.click.volume = 0.4;
         this.sounds.popupOpen.volume = 0.5;
