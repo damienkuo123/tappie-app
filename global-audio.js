@@ -1,72 +1,41 @@
 /**
- * Happy Marian 3.0 - 全域通用音效與配樂引擎 (Global Audio Engine)
- * 支援：自動切換情境 BGM、麥克風錄音時自動靜音 (Auto-Ducking)、彈窗音效監聽
+ * Happy Marian 3.0 - 全域通用音效與配樂引擎 (Global Audio Engine - Web Audio API Edition)
+ * 解決 Safari 靜音限制、避免預載亂叫、達成零延遲完美打擊感！
  */
 
 const GlobalAudio = {
-    // ==========================================
-    // 1. 短音效庫 (SFX)
-    // ==========================================
-    sounds: {
-        click: new Audio('https://damienkuo123.github.io/marian-app/audio/click.m4a'),
-        popupOpen: new Audio('https://damienkuo123.github.io/marian-app/audio/popupOpen.m4a'),
-        popupClose: new Audio('https://damienkuo123.github.io/marian-app/audio/popupClose.m4a'),
-        
-        // 🚀 新增對戰音效
-        countdown: new Audio('https://damienkuo123.github.io/marian-app/audio/countdown.mp3'), // 逼逼聲
-        fireNormal: new Audio('https://damienkuo123.github.io/marian-app/audio/fireNormal.mp3'), // 普通射擊
-        fireUlt: new Audio('https://damienkuo123.github.io/marian-app/audio/fireUlt.mp3'),     // 大招蓄力射擊
-        hit: new Audio('https://damienkuo123.github.io/marian-app/audio/hit.mp3'),      // 受擊震動
-        cutin: new Audio('https://damienkuo123.github.io/marian-app/audio/cutin.mp3'),    // 立繪切入
-        victory: new Audio('https://damienkuo123.github.io/marian-app/audio/victory.mp3'),  // 勝利號角
-        
-        // 🚀 新增抽獎音效
-        shatter: new Audio('https://damienkuo123.github.io/marian-app/audio/shatter.mp3')   // 封印碎裂
+    // 1. 音效網址庫 (改為網址對應)
+    soundUrls: {
+        click: 'https://damienkuo123.github.io/marian-app/audio/click.m4a',
+        popupOpen: 'https://damienkuo123.github.io/marian-app/audio/popupOpen.m4a',
+        popupClose: 'https://damienkuo123.github.io/marian-app/audio/popupClose.m4a',
+        countdown: 'https://damienkuo123.github.io/marian-app/audio/countdown.mp3',
+        fireNormal: 'https://damienkuo123.github.io/marian-app/audio/fireNormal.mp3',
+        fireUlt: 'https://damienkuo123.github.io/marian-app/audio/fireUlt.mp3',
+        hit: 'https://damienkuo123.github.io/marian-app/audio/hit.mp3',
+        cutin: 'https://damienkuo123.github.io/marian-app/audio/cutin.mp3',
+        victory: 'https://damienkuo123.github.io/marian-app/audio/victory.mp3',
+        shatter: 'https://damienkuo123.github.io/marian-app/audio/shatter.mp3'
     },
 
-    // ==========================================
-    // 2. 背景音樂庫 (BGM) - 替換成你的專屬音樂網址
-    // ==========================================
+    // 2. 背景音樂庫 (BGM 檔案大，仍保留傳統 Audio 標籤串流播放)
     bgm: {
         dashboard: new Audio('https://damienkuo123.github.io/marian-app/audio/cyberwave-orchestra-puzzle-game-loop-bright-casual-video-game-music-249201.mp3'), 
-        lobby: new Audio('https://damienkuo123.github.io/marian-app/audio/決戦へ.mp3'),     // 替換為你的 Lobby 音樂
-        arenaNormal: new Audio('https://damienkuo123.github.io/marian-app/audio/wind_feelings.mp3'), // 一般練習音樂
-        arenaBattle: new Audio('https://damienkuo123.github.io/marian-app/audio/Devil_Disaster.mp3'), // 熱血對戰音樂
-        gacha: new Audio('https://damienkuo123.github.io/marian-app/audio/Battle_in_the_Moonlight.mp3')        // 抽卡專屬史詩音樂
+        lobby: new Audio('https://damienkuo123.github.io/marian-app/audio/決戦へ.mp3'),     
+        arenaNormal: new Audio('https://damienkuo123.github.io/marian-app/audio/wind_feelings.mp3'), 
+        arenaBattle: new Audio('https://damienkuo123.github.io/marian-app/audio/Devil_Disaster.mp3'), 
+        gacha: new Audio('https://damienkuo123.github.io/marian-app/audio/Battle_in_the_Moonlight.mp3')        
     },
 
-    currentBGM: null,       // 紀錄目前正在播放的主 BGM
-    isDucking: false,       // 紀錄是否正在錄音靜音中
+    // 🚀 新增：Web Audio API 核心組件
+    audioCtx: null,
+    audioBuffers: {}, // 用來存放解碼後的純淨聲音數據
 
-    // 🚀 專門給 Arena 呼叫：切換到抽卡音樂
-    playGachaBGM: function() {
-        if (this.currentBGM) {
-            this.currentBGM.pause();
-        }
-        this.bgm.gacha.currentTime = 0;
-        this.bgm.gacha.play().catch(e => console.warn("Gacha BGM failed:", e));
-        document.body.dataset.gachaBgmPlaying = "true";
-        console.log("🎲 切換至抽卡音樂");
-    },
-
-    // 🚀 專門給 Arena 呼叫：恢復原本的背景音樂
-    resumeNormalBGM: function() {
-        if (document.body.dataset.gachaBgmPlaying) {
-            this.bgm.gacha.pause();
-            if (this.currentBGM) {
-                this.currentBGM.play().catch(e => console.warn("Resume BGM failed:", e));
-            }
-            delete document.body.dataset.gachaBgmPlaying;
-            console.log("🎵 恢復原本音樂");
-        }
-    },
+    currentBGM: null,       
+    isDucking: false,       
 
     init: function() {
-        this.sounds.click.volume = 0.4;
-        this.sounds.popupOpen.volume = 0.5;
-        this.sounds.popupClose.volume = 0.4;
-
-        // 設定所有 BGM 預設音量與循環
+        // 設定 BGM 預設音量與循環
         for (let key in this.bgm) {
             this.bgm[key].volume = 0.15; 
             this.bgm[key].loop = true;
@@ -77,31 +46,78 @@ const GlobalAudio = {
         this.bindMicDucking(); 
         this.autoPlayBGM();    
         
-        // 🚀 黑魔法：在使用者第一次點擊畫面時，以 0 音量把所有音效「摸」一遍，騙過瀏覽器！
-        const unlockAllAudio = () => {
-            for (let key in this.sounds) {
-                const s = this.sounds[key];
-                s.volume = 0; // 靜音
-                s.play().then(() => {
-                    s.pause(); // 播了馬上停
-                    s.currentTime = 0;
-                    // 恢復原本該有的音量
-                    if (key === 'click' || key === 'popupClose') s.volume = 0.4;
-                    else if (key === 'popupOpen') s.volume = 0.5;
-                    else s.volume = 1.0; // 其他戰鬥音效預設滿音量
-                }).catch(e => {}); // 忽略錯誤
+        // 🚀 核心機制：等待使用者第一次點擊，才喚醒 AudioContext 並開始下載音效！
+        const initWebAudio = () => {
+            if (!this.audioCtx) {
+                this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                this.preloadAllSounds(); // 開始默默下載短音效
+                console.log("🔓 Web Audio API 喚醒成功！");
             }
-            document.removeEventListener('pointerdown', unlockAllAudio);
-            console.log("🔓 所有音效已解鎖！");
+            if (this.audioCtx.state === 'suspended') {
+                this.audioCtx.resume();
+            }
+            document.removeEventListener('pointerdown', initWebAudio);
         };
-        document.addEventListener('pointerdown', unlockAllAudio);
+        document.addEventListener('pointerdown', initWebAudio);
 
-        console.log("🎵 Global Audio Engine 3.0 Initialized");
+        console.log("🎵 Global Audio Engine 3.2 Initialized (Web Audio API Mode)");
     },
 
-    // ==========================================
-    // 自動判斷頁面與模式，播放專屬 BGM
-    // ==========================================
+    // 🚀 將所有短音效下載並解碼到記憶體中 (背景執行，絕對不會發出聲音)
+    preloadAllSounds: function() {
+        for (let key in this.soundUrls) {
+            fetch(this.soundUrls[key])
+                .then(response => response.arrayBuffer())
+                .then(arrayBuffer => this.audioCtx.decodeAudioData(arrayBuffer))
+                .then(audioBuffer => {
+                    this.audioBuffers[key] = audioBuffer; // 存入記憶體
+                })
+                .catch(e => console.warn(`音效 ${key} 載入失敗:`, e));
+        }
+    },
+
+    // 🚀 終極播放函數：從記憶體中提取聲音，零延遲噴發！
+    play: function(soundName) {
+        if (!this.audioCtx || !this.audioBuffers[soundName]) return; // 如果還沒載入完就算了
+        
+        // 每次播放都要產生一個新的 Source (這是 Web Audio API 的規定)
+        const source = this.audioCtx.createBufferSource();
+        source.buffer = this.audioBuffers[soundName];
+
+        // 獨立控制音量
+        const gainNode = this.audioCtx.createGain();
+        let vol = 1.0;
+        if (soundName === 'click' || soundName === 'popupClose') vol = 0.4;
+        else if (soundName === 'popupOpen') vol = 0.5;
+        gainNode.gain.setValueAtTime(vol, this.audioCtx.currentTime);
+
+        // 連接線路並發射！
+        source.connect(gainNode);
+        gainNode.connect(this.audioCtx.destination);
+        source.start(0);
+    },
+
+    // --- 以下為原本的 BGM 切換與監聽邏輯，完全沒變 ---
+
+    playGachaBGM: function() {
+        if (this.currentBGM) {
+            this.currentBGM.pause();
+        }
+        this.bgm.gacha.currentTime = 0;
+        this.bgm.gacha.play().catch(e => {});
+        document.body.dataset.gachaBgmPlaying = "true";
+    },
+
+    resumeNormalBGM: function() {
+        if (document.body.dataset.gachaBgmPlaying) {
+            this.bgm.gacha.pause();
+            if (this.currentBGM) {
+                this.currentBGM.play().catch(e => {});
+            }
+            delete document.body.dataset.gachaBgmPlaying;
+        }
+    },
+
     autoPlayBGM: function() {
         const currentPath = window.location.pathname.toLowerCase();
         const urlParams = new URLSearchParams(window.location.search);
@@ -110,48 +126,41 @@ const GlobalAudio = {
         if (currentPath.includes('dashboard')) {
             targetBGM = this.bgm.dashboard;
         } else if (currentPath.includes('arena')) {
-            // 🚀 判斷是否為對戰模式
             if (urlParams.get('mode') === 'battle' || urlParams.get('roomId')) {
                 targetBGM = this.bgm.arenaBattle;
             } else {
                 targetBGM = this.bgm.arenaNormal;
             }
         } else if (currentPath.includes('lobby')) {
-            targetBGM = this.bgm.lobby; // 🚀 修復：讓 Lobby 播放專屬的 bgm.lobby
+            targetBGM = this.bgm.lobby; 
         }
 
         if (targetBGM) {
             this.currentBGM = targetBGM;
-            // 需等待使用者第一次點擊畫面才能播放 (瀏覽器安全限制)
             const startBgmInteraction = () => {
-                this.currentBGM.play().catch(e => console.warn("BGM 等待互動中...", e));
+                this.currentBGM.play().catch(e => {});
                 document.removeEventListener('pointerdown', startBgmInteraction);
             };
             document.addEventListener('pointerdown', startBgmInteraction);
         }
     },
 
-    // ==========================================
-    // 🎤 麥克風防干擾機制 (Auto-Ducking)
-    // ==========================================
     bindMicDucking: function() {
-        // 當按下錄音鍵 (包含一般錄音與對戰錄音按鈕)
         document.addEventListener('pointerdown', (e) => {
             if (e.target.closest('#record-btn') || e.target.closest('#battle-record-btn')) {
                 if (this.currentBGM && !this.currentBGM.paused) {
-                    this.currentBGM.pause(); // 🚀 錄音瞬間，暫停背景音樂
+                    this.currentBGM.pause(); 
                     this.isDucking = true;
                 }
             }
         });
 
-        // 當放開錄音鍵
         const resumeAudio = (e) => {
             if (this.isDucking && (e.target.closest('#record-btn') || e.target.closest('#battle-record-btn'))) {
                 setTimeout(() => {
-                    if (this.currentBGM) this.currentBGM.play(); // 🚀 錄音結束，恢復播放
+                    if (this.currentBGM) this.currentBGM.play().catch(e=>{});
                     this.isDucking = false;
-                }, 500); // 稍微延遲 0.5 秒恢復，避免剛放開時的雜音被錄到
+                }, 500); 
             }
         };
 
@@ -160,18 +169,9 @@ const GlobalAudio = {
         document.addEventListener('pointerout', resumeAudio);
     },
 
-    play: function(soundName) {
-        const sound = this.sounds[soundName];
-        if (sound) {
-            sound.currentTime = 0; 
-            sound.play().catch(e => {});
-        }
-    },
-
     bindClickEvents: function() {
         document.addEventListener('pointerdown', (e) => {
             const target = e.target.closest('button, a, .btn, .btn-dock, .btn-play-pill, .ws-letter, .btn-image-choice');
-            // 排除錄音按鈕，錄音按鈕有自己的物理反饋聲或不發聲
             if (target && !target.disabled && !target.classList.contains('disabled') && target.id !== 'record-btn' && target.id !== 'battle-record-btn') {
                 if (target.hasAttribute('data-no-click-sound')) return;
                 this.play('click');
@@ -179,9 +179,6 @@ const GlobalAudio = {
         });
     },
 
-    // ==========================================
-    // 彈窗監聽與 🎁 抽卡專屬 BGM 切換
-    // ==========================================
     observeModals: function() {
         const displayModals = ['#summary', '#impact-overlay', '#phonic-helper-overlay', '#logModal'];
         const classModals = [{ selector: '#lb-panel', activeClass: 'open' }];
@@ -191,7 +188,6 @@ const GlobalAudio = {
                 const target = mutation.target;
 
                 if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
-                    // 1. 處理一般彈窗音效
                     const isDisplayModal = displayModals.some(selector => target.matches(selector));
                     if (isDisplayModal) {
                         const displayStyle = window.getComputedStyle(target).display;
@@ -204,10 +200,8 @@ const GlobalAudio = {
                             delete target.dataset.audioStateOpen;
                         }
                     }
-
                 }
 
-                // 處理榮譽榜等 class 變化
                 if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
                     classModals.forEach(config => {
                         if (target.matches(config.selector)) {
@@ -229,7 +223,6 @@ const GlobalAudio = {
     }
 };
 
-// 🚀 強制將 GlobalAudio 暴露為全域變數，讓其他 HTML 檔案可以輕易呼叫它
 window.GlobalAudio = GlobalAudio;
 
 document.addEventListener('DOMContentLoaded', () => {
