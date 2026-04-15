@@ -2784,6 +2784,10 @@
     
     readyTimer = setInterval(() => {
       document.getElementById('battle-timer').innerText = count;
+      // 🚀 埋點：發出倒數「逼」聲 (只要大於 0 就發聲)
+      if (count > 0 && window.GlobalAudio) {
+          GlobalAudio.play('countdown');
+      }
       count--;
       if (count < 0) {
         clearInterval(readyTimer);
@@ -2831,9 +2835,13 @@
 
     let delayBeforeAttack = 0;
     if (myNum > opNum && isMyUlt) {
+        // 🚀 埋點：大招切入音效
+        if (window.GlobalAudio) GlobalAudio.play('cutin');
         playCutinAnimation(`url('${myImgUrl}')`, true);
         delayBeforeAttack = 1500; 
     } else if (opNum > myNum && isOpUlt) {
+        // 🚀 埋點：大招切入音效
+        if (window.GlobalAudio) GlobalAudio.play('cutin');
         playCutinAnimation(`url('${opImgUrl}')`, false);
         delayBeforeAttack = 1500;
     }
@@ -2843,8 +2851,11 @@
         const opContainer = opCard.closest('.op-container');
 
         // 🚀 動態生成掛在 arena 上的物理光球
-        function createBlast(type, delay = 0) {
+        function createBlast(type, delay = 0, isUlt = false) { // 加入 isUlt 參數判斷是否為大招
            setTimeout(() => {
+             // 🚀 埋點：光球發射音效 (根據是否為大招播放不同聲音)
+             if (window.GlobalAudio) GlobalAudio.play(isUlt ? 'fireUlt' : 'fireNormal');
+             
              const blast = document.createElement('div');
              blast.className = `blast-particle ${type}`;
              arenaBg.appendChild(blast);
@@ -2857,32 +2868,40 @@
             if(myContainer) myContainer.classList.add('recoil-my'); 
             if (isMyUlt) {
                 myCard.classList.add('ultimate-charging'); 
-                createBlast('blast-ult-my', 100); createBlast('blast-ult-my', 300);
+                createBlast('blast-ult-my', 100, true); createBlast('blast-ult-my', 300, true); // 傳入 true 代表是大招
                 if(arenaBg) arenaBg.classList.add('screen-flash-gold');
             } else {
                 myCard.classList.add('charging-mana'); 
-                createBlast('blast-my', 100);
+                createBlast('blast-my', 100, false);
                 if(arenaBg) arenaBg.classList.add('screen-flash-cyan'); 
             }
             if(isFinal) setTimeout(() => myCard.classList.add('winner-glory'), 800);
           }
-          if(opCard) opCard.classList.add(isFinal ? 'loser-shatter' : 'take-damage'); 
+          if(opCard) {
+              opCard.classList.add(isFinal ? 'loser-shatter' : 'take-damage');
+              // 🚀 埋點：受擊音效 (配合動畫的 0.5s 延遲)
+              setTimeout(() => { if (window.GlobalAudio) GlobalAudio.play('hit'); }, 500);
+          }
         }
         else if (myNum < opNum) { 
           if(opCard) {
             if(opContainer) opContainer.classList.add('recoil-op'); 
             if (isOpUlt) {
                 opCard.classList.add('ultimate-charging'); 
-                createBlast('blast-ult-op', 100); createBlast('blast-ult-op', 300);
+                createBlast('blast-ult-op', 100, true); createBlast('blast-ult-op', 300, true);
                 if(arenaBg) arenaBg.classList.add('screen-flash-gold');
             } else {
                 opCard.classList.add('charging-mana'); 
-                createBlast('blast-op', 100);
+                createBlast('blast-op', 100, false);
                 if(arenaBg) arenaBg.classList.add('screen-flash-red'); 
             }
             if(isFinal) setTimeout(() => opCard.classList.add('winner-glory'), 800);
           }
-          if(myCard) myCard.classList.add(isFinal ? 'loser-shatter' : 'take-damage');
+          if(myCard) {
+              myCard.classList.add(isFinal ? 'loser-shatter' : 'take-damage');
+              // 🚀 埋點：受擊音效
+              setTimeout(() => { if (window.GlobalAudio) GlobalAudio.play('hit'); }, 500);
+          }
         }
 
         updateCardDamage(myCard, opTotalWins);
@@ -3037,6 +3056,8 @@
     // 🚀 根據勝負，套用贏家的全息卡片資料！
     if (myNum > opNum) { 
       r.innerText = isFinal ? "對戰獲勝" : "WIN"; 
+      // 🚀 埋點：如果是最後一局且我方獲勝，播放勝利號角
+      if (isFinal && window.GlobalAudio) GlobalAudio.play('victory'); 
       r.classList.add('result-win'); o.classList.add('theme-win'); 
       if (myImgUrl) impactCardBg.style.backgroundImage = `url('${myImgUrl}')`; 
       impactCard.setAttribute('data-rarity', window.currentMyRarity || 'N');
@@ -3570,6 +3591,9 @@
       if (unlockUi) unlockUi.style.display = 'none';
       
       setTimeout(() => {
+          // 🚀 埋點：封印碎裂音效
+          if (window.GlobalAudio) GlobalAudio.play('shatter');
+          
           gachaCardsData[index].flipped = true;
           cardEl.classList.add('flipped');
           
