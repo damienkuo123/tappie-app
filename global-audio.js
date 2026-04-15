@@ -8,17 +8,17 @@ const GlobalAudio = {
     // 1. 短音效庫 (SFX)
     // ==========================================
     sounds: {
-        click: new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3'),
-        popupOpen: new Audio('https://assets.mixkit.co/active_storage/sfx/1114/1114-preview.mp3'),
-        popupClose: new Audio('https://assets.mixkit.co/active_storage/sfx/2361/2361-preview.mp3'),
+        click: new Audio('https://damienkuo123.github.io/marian-app/audio/click.m4a'),
+        popupOpen: new Audio('https://damienkuo123.github.io/marian-app/audio/popupOpen.m4a'),
+        popupClose: new Audio('https://damienkuo123.github.io/marian-app/audio/popupClose.m4a'),
         
         // 🚀 新增對戰音效
-        countdown: new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3'), // 逼逼聲
-        fireNormal: new Audio('https://assets.mixkit.co/active_storage/sfx/2897/2897-preview.mp3'), // 普通射擊
-        fireUlt: new Audio('https://assets.mixkit.co/active_storage/sfx/611/611-preview.mp3'),     // 大招蓄力射擊
-        hit: new Audio('https://assets.mixkit.co/active_storage/sfx/1044/1044-preview.mp3'),      // 受擊震動
-        cutin: new Audio('https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3'),    // 立繪切入
-        victory: new Audio('https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3'),  // 勝利號角
+        countdown: new Audio('https://damienkuo123.github.io/marian-app/audio/countdown.mp3'), // 逼逼聲
+        fireNormal: new Audio('https://damienkuo123.github.io/marian-app/audio/fireNormal.mp3'), // 普通射擊
+        fireUlt: new Audio('https://damienkuo123.github.io/marian-app/audio/fireUlt.mp3'),     // 大招蓄力射擊
+        hit: new Audio('https://damienkuo123.github.io/marian-app/audio/hit.mp3'),      // 受擊震動
+        cutin: new Audio('https://damienkuo123.github.io/marian-app/audio/cutin.mp3'),    // 立繪切入
+        victory: new Audio('https://damienkuo123.github.io/marian-app/audio/victory.mp3'),  // 勝利號角
         
         // 🚀 新增抽獎音效
         shatter: new Audio('https://assets.mixkit.co/active_storage/sfx/2042/2042-preview.mp3')   // 封印碎裂
