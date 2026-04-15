@@ -64,7 +64,7 @@ const GlobalAudio = {
                 targetBGM = this.bgm.arenaNormal;
             }
         } else if (currentPath.includes('lobby')) {
-            targetBGM = this.bgm.dashboard; // Lobby 可以共用 Dashboard 音樂，或之後再獨立
+            targetBGM = this.bgm.lobby; // 🚀 修復：讓 Lobby 播放專屬的 bgm.lobby
         }
 
         if (targetBGM) {
@@ -152,11 +152,11 @@ const GlobalAudio = {
                         }
                     }
 
-                    // 2. 🚀 處理抽卡畫面 (Gacha Overlay) 的專屬 BGM 覆蓋
-                    if (target.matches('#gacha-overlay')) {
+                    // 2. 🚀 處理抽卡畫面 (Epic Reward Zone) 的專屬 BGM 覆蓋
+                    if (target.matches('#epic-reward-zone')) { // 🚀 修復：對準 Arena 的實際抽卡 ID
                         const displayStyle = window.getComputedStyle(target).display;
                         if (displayStyle !== 'none' && !target.dataset.gachaBgmPlaying) {
-                            // 暫停原本的 BGM，改播抽卡音樂
+                            // 暫停原本的 BGM，改播抽卡史詩音樂
                             if (this.currentBGM) this.currentBGM.pause();
                             this.bgm.gacha.currentTime = 0;
                             this.bgm.gacha.play().catch(e=>{});
