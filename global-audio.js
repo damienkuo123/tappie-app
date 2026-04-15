@@ -57,45 +57,61 @@ const GlobalAudio = {
         });
     },
 
-    // 🌟 2. 自動綁定「介面彈出/收起」音效 (透過 MutationObserver 監聽 DOM 變化)
+    // 🌟 2. 自動綁定「介面彈出/收起」音效 (升級版：支援 display 與 class 變化)
     observeModals: function() {
-        // 定義哪些 class 的顯示/隱藏代表彈出視窗 (依據你的專案結構調整)
-        // 例如：結算畫面 (summary)、抽獎畫面 (gacha-overlay)、自訂 Popup
-        const modalSelectors = ['#summary', '#gacha-overlay', '#impact-overlay', '#phonic-helper-overlay'];
+        // 第一類：透過改變 display 顯示的彈窗 (加入 #logModal)
+        const displayModals = ['#summary', '#gacha-overlay', '#impact-overlay', '#phonic-helper-overlay', '#logModal'];
+        
+        // 第二類：透過加上 specific class 來展開的區塊 (加入 #lb-panel 的 open 狀態)
+        const classModals = [
+            { selector: '#lb-panel', activeClass: 'open' }
+        ];
 
-        // 建立觀察者，監視 document.body 內屬性的變化
         const observer = new MutationObserver((mutations) => {
             mutations.forEach((mutation) => {
+                const target = mutation.target;
+
+                // 處理第一類 (基於 style.display 變化的彈窗)
                 if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
-                    const target = mutation.target;
+                    const isDisplayModal = displayModals.some(selector => target.matches(selector));
                     
-                    // 檢查這個變動的元素，是不是我們定義的彈跳視窗之一
-                    const isModal = modalSelectors.some(selector => target.matches(selector));
-                    
-                    if (isModal) {
+                    if (isDisplayModal) {
                         const displayStyle = window.getComputedStyle(target).display;
                         const opacityStyle = window.getComputedStyle(target).opacity;
                         
-                        // 判斷開啟：display 變成不是 none，且 opacity 不是 0
                         if (displayStyle !== 'none' && opacityStyle !== '0' && !target.dataset.audioStateOpen) {
                             this.play('popupOpen');
-                            target.dataset.audioStateOpen = "true"; // 標記已開啟，防重複觸發
-                        } 
-                        // 判斷關閉：display 變回 none
-                        else if (displayStyle === 'none' && target.dataset.audioStateOpen) {
+                            target.dataset.audioStateOpen = "true";
+                        } else if (displayStyle === 'none' && target.dataset.audioStateOpen) {
                             this.play('popupClose');
-                            delete target.dataset.audioStateOpen; // 移除標記
+                            delete target.dataset.audioStateOpen;
                         }
                     }
+                }
+
+                // 處理第二類 (基於 class 變化的展開區塊，例如榮譽榜)
+                if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                    classModals.forEach(config => {
+                        if (target.matches(config.selector)) {
+                            const isOpen = target.classList.contains(config.activeClass);
+                            
+                            if (isOpen && !target.dataset.audioStateOpen) {
+                                this.play('popupOpen');
+                                target.dataset.audioStateOpen = "true";
+                            } else if (!isOpen && target.dataset.audioStateOpen) {
+                                this.play('popupClose');
+                                delete target.dataset.audioStateOpen;
+                            }
+                        }
+                    });
                 }
             });
         });
 
-        // 開始監視整個 body 及其子元素的屬性變化
         observer.observe(document.body, {
             attributes: true,
             subtree: true,
-            attributeFilter: ['style', 'class'] // 監視 style 和 class 的變化
+            attributeFilter: ['style', 'class'] 
         });
     }
 };
