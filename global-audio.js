@@ -21,7 +21,7 @@ const GlobalAudio = {
         victory: new Audio('https://damienkuo123.github.io/marian-app/audio/victory.mp3'),  // 勝利號角
         
         // 🚀 新增抽獎音效
-        shatter: new Audio('https://assets.mixkit.co/active_storage/sfx/2042/2042-preview.mp3')   // 封印碎裂
+        shatter: new Audio('https://damienkuo123.github.io/marian-app/audio/shatter.mp3')   // 封印碎裂
     },
 
     // ==========================================
