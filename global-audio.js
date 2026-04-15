@@ -41,6 +41,33 @@ const GlobalAudio = {
         this.bindMicDucking(); 
         this.autoPlayBGM();    
         
+        // 🚀 終極黑魔法：無聲過水法 (Silent Preload)
+        // 只要使用者點擊畫面的任何地方，我們就瞬間創造出所有的音效物件，
+        // 把它們的音量設為 0，叫它們「播放」，然後馬上「暫停」。
+        // 這樣瀏覽器就會覺得：「喔，這些聲音都是使用者點擊授權的」，之後用 setTimeout 呼叫也不會被擋了！
+        const unlockAllAudio = () => {
+            for (let key in this.soundUrls) {
+                const url = this.soundUrls[key];
+                if (url) {
+                    const audio = new Audio(url);
+                    audio.volume = 0; // 絕對靜音
+                    // 播放後立刻暫停，完成「過水」儀式
+                    audio.play().then(() => {
+                        audio.pause();
+                        audio.currentTime = 0;
+                    }).catch(e => {
+                        // 如果因為檔案還沒下載完而報錯，我們就安靜地忽略它
+                    });
+                }
+            }
+            // 過水儀式只要做一次就好，做完就把這個監聽器殺掉
+            document.removeEventListener('pointerdown', unlockAllAudio);
+            console.log("🔓 所有戰鬥音效已取得瀏覽器播放授權！");
+        };
+
+        // 綁定在整個網頁的第一次點擊上
+        document.addEventListener('pointerdown', unlockAllAudio);
+
         console.log("🎵 Global Audio Engine 3.1 Initialized (Safe Mode)");
     },
 
