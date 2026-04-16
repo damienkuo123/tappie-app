@@ -1726,22 +1726,39 @@
   };
 
   document.getElementById('start-btn').onclick = () => {
-    document.getElementById('info-text').innerText = "正在載入題目...";
-    fetch(`${GAS_URL}?id=${STUDENT_ID}&action=get_data&unit=${encodeURIComponent(TARGET_UNIT)}`)
-      .then(res => res.json()).then(data => {
-        if (!data.words || data.words.length === 0) { alert("題目為空"); return; }
-        quizData = data.words; 
-        scores = new Array(quizData.length).fill(null);
+    document.getElementById('info-text').innerText = "正在開啟麥克風與載入題目...";
+    document.getElementById('start-btn').style.display = 'none'; 
+    
+    // 1️⃣ 瞬間喚醒 AudioContext 鎖定通道 (這沒有延遲)
+    if (window.GlobalAudio) window.GlobalAudio.unlockWebAudio();
+
+    // 2️⃣ 將麥克風請求丟到背景去跑 (不要用 await 擋住主線程！)
+    // 並且加上關閉回音消除的參數，雙重保險
+    navigator.mediaDevices.getUserMedia({ 
+        audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } 
+    }).then(stream => {
+        globalMicStream = stream; // 存入全域變數
         
-        document.getElementById('total-display').innerText = quizData.length;
-        document.getElementById('setup-zone').style.display = 'none';
-        document.getElementById('progress-container').style.display = 'block';
-        document.getElementById('studio').style.display = 'block';
-        
-        // 🚀 關鍵：先綁定監聽器，再畫出第一題，按鈕才不會失效！
-        attachButtonListeners(); 
-        renderWord();
-      });
+        // 3️⃣ 麥克風拿到後，才去抓題目
+        fetch(`${GAS_URL}?id=${STUDENT_ID}&action=get_data&unit=${encodeURIComponent(TARGET_UNIT)}`)
+          .then(res => res.json()).then(data => {
+            if (!data.words || data.words.length === 0) { alert("題目為空"); return; }
+            quizData = data.words; 
+            scores = new Array(quizData.length).fill(null);
+            
+            document.getElementById('total-display').innerText = quizData.length;
+            document.getElementById('setup-zone').style.display = 'none';
+            document.getElementById('progress-container').style.display = 'block';
+            document.getElementById('studio').style.display = 'block';
+            
+            attachButtonListeners(); 
+            renderWord();
+          });
+    }).catch(e => {
+        alert("請允許麥克風權限才能進行練習喔！"); 
+        document.getElementById('info-text').innerText = "麥克風授權失敗";
+        document.getElementById('start-btn').style.display = 'inline-block';
+    });
   };
   
   function attachButtonListeners() {
