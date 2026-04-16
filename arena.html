@@ -1975,28 +1975,33 @@
 
         // 綁定「點擊進入戰場」的跳轉功能
         window.portalJump = async () => {
-          arenaLog("👉 點擊了 [進入戰場] 按鈕");
           enterBtn.innerText = "連線中...";
           enterBtn.style.pointerEvents = "none";
           
-          arenaLog("對戰模式：呼叫 getUserMedia (非同步不阻擋)...");
-          let streamPromise = navigator.mediaDevices.getUserMedia({ 
-              audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } 
-          });
-          
+          // 1️⃣ 拔出保護傘：強制解鎖 Web Audio API
           if (window.GlobalAudio) {
-              arenaLog("對戰模式：呼叫 unlockWebAudio 與 BGM.play()...");
               window.GlobalAudio.unlockWebAudio();
+              
+              // 2️⃣ 強制等待 BGM 真正開始播放！
               if (window.GlobalAudio.currentBGM) {
-                  window.GlobalAudio.currentBGM.play().then(() => arenaLog("✅ 對戰 BGM 觸發成功")).catch(e => arenaLog("❌ 對戰 BGM 觸發失敗: " + e));
+                  try {
+                      window.GlobalAudio.currentBGM.volume = 0.15;
+                      await window.GlobalAudio.currentBGM.play();
+                      console.log("✅ 序列保護傘：對戰 BGM 已開始播放，媒體通道鎖定！");
+                  } catch(e) {
+                      console.warn("⚠️ 序列保護傘：對戰 BGM 播放失敗，繼續嘗試...", e);
+                  }
               }
           }
           
           try {
-              arenaLog("對戰模式：等待 streamPromise 解析...");
-              globalMicStream = await streamPromise;
-              arenaLog("✅ 對戰模式：getUserMedia 取得成功！麥克風已開啟！");
+              // 3️⃣ 保護傘撐開後，才去要麥克風！
+              globalMicStream = await navigator.mediaDevices.getUserMedia({ 
+                  audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } 
+              });
+              console.log("✅ 序列保護傘：對戰麥克風已取得！");
               
+              // 4️⃣ 麥克風安全到手，進入戰場
               clearInterval(pTimer);
               portal.style.display = 'none';
               document.getElementById('battle-arena').style.display = 'flex';
