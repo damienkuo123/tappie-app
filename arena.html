@@ -2203,7 +2203,7 @@
                             let rawAzureData = SpeechSDK.PronunciationAssessmentResult.fromResult(result).detailResult;
                             azureReports[currentIndex] = rawAzureData;
 
-                            fetch(`${GAS_URL}?action=evaluate_speech_azure&word=${encodeURIComponent(targetWord)}`, { 
+                            fetch(`${GAS_URL}?action=evaluate_speech_azure&word=${encodeURIComponent(targetWord)}&id=${STUDENT_ID}`, { 
                                 method: 'POST', body: JSON.stringify(rawAzureData) 
                             }).then(res => res.json()).then(data => {
                                 // 存入數據
