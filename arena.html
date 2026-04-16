@@ -1868,8 +1868,35 @@
     if (MODE === 'battle' && ROOM_ID) {
       document.getElementById('main-card').style.display = 'none';
       document.getElementById('impact-overlay').classList.remove('active');
+      
+      // 🚀 1. 戰場專屬：先去後端檢查今天額度用完了沒？
       try {
-        // 🚀 對戰模式一樣啟動並保溫！
+          const res = await fetch(`${GAS_URL}?action=get_user_status&id=${STUDENT_ID}`);
+          const status = await res.json();
+          
+          if (!status.canPlay) {
+              // 🛑 額度用完了！直接把 loading 畫面換成溫馨警告，終止所有載入！
+              const loader = document.getElementById('loading-screen');
+              loader.innerHTML = `
+                  <div style="background: rgba(10, 15, 20, 0.95); padding: 30px; border-radius: 20px; border: 2px solid #f1c40f; text-align: center; max-width: 80%;">
+                      <span style="font-size: 50px; display: block; margin-bottom: 15px;">☕</span>
+                      <h3 style="color: #f1c40f; letter-spacing: 2px; margin: 0 0 10px 0;">今日戰鬥已達上限</h3>
+                      <p style="color: #a4b0be; font-size: 16px; margin: 0; line-height: 1.5;">
+                          你已經完成 ${status.count} 次挑戰了。<br>請讓喉嚨休息一下，我們明天再戰！
+                      </p>
+                      <button onclick="window.location.href='https://damienkuo123.github.io/marian-app/lobby.html?id=${STUDENT_ID}'" style="margin-top: 20px; background: #f1c40f; color: #000; border: none; padding: 10px 25px; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 16px;">返回大廳</button>
+                  </div>
+              `;
+              loader.style.display = 'flex';
+              loader.style.opacity = '1';
+              return; // 🛑 終止執行，連麥克風都不開，也不抓資料了
+          }
+      } catch(e) {
+          console.warn("戰場額度檢查連線異常，先放行", e);
+      }
+
+      // 🚀 2. 額度沒滿，正常開啟保溫麥克風與抓取資料
+      try {
         globalMicStream = await navigator.mediaDevices.getUserMedia({ audio: true });
         
         fetch(`${GAS_URL}?action=get_lobby_data&id=${STUDENT_ID}`)
