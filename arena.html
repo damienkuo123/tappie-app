@@ -1722,22 +1722,31 @@
   const originalOnload = async () => {
     if(MODE === 'review') document.getElementById('title-text').innerText = "📖 自由練習模式";
     
-    // 🚀 新增：檢查今日額度
+    // 🚀 1. 先去後端檢查今天額度用完了沒？
     try {
         const res = await fetch(`${GAS_URL}?action=get_user_status&id=${STUDENT_ID}`);
         const status = await res.json();
         
         if (!status.canPlay) {
-            document.getElementById('info-text').innerHTML = `<span style="color:var(--marian-red); font-weight:900;">🚨 今日挑戰額度已滿 (${status.count}/${status.limit})</span><br>明天再來挑戰吧！`;
+            // 🛑 額度用完了！顯示溫馨提示，隱藏按鈕，終止載入。
+            document.getElementById('info-text').innerHTML = `
+              <div style="background: #fff3cd; color: #856404; padding: 15px; border-radius: 12px; border: 1px solid #ffeeba; margin-top: 10px;">
+                <span style="font-size: 24px; display: block; margin-bottom: 5px;">☕</span>
+                <strong style="font-size: 18px;">今天練習得很棒喔！</strong><br>
+                <span style="font-size: 14px;">你已經完成 ${status.count} 題挑戰了。<br>請讓喉嚨休息一下，我們明天再繼續吧！</span>
+              </div>
+            `;
+            document.getElementById('start-btn').style.display = 'none';
             hideLoadingScreen();
-            return; // 🛑 額度滿了，直接停止，連麥克風都不開了
+            return; // 🛑 直接停止，連麥克風都不開了
         }
     } catch(e) {
-        console.warn("額度檢查失敗，放行"); // 萬一網路卡住，不要鎖死學生
+        console.warn("額度檢查連線異常，先放行", e);
     }
 
+    // 🚀 2. 額度沒滿，正常開啟保溫麥克風
     try {
-      // 🚀 啟動並永久保溫麥克風，不再關閉！
+      // 啟動並永久保溫麥克風，不再關閉！
       globalMicStream = await navigator.mediaDevices.getUserMedia({ audio: true }); 
       
       document.getElementById('info-text').innerText = "麥克風已就緒";
