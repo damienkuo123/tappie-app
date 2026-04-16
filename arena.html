@@ -1429,7 +1429,7 @@
   // 🚀 這是你設定的活動 Boss，絕對不能少！
   const EVENT_AVATAR = params.get('eventAvatar') || 'A006'; 
   
-  // 🚀 關鍵修復：如果是突發事件，強制給予 'battle' 模式；若不是，就讀取原本的 mode，都沒讀到才去 'challenge'
+  const MODE = isEventMode ? 'battle' : (params.get('mode') || "challenge");
   
   const ROOM_ID = params.get('roomId');
 
