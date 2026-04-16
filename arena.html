@@ -1721,21 +1721,26 @@
     hideLoadingScreen();
   };
 
-  document.getElementById('start-btn').onclick = () => {
+  document.getElementById('start-btn').onclick = async () => {
     document.getElementById('info-text').innerText = "正在開啟麥克風與載入題目...";
     document.getElementById('start-btn').style.display = 'none'; 
     
-    // 1️⃣ 瞬間喚醒 AudioContext 鎖定通道 (這沒有延遲)
-    if (window.GlobalAudio) window.GlobalAudio.unlockWebAudio();
-
-    // 2️⃣ 將麥克風請求丟到背景去跑 (不要用 await 擋住主線程！)
-    // 並且加上關閉回音消除的參數，雙重保險
-    navigator.mediaDevices.getUserMedia({ 
+    // 1️⃣ 發起麥克風請求，但【不要用 await 擋住路線】
+    let streamPromise = navigator.mediaDevices.getUserMedia({ 
         audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } 
-    }).then(stream => {
-        globalMicStream = stream; // 存入全域變數
+    });
+    
+    // 2️⃣ 趁著 Click 事件的最高權限還在，同一毫秒內強行鎖定媒體通道！(霸王硬上弓)
+    if (window.GlobalAudio) {
+        window.GlobalAudio.unlockWebAudio();
+        if (window.GlobalAudio.currentBGM) window.GlobalAudio.currentBGM.play().catch(e=>{});
+    }
+
+    try {
+        // 3️⃣ 現在才開始乖乖等剛剛發起的麥克風請求完成
+        globalMicStream = await streamPromise; 
         
-        // 3️⃣ 麥克風拿到後，才去抓題目
+        // 麥克風拿到後，去抓題目
         fetch(`${GAS_URL}?id=${STUDENT_ID}&action=get_data&unit=${encodeURIComponent(TARGET_UNIT)}`)
           .then(res => res.json()).then(data => {
             if (!data.words || data.words.length === 0) { alert("題目為空"); return; }
@@ -1750,11 +1755,11 @@
             attachButtonListeners(); 
             renderWord();
           });
-    }).catch(e => {
+    } catch(e) {
         alert("請允許麥克風權限才能進行練習喔！"); 
         document.getElementById('info-text').innerText = "麥克風授權失敗";
         document.getElementById('start-btn').style.display = 'inline-block';
-    });
+    }
   };
   
   function attachButtonListeners() {
