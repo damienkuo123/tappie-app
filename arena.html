@@ -1713,15 +1713,11 @@
 
   const originalOnload = async () => {
     if(MODE === 'review') document.getElementById('title-text').innerText = "📖 自由練習模式";
-    try {
-      // 🚀 啟動並永久保溫麥克風，不再關閉！
-      globalMicStream = await navigator.mediaDevices.getUserMedia({ audio: true }); 
-      
-      document.getElementById('info-text').innerText = "麥克風已就緒";
-      document.getElementById('start-btn').style.display = 'inline-block';
-    } catch (e) { 
-      alert("請開啟麥克風權限"); 
-    }
+    
+    // 🚀 一進畫面不要馬上要麥克風！先讓玩家點擊「開始挑戰」
+    document.getElementById('info-text').innerText = "請點擊下方按鈕開始";
+    document.getElementById('start-btn').style.display = 'inline-block';
+    
     hideLoadingScreen();
   };
 
