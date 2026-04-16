@@ -37,7 +37,7 @@ const GlobalAudio = {
     init: function() {
         // 設定 BGM 預設音量與循環
         for (let key in this.bgm) {
-            this.bgm[key].volume = 0.1; 
+            this.bgm[key].volume = 0.05; 
             this.bgm[key].loop = true;
         }
 
