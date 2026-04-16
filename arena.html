@@ -1444,6 +1444,9 @@
   let audioContext, analyser, dataArray, source, gradingInterval;
   let maxVolume = 0;
   
+  let practiceTimeout = null; // 🚀 新增：一般錄音 10 秒防呆計時器
+  let battleTimeout = null;   // 🚀 新增：戰鬥錄音 10 秒防呆計時器
+  
   let hasUsedSkill = false; 
   let isUltimateMode = false; 
 
@@ -1718,6 +1721,21 @@
 
   const originalOnload = async () => {
     if(MODE === 'review') document.getElementById('title-text').innerText = "📖 自由練習模式";
+    
+    // 🚀 新增：檢查今日額度
+    try {
+        const res = await fetch(`${GAS_URL}?action=get_user_status&id=${STUDENT_ID}`);
+        const status = await res.json();
+        
+        if (!status.canPlay) {
+            document.getElementById('info-text').innerHTML = `<span style="color:var(--marian-red); font-weight:900;">🚨 今日挑戰額度已滿 (${status.count}/${status.limit})</span><br>明天再來挑戰吧！`;
+            hideLoadingScreen();
+            return; // 🛑 額度滿了，直接停止，連麥克風都不開了
+        }
+    } catch(e) {
+        console.warn("額度檢查失敗，放行"); // 萬一網路卡住，不要鎖死學生
+    }
+
     try {
       // 🚀 啟動並永久保溫麥克風，不再關閉！
       globalMicStream = await navigator.mediaDevices.getUserMedia({ audio: true }); 
@@ -2115,13 +2133,24 @@
         document.getElementById('prev-btn').disabled = true;
         document.getElementById('next-btn').disabled = true;
         document.getElementById('back-summary-btn').disabled = true;
+        
+        // 🚀 新增：10 秒防呆截斷
+        if (practiceTimeout) clearTimeout(practiceTimeout);
+        practiceTimeout = setTimeout(() => {
+            if (isRecording) {
+                console.log("⏱️ 錄音超時 10 秒，強制截斷！");
+                stopPracticeRecord(e); // 呼叫下方的停止函數
+            }
+        }, 10000);
     };
 
     const stopPracticeRecord = (e) => {
         if(!isRecording) return;
-        e.preventDefault();
+        if(e && e.preventDefault) e.preventDefault(); // 防呆處理
         isRecording = false;
         rb.classList.remove('active'); 
+        
+        if (practiceTimeout) clearTimeout(practiceTimeout); // 🚀 新增：拆除炸彈 
         
         if (!practiceRecorder || practiceRecorder.state !== "recording") {
             document.getElementById('status').innerText = "🚨 錄音異常，請重試";
@@ -2539,12 +2568,23 @@
         
         document.getElementById('battle-info').innerText = "🔴 錄音中... (放開按鈕送出)";
         document.getElementById('battle-info').style.color = "#eb3b5a";
+        
+        // 🚀 新增：10 秒防呆截斷
+        if (battleTimeout) clearTimeout(battleTimeout);
+        battleTimeout = setTimeout(() => {
+            if (isBattleRecording) {
+                console.log("⏱️ 戰鬥錄音超時 10 秒，強制發射！");
+                stopBattleRecord(e); // 呼叫下方的停止函數
+            }
+        }, 10000);
     };
 
     const stopBattleRecord = (e) => {
         if (roundSubmitted || !isBattleRecording) return;
-        e.preventDefault();
+        if(e && e.preventDefault) e.preventDefault(); // 防呆處理
         isBattleRecording = false;
+        
+        if (battleTimeout) clearTimeout(battleTimeout); // 🚀 新增：拆除炸彈
         
         battleBtn.classList.remove('active', 'ult-active'); 
         
