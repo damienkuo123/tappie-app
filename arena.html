@@ -1430,11 +1430,6 @@
   const EVENT_AVATAR = params.get('eventAvatar') || 'A006'; 
   
   // 🚀 關鍵修復：如果是突發事件，強制給予 'battle' 模式；若不是，就讀取原本的 mode，都沒讀到才去 'challenge'
-  const MODE = isEventMode ? 'battle' : (params.get('mode') || "challenge");
-  
-  const ROOM_ID = params.get('roomId');
-
-  const MODE = isEventMode ? 'battle' : (params.get('mode') || "challenge");
   
   const ROOM_ID = params.get('roomId');
 
@@ -1447,7 +1442,6 @@
 
   let stream, mediaRecorder, chunks = [], quizData = [], scores = [], currentIndex = 0, isReReading = false;
 
-  let stream, mediaRecorder, chunks = [], quizData = [], scores = [], currentIndex = 0, isReReading = false;
   let azureReports = []; // 🚀 專門用來收集微軟的法醫級音素報告
   let audioContext, analyser, dataArray, source, gradingInterval;
   let maxVolume = 0;
