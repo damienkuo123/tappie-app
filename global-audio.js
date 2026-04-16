@@ -34,6 +34,18 @@ const GlobalAudio = {
     currentBGM: null,       
     isDucking: false,       
 
+    // 🚀 專門用來在任何時候強制喚醒 AudioContext 的武器
+    unlockWebAudio: function() {
+        if (!this.audioCtx) {
+            this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            this.preloadAllSounds(); 
+            console.log("🔓 Web Audio API 喚醒成功！");
+        }
+        if (this.audioCtx.state === 'suspended') {
+            this.audioCtx.resume().catch(e => console.warn("AudioContext resume failed", e));
+        }
+    },
+    
     init: function() {
         // 設定 BGM 預設音量與循環
         for (let key in this.bgm) {
