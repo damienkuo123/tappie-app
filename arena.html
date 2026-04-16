@@ -1729,29 +1729,33 @@
   };
 
   document.getElementById('start-btn').onclick = async () => {
-    arenaLog("👉 點擊了 [開始挑戰] 按鈕");
     document.getElementById('info-text').innerText = "正在開啟麥克風與載入題目...";
     document.getElementById('start-btn').style.display = 'none'; 
     
-    arenaLog("呼叫 getUserMedia (非同步不阻擋)...");
-    let streamPromise = navigator.mediaDevices.getUserMedia({ 
-        audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } 
-    });
-    
+    // 1️⃣ 拔出保護傘：強制解鎖 Web Audio API
     if (window.GlobalAudio) {
-        arenaLog("呼叫 unlockWebAudio 與 BGM.play()...");
         window.GlobalAudio.unlockWebAudio();
+        
+        // 2️⃣ 強制等待 BGM 真正開始播放！
         if (window.GlobalAudio.currentBGM) {
-            window.GlobalAudio.currentBGM.play().then(() => arenaLog("✅ BGM 觸發成功")).catch(e => arenaLog("❌ BGM 觸發失敗: " + e));
+            try {
+                window.GlobalAudio.currentBGM.volume = 0.15;
+                await window.GlobalAudio.currentBGM.play();
+                console.log("✅ 序列保護傘：BGM 已開始播放，媒體通道鎖定！");
+            } catch(e) {
+                console.warn("⚠️ 序列保護傘：BGM 播放失敗，繼續嘗試...", e);
+            }
         }
     }
 
     try {
-        arenaLog("等待 streamPromise 解析 (等待麥克風硬體開啟)...");
-        globalMicStream = await streamPromise; 
-        arenaLog("✅ getUserMedia 取得成功！麥克風已開啟！");
+        // 3️⃣ 保護傘撐開後，才去要麥克風！(加入防護參數)
+        globalMicStream = await navigator.mediaDevices.getUserMedia({ 
+            audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } 
+        });
+        console.log("✅ 序列保護傘：麥克風已取得！");
         
-        // 麥克風拿到後，去抓題目
+        // 4️⃣ 麥克風安全到手，去抓題目
         fetch(`${GAS_URL}?id=${STUDENT_ID}&action=get_data&unit=${encodeURIComponent(TARGET_UNIT)}`)
           .then(res => res.json()).then(data => {
             if (!data.words || data.words.length === 0) { alert("題目為空"); return; }
