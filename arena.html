@@ -1972,30 +1972,24 @@
           enterBtn.innerText = "連線中...";
           enterBtn.style.pointerEvents = "none";
           
-          // 1️⃣ 拔出保護傘：強制解鎖 Web Audio API
-          if (window.GlobalAudio) {
-              window.GlobalAudio.unlockWebAudio();
-              
-              // 2️⃣ 強制等待 BGM 真正開始播放！
-              if (window.GlobalAudio.currentBGM) {
-                  try {
-                      window.GlobalAudio.currentBGM.volume = 0.15;
-                      await window.GlobalAudio.currentBGM.play();
-                      console.log("✅ 序列保護傘：對戰 BGM 已開始播放，媒體通道鎖定！");
-                  } catch(e) {
-                      console.warn("⚠️ 序列保護傘：對戰 BGM 播放失敗，繼續嘗試...", e);
-                  }
-              }
-          }
-          
           try {
-              // 3️⃣ 保護傘撐開後，才去要麥克風！
+              // 1️⃣ 先開麥克風！
               globalMicStream = await navigator.mediaDevices.getUserMedia({ 
                   audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } 
               });
-              console.log("✅ 序列保護傘：對戰麥克風已取得！");
+              console.log("✅ 逆向工程：對戰麥克風已開啟！");
+
+              // 2️⃣ 麥克風開完的瞬間，我們立刻拔出保護傘搶回通道！
+              if (window.GlobalAudio) {
+                  window.GlobalAudio.unlockWebAudio();
+                  if (window.GlobalAudio.currentBGM) {
+                      window.GlobalAudio.currentBGM.volume = 0.15;
+                      window.GlobalAudio.currentBGM.play().catch(e=>{});
+                  }
+                  console.log("✅ 逆向工程：對戰模式已強制搶回媒體播放通道！");
+              }
               
-              // 4️⃣ 麥克風安全到手，進入戰場
+              // 3️⃣ 麥克風和通道都搞定後，進入戰場
               clearInterval(pTimer);
               portal.style.display = 'none';
               document.getElementById('battle-arena').style.display = 'flex';
