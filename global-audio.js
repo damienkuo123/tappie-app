@@ -106,7 +106,10 @@ const GlobalAudio = {
             case 'countdown':
                 vol = 2;  // 逼逼聲
                 break;
-            // 如果沒有列在上面的 (例如 fireNormal, cutin, victory)，就會自動使用預設的 vol = 1.0
+            case 'cutin':
+                vol = 2;  
+                break;
+            // 如果沒有列在上面的 (例如 fireNormal, victory)，就會自動使用預設的 vol = 1.0
         }
         
         // 將設定好的音量套用到混音器上
