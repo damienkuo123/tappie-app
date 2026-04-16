@@ -1735,23 +1735,27 @@
   };
 
   document.getElementById('start-btn').onclick = async () => {
+    arenaLog("👉 點擊了 [開始挑戰] 按鈕");
     document.getElementById('info-text').innerText = "正在開啟麥克風與載入題目...";
     document.getElementById('start-btn').style.display = 'none'; 
     
-    // 1️⃣ 發起麥克風請求，但【不要用 await 擋住路線】
+    arenaLog("呼叫 getUserMedia (非同步不阻擋)...");
     let streamPromise = navigator.mediaDevices.getUserMedia({ 
         audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } 
     });
     
-    // 2️⃣ 趁著 Click 事件的最高權限還在，同一毫秒內強行鎖定媒體通道！(霸王硬上弓)
     if (window.GlobalAudio) {
+        arenaLog("呼叫 unlockWebAudio 與 BGM.play()...");
         window.GlobalAudio.unlockWebAudio();
-        if (window.GlobalAudio.currentBGM) window.GlobalAudio.currentBGM.play().catch(e=>{});
+        if (window.GlobalAudio.currentBGM) {
+            window.GlobalAudio.currentBGM.play().then(() => arenaLog("✅ BGM 觸發成功")).catch(e => arenaLog("❌ BGM 觸發失敗: " + e));
+        }
     }
 
     try {
-        // 3️⃣ 現在才開始乖乖等剛剛發起的麥克風請求完成
+        arenaLog("等待 streamPromise 解析 (等待麥克風硬體開啟)...");
         globalMicStream = await streamPromise; 
+        arenaLog("✅ getUserMedia 取得成功！麥克風已開啟！");
         
         // 麥克風拿到後，去抓題目
         fetch(`${GAS_URL}?id=${STUDENT_ID}&action=get_data&unit=${encodeURIComponent(TARGET_UNIT)}`)
