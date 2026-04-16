@@ -1711,52 +1711,72 @@
     rb.innerHTML = "👊";
   }
 
-  // 🚀 植入 Arena 專屬時間戳記 (法醫核心)
-  const arenaLog = (msg) => {
-      const now = window.GlobalAudio ? (performance.now() - window.GlobalAudio.startTime).toFixed(2) : performance.now().toFixed(2);
-      console.log(`[⏱️ ${now}ms] ⚔️ Arena: ${msg}`);
-  };
-
   const originalOnload = async () => {
-    arenaLog("originalOnload 執行中...");
     if(MODE === 'review') document.getElementById('title-text').innerText = "📖 自由練習模式";
-    try {
-      arenaLog("呼叫 getUserMedia (等待使用者授權麥克風中)...");
-      // 🚀 這是舊版寫法：一進來就要麥克風
-      globalMicStream = await navigator.mediaDevices.getUserMedia({ audio: true }); 
-      arenaLog("✅ getUserMedia 取得成功！麥克風已開啟！");
-      
-      document.getElementById('info-text').innerText = "麥克風已就緒";
-      document.getElementById('start-btn').style.display = 'inline-block';
-    } catch (e) { 
-      arenaLog(`❌ getUserMedia 失敗: ${e.message}`);
-      alert("請開啟麥克風權限"); 
-    }
+    
+    // 🚀 一進畫面不要馬上要麥克風！先讓玩家點擊「開始挑戰」
+    document.getElementById('info-text').innerText = "請點擊下方按鈕開始";
+    document.getElementById('start-btn').style.display = 'inline-block';
+    
     hideLoadingScreen();
   };
 
-  document.getElementById('start-btn').onclick = () => {
-    arenaLog("👉 點擊了 [開始挑戰] 按鈕");
-    document.getElementById('info-text').innerText = "正在載入題目...";
-    document.getElementById('start-btn').style.display = 'none';
+  document.getElementById('start-btn').onclick = async () => {
+    document.getElementById('info-text').innerText = "正在開啟麥克風與載入題目...";
+    document.getElementById('start-btn').style.display = 'none'; 
     
-    fetch(`${GAS_URL}?id=${STUDENT_ID}&action=get_data&unit=${encodeURIComponent(TARGET_UNIT)}`)
-      .then(res => res.json()).then(data => {
-        arenaLog("✅ 題目載入完成，準備渲染");
-        if (!data.words || data.words.length === 0) { alert("題目為空"); return; }
-        quizData = data.words; 
-        scores = new Array(quizData.length).fill(null);
-        
-        document.getElementById('total-display').innerText = quizData.length;
-        document.getElementById('setup-zone').style.display = 'none';
-        document.getElementById('progress-container').style.display = 'block';
-        document.getElementById('studio').style.display = 'block';
-        
-        attachButtonListeners(); 
-        renderWord();
-      });
-  };
+    // 1️⃣ 發起麥克風請求，但【不要用 await 擋住路線】
+    let streamPromise = navigator.mediaDevices.getUserMedia({ 
+        audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } 
+    });
+    
+    // 2️⃣ 趁著 Click 事件的最高權限還在，同一毫秒內強行鎖定媒體通道！(霸王硬上弓)
+    if (window.GlobalAudio) {
+        window.GlobalAudio.unlockWebAudio();
+        if (window.GlobalAudio.currentBGM) window.GlobalAudio.currentBGM.play().catch(e=>{});
+    }
 
+    try {
+        // 3️⃣ 現在才開始乖乖等剛剛發起的麥克風請求完成
+        globalMicStream = await streamPromise; 
+        
+        // 麥克風拿到後，去抓題目
+        fetch(`${GAS_URL}?id=${STUDENT_ID}&action=get_data&unit=${encodeURIComponent(TARGET_UNIT)}`)
+          .then(res => res.json()).then(data => {
+            if (!data.words || data.words.length === 0) { alert("題目為空"); return; }
+            quizData = data.words; 
+            scores = new Array(quizData.length).fill(null);
+            
+            document.getElementById('total-display').innerText = quizData.length;
+            document.getElementById('setup-zone').style.display = 'none';
+            document.getElementById('progress-container').style.display = 'block';
+            document.getElementById('studio').style.display = 'block';
+            
+            attachButtonListeners(); 
+            renderWord();
+          });
+    } catch(e) {
+        alert("請允許麥克風權限才能進行練習喔！"); 
+        document.getElementById('info-text').innerText = "麥克風授權失敗";
+        document.getElementById('start-btn').style.display = 'inline-block';
+    }
+  };
+  
+  function attachButtonListeners() {
+    document.getElementById('play-btn').onclick = () => { 
+        const btn = document.getElementById('play-btn');
+        btn.style.transform = "scale(0.9)";
+        setTimeout(() => btn.style.transform = "scale(1)", 150);
+        
+        // 🚀 呼叫雲端快取發音，放大 1.8 倍！
+        speakWordCloudCached(quizData[currentIndex].en, 1.8, null, null); 
+    };
+    
+    document.getElementById('prev-btn').onclick = () => { if(currentIndex > 0){ currentIndex--; renderWord(); } };
+    document.getElementById('next-btn').onclick = () => { if (currentIndex < quizData.length - 1) { currentIndex++; renderWord(); } else { showSummary(); } };
+    document.getElementById('back-summary-btn').onclick = () => { isReReading = false; showSummary(); };
+  }
+  
   window.onload = async () => {
     // 🚀 開發者測試外掛：直接進入高階 AI 抽獎畫面
     if (MODE === 'test_gacha') {
@@ -1821,33 +1841,24 @@
     if (MODE === 'battle' && ROOM_ID) {
       document.getElementById('main-card').style.display = 'none';
       document.getElementById('impact-overlay').classList.remove('active');
-      try {
-        arenaLog("對戰模式：呼叫 getUserMedia (等待使用者授權麥克風中)...");
-        // 🚀 舊版對戰模式寫法
-        globalMicStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        arenaLog("✅ 對戰模式：getUserMedia 取得成功！麥克風已開啟！");
-        
-        fetch(`${GAS_URL}?action=get_lobby_data&id=${STUDENT_ID}`)
-          .then(res => res.json())
-          .then(data => {
-            arenaLog("✅ 對手資料與圖鑑載入完成");
-            window.characterAssets = data.assets || {}; 
-            characterAssets = window.characterAssets;   
-            buildDynamicPrizePool();                    
+      
+      // 🚀 進入對戰準備畫面，直接抓資料，把要麥克風的動作留給「進入戰場」按鈕
+      fetch(`${GAS_URL}?action=get_lobby_data&id=${STUDENT_ID}`)
+        .then(res => res.json())
+        .then(data => {
+          window.characterAssets = data.assets || {}; 
+          characterAssets = window.characterAssets;   
+          buildDynamicPrizePool();                    
 
-            showPortal();
-            hideLoadingScreen();
-          }).catch(err => {
-            arenaLog(`❌ 對手資料載入失敗: ${err.message}`);
-            buildDynamicPrizePool();
-            showPortal();
-            hideLoadingScreen(); 
-          });
-      } catch(err) { 
-        arenaLog(`❌ 對戰模式：getUserMedia 失敗: ${err.message}`);
-        alert("請開啟麥克風權限才能對戰！"); 
-        hideLoadingScreen(); 
-      }
+          showPortal();
+          hideLoadingScreen();
+        }).catch(err => {
+          console.log("圖鑑載入失敗，使用預設", err);
+          buildDynamicPrizePool();
+          showPortal();
+          hideLoadingScreen(); 
+        });
+        
     } else {
       await originalOnload();
     }
@@ -1948,12 +1959,35 @@
         enterBtn.classList.add('portal-btn-show');
 
         // 綁定「點擊進入戰場」的跳轉功能
-        window.portalJump = () => {
-          clearInterval(pTimer);
-          portal.style.display = 'none';
-          document.getElementById('battle-arena').style.display = 'flex';
-          setTimeout(() => { document.getElementById('battle-arena').classList.add('battle-ready'); }, 100);
-          fetchBattleDataAndStart(ROOM_ID);
+        window.portalJump = async () => {
+          enterBtn.innerText = "連線中...";
+          enterBtn.style.pointerEvents = "none";
+          
+          // 1️⃣ 發起麥克風請求 (不使用 await)
+          let streamPromise = navigator.mediaDevices.getUserMedia({ 
+              audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } 
+          });
+          
+          // 2️⃣ 同一毫秒內奪回媒體通道！
+          if (window.GlobalAudio) {
+              window.GlobalAudio.unlockWebAudio();
+              if (window.GlobalAudio.currentBGM) window.GlobalAudio.currentBGM.play().catch(e=>{});
+          }
+          
+          try {
+              // 3️⃣ 等待麥克風
+              globalMicStream = await streamPromise;
+              
+              clearInterval(pTimer);
+              portal.style.display = 'none';
+              document.getElementById('battle-arena').style.display = 'flex';
+              setTimeout(() => { document.getElementById('battle-arena').classList.add('battle-ready'); }, 100);
+              fetchBattleDataAndStart(ROOM_ID);
+          } catch(err) {
+              alert("請允許麥克風權限才能對戰喔！");
+              enterBtn.innerText = "進入戰場";
+              enterBtn.style.pointerEvents = "auto";
+          }
         };
         // 🚀 加上這行：資料載入完畢後，啟動閃卡互動引擎！
         setTimeout(() => { initInteractiveHoloCards(); }, 500);
