@@ -1836,31 +1836,24 @@
     if (MODE === 'battle' && ROOM_ID) {
       document.getElementById('main-card').style.display = 'none';
       document.getElementById('impact-overlay').classList.remove('active');
-      try {
-        // 🚀 對戰模式一樣啟動並保溫！
-        globalMicStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        
-        fetch(`${GAS_URL}?action=get_lobby_data&id=${STUDENT_ID}`)
-          .then(res => res.json())
-          .then(data => {
-            window.characterAssets = data.assets || {}; // 存入全域變數
-            
-            // 🚀 關鍵修復：同步給抽獎系統的變數，並啟動獎池引擎！
-            characterAssets = window.characterAssets;   
-            buildDynamicPrizePool();                    
+      
+      // 🚀 進入對戰準備畫面，直接抓資料，把要麥克風的動作留給「進入戰場」按鈕
+      fetch(`${GAS_URL}?action=get_lobby_data&id=${STUDENT_ID}`)
+        .then(res => res.json())
+        .then(data => {
+          window.characterAssets = data.assets || {}; 
+          characterAssets = window.characterAssets;   
+          buildDynamicPrizePool();                    
 
-            showPortal();
-            hideLoadingScreen();
-          }).catch(err => {
-            console.log("圖鑑載入失敗，使用預設", err);
-            buildDynamicPrizePool();
-            showPortal();
-            hideLoadingScreen(); // 失敗時也要解開畫面
-          });
-      } catch(err) { 
-        alert("請開啟麥克風權限才能對戰！"); 
-        hideLoadingScreen(); // 🚀 補上這行，權限被擋時才不會卡在黑畫面
-      }
+          showPortal();
+          hideLoadingScreen();
+        }).catch(err => {
+          console.log("圖鑑載入失敗，使用預設", err);
+          buildDynamicPrizePool();
+          showPortal();
+          hideLoadingScreen(); 
+        });
+        
     } else {
       await originalOnload();
     }
