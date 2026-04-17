@@ -45,37 +45,47 @@ const GlobalAudio = {
         this.bindClickEvents();
         this.observeModals();
         this.bindMicDucking(); 
-        this.autoPlayBGM();    
         
-        // 🚀 核心機制：等待使用者第一次點擊，才喚醒 AudioContext 並開始下載音效！
-        const initWebAudio = () => {
+        // 🚀 先決定好這頁要播什麼 BGM
+        this.autoPlayBGM(); 
+        
+        // 🚀 終極全螢幕解鎖器 (Global Audio Unlocker)
+        const unlockAudio = () => {
+            // 1. 喚醒 Web Audio API 與混音器
             if (!this.audioCtx) {
                 this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                this.preloadAllSounds(); // 開始默默下載短音效
+                this.preloadAllSounds(); 
                 
-                // 🚀 破解 iOS 音量限制：建立 BGM 專屬混音器
                 this.bgmGainNode = this.audioCtx.createGain();
-                
-                // 🎚️ 老闆，以後 BGM 音量在這邊調！(0.01 ~ 1.0 絕對有效)
-                this.bgmGainNode.gain.value = 0.5; 
+                this.bgmGainNode.gain.value = 0.05; // BGM 音量在這裡控制！
                 this.bgmGainNode.connect(this.audioCtx.destination);
 
-                // 將所有傳統 Audio 標籤導流進混音器，強制受控
                 for (let key in this.bgm) {
                     const track = this.bgm[key];
-                    track.crossOrigin = "anonymous"; // 防止 Safari 跨域阻擋
+                    track.crossOrigin = "anonymous";
                     const source = this.audioCtx.createMediaElementSource(track);
                     source.connect(this.bgmGainNode);
                 }
-
                 console.log("🔓 Web Audio API 喚醒成功！BGM 已強制接管。");
             }
+
             if (this.audioCtx.state === 'suspended') {
                 this.audioCtx.resume();
             }
-            document.removeEventListener('pointerdown', initWebAudio);
+
+            // 2. 解鎖的同時，把 BGM 播出來！
+            if (this.currentBGM && this.currentBGM.paused) {
+                this.currentBGM.play().catch(e => console.warn("BGM 播放被阻擋", e));
+            }
+
+            // 3. 成功解鎖後，過河拆橋，把監聽器刪掉以免浪費效能
+            document.removeEventListener('click', unlockAudio);
+            document.removeEventListener('touchstart', unlockAudio);
         };
-        document.addEventListener('pointerdown', initWebAudio);
+
+        // 🚀 綁定到 click 和 touchstart，保證學生點螢幕的任何一個角落都能解鎖！
+        document.addEventListener('click', unlockAudio);
+        document.addEventListener('touchstart', unlockAudio, { passive: true });
 
         console.log("🎵 Global Audio Engine 3.2 Initialized (Web Audio API Mode)");
     },
@@ -176,13 +186,9 @@ const GlobalAudio = {
             targetBGM = this.bgm.lobby; 
         }
 
+        // 🚀 改變這裡：只要決定好是哪首歌就好，播放交給 init 裡的終極解鎖器
         if (targetBGM) {
             this.currentBGM = targetBGM;
-            const startBgmInteraction = () => {
-                this.currentBGM.play().catch(e => {});
-                document.removeEventListener('pointerdown', startBgmInteraction);
-            };
-            document.addEventListener('pointerdown', startBgmInteraction);
         }
     },
 
