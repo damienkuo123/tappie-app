@@ -193,13 +193,41 @@
        🏆 榮譽榜模塊
        ======================================================= */
     .leaderboard { margin: 0; background: transparent; border: none; padding: 0; width: 100%; box-shadow: none; }
-    .btn-glory { width: 100%; background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,255,255,0.6)); color: var(--primary-blue); border: 1px solid rgba(255,255,255,1); padding: 20px; border-radius: 24px; font-size: 16px; font-weight: 900; cursor: pointer; transition: 0.3s; box-shadow: var(--glass-shadow); display: flex; justify-content: center; align-items: center; gap: 10px; letter-spacing: 2px; backdrop-filter: blur(20px); box-sizing: border-box; }
+    .btn-glory { 
+      width: 100%; background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,255,255,0.6)); 
+      color: var(--primary-blue); border: 1px solid rgba(255,255,255,1); 
+      padding: 20px; border-radius: 24px; font-size: 16px; font-weight: 900; 
+      cursor: pointer; transition: 0.3s; box-shadow: var(--glass-shadow); 
+      display: flex; justify-content: center; align-items: center; gap: 10px; 
+      letter-spacing: 2px; backdrop-filter: blur(20px); box-sizing: border-box; 
+      
+      /* 🚀 拔除 Apple 預設按鈕的塑膠感 */
+      -webkit-appearance: none; 
+      appearance: none; 
+      background-clip: padding-box; 
+      transform: translateZ(0); 
+    }
     .btn-glory:active { transform: scale(0.97); }
     
     .lb-panel { max-height: 0; overflow: hidden; transition: max-height 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s; opacity: 0; margin-top: 0; background: transparent; border: none; }
     .lb-panel.open { max-height: 800px; opacity: 1; padding: 20px 0 0 0; margin-bottom: 0; }
     
-    .lb-row { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; font-size: 15px; transition: 0.3s; background: rgba(255,255,255,0.55); backdrop-filter: blur(25px) saturate(150%); -webkit-backdrop-filter: blur(25px) saturate(150%); border-radius: 20px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.9); box-shadow: 0 8px 20px rgba(0,0,0,0.04), inset 0 1px 1px rgba(255,255,255,1); }
+    .lb-row { 
+      display: flex; justify-content: space-between; align-items: center; 
+      padding: 16px 20px; font-size: 15px; transition: 0.3s; 
+      background: rgba(255,255,255,0.55); 
+      backdrop-filter: blur(25px) saturate(150%); 
+      -webkit-backdrop-filter: blur(25px) saturate(150%); 
+      border-radius: 20px; margin-bottom: 12px; 
+      border: 1px solid rgba(255,255,255,0.9); 
+      box-shadow: 0 8px 20px rgba(0,0,0,0.04), inset 0 1px 1px rgba(255,255,255,1); 
+      
+      /* 🚀 拯救 iPad 毛玻璃陰影破圖的終極護城河 */
+      -webkit-appearance: none; 
+      appearance: none; 
+      background-clip: padding-box; 
+      transform: translateZ(0); /* 🟢 關鍵：強制開啟 GPU 硬體加速，讓 iOS 乖乖把陰影算對！ */
+    }
     .lb-rank { font-weight: 900; width: 35px; text-align: center; font-size: 18px; color: var(--text-sub); }
     .lb-name { flex: 1; text-align: left; padding-left: 15px; font-weight: 900; color: var(--text-main); letter-spacing: 1px; }
     .lb-score { font-weight: 900; color: var(--marian-red); font-size: 16px; }
