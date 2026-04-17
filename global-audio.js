@@ -95,10 +95,10 @@ const GlobalAudio = {
                 vol = 0.8;  // 點擊聲保持低調
                 break;
             case 'popupOpen':
-                vol = 1.8;  // 🚀 彈窗打開調大聲一點！(原本是 0.5)
+                vol = 2.2;  // 🚀 彈窗打開調大聲一點！(原本是 0.5)
                 break;
             case 'popupClose':
-                vol = 1.6;  // 🚀 彈窗收起也調大一點！(原本是 0.4)
+                vol = 2;  // 🚀 彈窗收起也調大一點！(原本是 0.4)
                 break;
             case 'hit':
                 vol = 1;  // 震動聲可以稍微收一點，以免太吵
