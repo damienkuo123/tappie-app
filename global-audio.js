@@ -30,7 +30,6 @@ const GlobalAudio = {
     // 🚀 新增：Web Audio API 核心組件
     audioCtx: null,
     audioBuffers: {}, // 用來存放解碼後的純淨聲音數據
-    bgmGainNode: null, // 🚀 新增：BGM 專屬的物理混音器
 
     currentBGM: null,       
     isDucking: false,       
@@ -38,60 +37,28 @@ const GlobalAudio = {
     init: function() {
         // 設定 BGM 預設音量與循環
         for (let key in this.bgm) {
-            this.bgm[key].volume = 0; 
+            this.bgm[key].volume = 0.001; 
             this.bgm[key].loop = true;
         }
 
         this.bindClickEvents();
         this.observeModals();
         this.bindMicDucking(); 
+        this.autoPlayBGM();    
         
-        // 🚀 先決定好這頁要播什麼 BGM
-        this.autoPlayBGM(); 
-        
-        // ==========================================
-        // 🛡️ 終極殺手鐧：全螢幕隱形解鎖盾牌 (專治 iOS 不良反應)
-        // ==========================================
-        const unlockShield = document.createElement('div');
-        // 鋪滿全螢幕、放在最上層 (z-index 爆高)、而且加上 cursor:pointer 逼 Apple 承認它是可點擊的
-        unlockShield.style.cssText = 'position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:99999; cursor:pointer; background:transparent;';
-        document.body.appendChild(unlockShield);
-
-        const unlockAudio = () => {
-            // 1. 喚醒 Web Audio API 與混音器
+        // 🚀 核心機制：等待使用者第一次點擊，才喚醒 AudioContext 並開始下載音效！
+        const initWebAudio = () => {
             if (!this.audioCtx) {
                 this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                this.preloadAllSounds(); 
-                
-                this.bgmGainNode = this.audioCtx.createGain();
-                this.bgmGainNode.gain.value = 0.05; // 🎚️ 老闆，BGM 音量在這裡！
-                this.bgmGainNode.connect(this.audioCtx.destination);
-
-                for (let key in this.bgm) {
-                    const track = this.bgm[key];
-                    track.crossOrigin = "anonymous";
-                    const source = this.audioCtx.createMediaElementSource(track);
-                    source.connect(this.bgmGainNode);
-                }
-                console.log("🔓 Web Audio API 喚醒成功！BGM 已強制接管。");
+                this.preloadAllSounds(); // 開始默默下載短音效
+                console.log("🔓 Web Audio API 喚醒成功！");
             }
-
             if (this.audioCtx.state === 'suspended') {
                 this.audioCtx.resume();
             }
-
-            // 2. 解鎖的同時，把 BGM 播出來！
-            if (this.currentBGM && this.currentBGM.paused) {
-                this.currentBGM.play().catch(e => console.warn("BGM 播放被阻擋", e));
-            }
-
-            // 3. 💥 任務完成，盾牌自毀！把這層隱形 `div` 從網頁上徹底拔除，把點擊權限還給底下的按鈕
-            unlockShield.remove();
+            document.removeEventListener('pointerdown', initWebAudio);
         };
-
-        // 🚀 把解鎖事件綁定在這面盾牌上
-        unlockShield.addEventListener('click', unlockAudio);
-        unlockShield.addEventListener('touchstart', unlockAudio, { passive: true });
+        document.addEventListener('pointerdown', initWebAudio);
 
         console.log("🎵 Global Audio Engine 3.2 Initialized (Web Audio API Mode)");
     },
@@ -128,10 +95,10 @@ const GlobalAudio = {
                 vol = 0.8;  // 點擊聲保持低調
                 break;
             case 'popupOpen':
-                vol = 2;  // 🚀 彈窗打開調大聲一點！(原本是 0.5)
+                vol = 1.8;  // 🚀 彈窗打開調大聲一點！(原本是 0.5)
                 break;
             case 'popupClose':
-                vol = 1.8;  // 🚀 彈窗收起也調大一點！(原本是 0.4)
+                vol = 1.6;  // 🚀 彈窗收起也調大一點！(原本是 0.4)
                 break;
             case 'hit':
                 vol = 1;  // 震動聲可以稍微收一點，以免太吵
@@ -140,7 +107,7 @@ const GlobalAudio = {
                 vol = 2;  // 逼逼聲
                 break;
             case 'cutin':
-                vol = 2.5;  
+                vol = 2;  
                 break;
             // 如果沒有列在上面的 (例如 fireNormal, victory)，就會自動使用預設的 vol = 1.0
         }
@@ -192,9 +159,13 @@ const GlobalAudio = {
             targetBGM = this.bgm.lobby; 
         }
 
-        // 🚀 改變這裡：只要決定好是哪首歌就好，播放交給 init 裡的終極解鎖器
         if (targetBGM) {
             this.currentBGM = targetBGM;
+            const startBgmInteraction = () => {
+                this.currentBGM.play().catch(e => {});
+                document.removeEventListener('pointerdown', startBgmInteraction);
+            };
+            document.addEventListener('pointerdown', startBgmInteraction);
         }
     },
 
