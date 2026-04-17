@@ -20,11 +20,11 @@ const GlobalAudio = {
 
     // 2. 背景音樂庫 (BGM 檔案大，仍保留傳統 Audio 標籤串流播放)
     bgm: {
-        dashboard: new Audio('https://damienkuo123.github.io/marian-app/audio/cyberwave-orchestra-puzzle-game-loop-bright-casual-video-game-music-249201.mp3'), 
-        lobby: new Audio('https://damienkuo123.github.io/marian-app/audio/決戦へ.mp3'),     
-        arenaNormal: new Audio('https://damienkuo123.github.io/marian-app/audio/wind_feelings.mp3'), 
-        arenaBattle: new Audio('https://damienkuo123.github.io/marian-app/audio/Devil_Disaster.mp3'), 
-        gacha: new Audio('https://damienkuo123.github.io/marian-app/audio/Battle_in_the_Moonlight.mp3')        
+        dashboard: new Audio('https://damienkuo123.github.io/marian-app/audio/cyberwave-orchestra-puzzle-game-loop-bright-casual-video-game-music-249201_low.mp3'), 
+        lobby: new Audio('https://damienkuo123.github.io/marian-app/audio/決戦へ_low.mp3'),     
+        arenaNormal: new Audio('https://damienkuo123.github.io/marian-app/audio/wind_feelings_low.mp3'), 
+        arenaBattle: new Audio('https://damienkuo123.github.io/marian-app/audio/Devil_Disaster_low.mp3'), 
+        gacha: new Audio('https://damienkuo123.github.io/marian-app/audio/Battle_in_the_Moonlight_low.mp3')        
     },
 
     // 🚀 新增：Web Audio API 核心組件
