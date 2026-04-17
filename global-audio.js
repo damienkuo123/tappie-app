@@ -30,6 +30,7 @@ const GlobalAudio = {
     // 🚀 新增：Web Audio API 核心組件
     audioCtx: null,
     audioBuffers: {}, // 用來存放解碼後的純淨聲音數據
+    bgmGainNode: null, // 🚀 新增：BGM 專屬的物理混音器
 
     currentBGM: null,       
     isDucking: false,       
@@ -51,7 +52,23 @@ const GlobalAudio = {
             if (!this.audioCtx) {
                 this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 this.preloadAllSounds(); // 開始默默下載短音效
-                console.log("🔓 Web Audio API 喚醒成功！");
+                
+                // 🚀 破解 iOS 音量限制：建立 BGM 專屬混音器
+                this.bgmGainNode = this.audioCtx.createGain();
+                
+                // 🎚️ 老闆，以後 BGM 音量在這邊調！(0.01 ~ 1.0 絕對有效)
+                this.bgmGainNode.gain.value = 0.5; 
+                this.bgmGainNode.connect(this.audioCtx.destination);
+
+                // 將所有傳統 Audio 標籤導流進混音器，強制受控
+                for (let key in this.bgm) {
+                    const track = this.bgm[key];
+                    track.crossOrigin = "anonymous"; // 防止 Safari 跨域阻擋
+                    const source = this.audioCtx.createMediaElementSource(track);
+                    source.connect(this.bgmGainNode);
+                }
+
+                console.log("🔓 Web Audio API 喚醒成功！BGM 已強制接管。");
             }
             if (this.audioCtx.state === 'suspended') {
                 this.audioCtx.resume();
