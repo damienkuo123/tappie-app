@@ -194,18 +194,13 @@
        ======================================================= */
     .leaderboard { margin: 0; background: transparent; border: none; padding: 0; width: 100%; box-shadow: none; }
     .btn-glory { 
-      width: 100%; background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,255,255,0.6)); 
+      width: 100%; background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(255,255,255,0.7)); 
       color: var(--primary-blue); border: 1px solid rgba(255,255,255,1); 
       padding: 20px; border-radius: 24px; font-size: 16px; font-weight: 900; 
       cursor: pointer; transition: 0.3s; box-shadow: var(--glass-shadow); 
       display: flex; justify-content: center; align-items: center; gap: 10px; 
-      letter-spacing: 2px; backdrop-filter: blur(20px); box-sizing: border-box; 
-      
-      /* 🚀 拔除 Apple 預設按鈕的塑膠感 */
-      -webkit-appearance: none; 
-      appearance: none; 
-      background-clip: padding-box; 
-      transform: translateZ(0); 
+      letter-spacing: 2px; box-sizing: border-box; 
+      -webkit-appearance: none; appearance: none; background-clip: padding-box; transform: translateZ(0); 
     }
     .btn-glory:active { transform: scale(0.97); }
     
@@ -215,18 +210,11 @@
     .lb-row { 
       display: flex; justify-content: space-between; align-items: center; 
       padding: 16px 20px; font-size: 15px; transition: 0.3s; 
-      background: rgba(255,255,255,0.55); 
-      backdrop-filter: blur(25px) saturate(150%); 
-      -webkit-backdrop-filter: blur(25px) saturate(150%); 
+      background: rgba(255, 255, 255, 0.65); /* 稍微調白一點，彌補拿掉毛玻璃的亮度 */
       border-radius: 20px; margin-bottom: 12px; 
       border: 1px solid rgba(255,255,255,0.9); 
       box-shadow: 0 8px 20px rgba(0,0,0,0.04), inset 0 1px 1px rgba(255,255,255,1); 
-      
-      /* 🚀 拯救 iPad 毛玻璃陰影破圖的終極護城河 */
-      -webkit-appearance: none; 
-      appearance: none; 
-      background-clip: padding-box; 
-      transform: translateZ(0); /* 🟢 關鍵：強制開啟 GPU 硬體加速，讓 iOS 乖乖把陰影算對！ */
+      -webkit-appearance: none; appearance: none; background-clip: padding-box; transform: translateZ(0);
     }
     .lb-rank { font-weight: 900; width: 35px; text-align: center; font-size: 18px; color: var(--text-sub); }
     .lb-name { flex: 1; text-align: left; padding-left: 15px; font-weight: 900; color: var(--text-main); letter-spacing: 1px; }
@@ -358,7 +346,7 @@
           
           <div id="lb-container"></div>
           
-          <div style="margin-top: 15px; padding: 12px 15px; background: rgba(255,255,255,0.35); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-radius: 16px; border: 1px solid rgba(255,255,255,0.6); display: flex; justify-content: center; gap: 20px; font-size: 13px; font-weight: 900; color: var(--text-sub); box-shadow: inset 0 1px 2px rgba(255,255,255,0.8);">
+          <div style="margin-top: 15px; padding: 12px 15px; background: rgba(255,255,255,0.6); border-radius: 16px; border: 1px solid rgba(255,255,255,0.6); display: flex; justify-content: center; gap: 20px; font-size: 13px; font-weight: 900; color: var(--text-sub); box-shadow: inset 0 1px 2px rgba(255,255,255,0.8);">
             <span>🥇 +100<span style="font-size:10px; margin-left:2px;">PTS</span></span>
             <span>🥈 +50<span style="font-size:10px; margin-left:2px;">PTS</span></span>
             <span>🥉 +30<span style="font-size:10px; margin-left:2px;">PTS</span></span>
