@@ -1784,7 +1784,7 @@
             playBtn.style.transform = "scale(0.9)";
             setTimeout(() => playBtn.style.transform = "scale(1)", 150);
             // 預設語速 (-10%)
-            speakWordCloudCached(quizData[currentIndex].en, 4, null, null, '-10%'); 
+            speakWordCloudCached(quizData[currentIndex].en, 2, null, null, '-10%'); 
         };
     }
 
@@ -1795,7 +1795,7 @@
             slowBtn.style.transform = "scale(0.9)";
             setTimeout(() => slowBtn.style.transform = "scale(1)", 150);
             // 🚀 呼叫慢速發音，設定 rate 為 -60%
-            speakWordCloudCached(quizData[currentIndex].en, 4, null, null, '-60%'); 
+            speakWordCloudCached(quizData[currentIndex].en, 2, null, null, '-60%'); 
         };
     }
     
@@ -3937,7 +3937,7 @@
           await new Promise(r => setTimeout(r, 400)); 
           
           // 2. 雲端單字 (Azure API + 快取，1.8倍放大)
-          await speakWordCloudCached(fullWord, 4, k3, "var(--primary-blue)");
+          await speakWordCloudCached(fullWord, 2, k3, "var(--primary-blue)");
       })();
   }
   // 3. 關閉視窗
