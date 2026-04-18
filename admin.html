@@ -1116,7 +1116,7 @@
             const originalText = btnElement.innerText;
             btnElement.innerText = "⏳";
 
-            fetch(`${GAS_URL}?action=admin_add_points&id=${currentStudentId}&val=${val}&secret=${ADMIN_SECRET}&id=${CURRENT_SCHOOL}-ADMIN`)
+            fetch(`${GAS_URL}?action=admin_add_points&id=${currentStudentId}&val=${val}&secret=${ADMIN_SECRET}`)
                 .then(res => res.json())
                 .then(resData => {
                     currentPointsValue += val;
