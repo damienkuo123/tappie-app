@@ -1978,7 +1978,8 @@
         }
 
         function saveStudentData() {
-            const uid = document.getElementById('edit-stu-uid').value.trim();
+            let rawUid = document.getElementById('edit-stu-uid').value.trim();
+            let uid = rawUid.includes('-') ? rawUid : `${CURRENT_SCHOOL}-${rawUid}`;
             const name = document.getElementById('edit-stu-name').value.trim();
             const type = document.getElementById('edit-stu-type').value;
             const classId = document.getElementById('edit-stu-class').value.trim();
