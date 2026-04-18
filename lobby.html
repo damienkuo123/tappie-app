@@ -10,7 +10,7 @@
   
   <meta name="apple-mobile-web-app-title" content="數位學習系統">
   
-  <link rel="apple-touch-icon" href="https://damienkuo123.github.io/tappie-core/assets/app-icon.png">
+  <link rel="apple-touch-icon" href="/assets/app-icon.png">
   <script src="https://aka.ms/csspeech/jsbrowserpackageraw"></script>
   <script src="global-audio.js"></script>
 
@@ -22,13 +22,13 @@
       --bg-color: #0b0f19; /* 更深邃的曜石黑底色 */
       --gold: #f1c40f;
 
-      --grain: url("https://cdn.jsdelivr.net/gh/damienkuo123/tappie-core@main/assets/grain.webp");
-      --glitter: url("https://cdn.jsdelivr.net/gh/damienkuo123/tappie-core@main/assets/glitter.png");
-      --foil: url("https://cdn.jsdelivr.net/gh/damienkuo123/tappie-core@main/assets/illusion.png");
-      --trainer-foil: url("https://cdn.jsdelivr.net/gh/damienkuo123/tappie-core@main/assets/trainerbg.png");
-      --cosmos-bottom: url("https://cdn.jsdelivr.net/gh/damienkuo123/tappie-core@main/assets/cosmos-bottom.png");
-      --cosmos-mid: url("https://cdn.jsdelivr.net/gh/damienkuo123/tappie-core@main/assets/cosmos-middle-trans.png");
-      --cosmos-top: url("https://cdn.jsdelivr.net/gh/damienkuo123/tappie-core@main/assets/cosmos-top-trans.png");
+      --grain: url("/assets/grain.webp");
+      --glitter: url("/assets/glitter.png");
+      --foil: url("/assets/illusion.png");
+      --trainer-foil: url("/assets/trainerbg.png");
+      --cosmos-bottom: url("/assets/cosmos-bottom.png");
+      --cosmos-mid: url("/assets/cosmos-middle-trans.png");
+      --cosmos-top: url("/assets/cosmos-top-trans.png");
 
       --space: 5%;
       --angle: 133deg;
@@ -695,7 +695,7 @@
 
       <div class="section-divider">Ai 對戰</div>
       <div>
-        <div class="ai-banner" style="background-image: url('https://cdn.jsdelivr.net/gh/damienkuo123/tappie-core@main/assets/Ai_m.webp');" onclick="startAiChallenge('初階Ai')">
+        <div class="ai-banner" style="background-image: url('/assets/Ai_m.webp');" onclick="startAiChallenge('初階Ai')">
           <div class="ai-banner-overlay"></div>
           <div class="ai-banner-text">
             <h4>初階 Ai</h4>
@@ -703,7 +703,7 @@
           </div>
         </div>
 
-        <div class="ai-banner" style="background-image: url('https://cdn.jsdelivr.net/gh/damienkuo123/tappie-core@main/assets/Ai_l.webp');" onclick="startAiChallenge('中階Ai')">
+        <div class="ai-banner" style="background-image: url('/assets/Ai_l.webp');" onclick="startAiChallenge('中階Ai')">
           <div class="ai-banner-overlay"></div>
           <div class="ai-banner-text">
             <h4>中階 Ai</h4>
@@ -711,7 +711,7 @@
           </div>
         </div>
 
-        <div class="ai-banner" style="background-image: url('https://cdn.jsdelivr.net/gh/damienkuo123/tappie-core@main/assets/Ai_h.webp');" onclick="startAiChallenge('高階Ai')">
+        <div class="ai-banner" style="background-image: url('/assets/Ai_h.webp');" onclick="startAiChallenge('高階Ai')">
           <div class="ai-banner-overlay"></div>
           <div class="ai-banner-text">
             <h4>高階 Ai</h4>
@@ -887,7 +887,7 @@
     let aiTimerInterval = null;
     let currentRoomId = null;
     let roomExpireTimer = null;
-    const GITHUB_APP_URL = "https://damienkuo123.github.io/tappie-core/";
+    const GITHUB_APP_URL = "/";
 
     async function initLobby() {
       try {
@@ -913,7 +913,7 @@
         console.error("載入失敗：", e);
         document.getElementById('hero-name').innerText = "⚠️ 離線預設模式";
         characterAssets = {
-          'A001': { name: 'Marian 瑪麗安', img: 'https://cdn.jsdelivr.net/gh/damienkuo123/tappie-core@main/assets/Marian%20%E7%91%AA%E9%BA%97%E5%AE%89.webp', rarity: 'N', category: '一般' }, 
+          'A001': { name: 'Marian 瑪麗安', img: '/assets/Marian%20%E7%91%AA%E9%BA%97%E5%AE%89.webp', rarity: 'N', category: '一般' }, 
         };
         userUnlocked = ["A001"];
         userEquipped = "A001";
@@ -1457,7 +1457,7 @@
         .then(res => res.json())
         .then(data => {
           if (data.status === 'success') {
-            let bossImg = 'https://cdn.jsdelivr.net/gh/damienkuo123/tappie-core@main/assets/event-bg.webp'; 
+            let bossImg = '/assets/event-bg.webp'; 
             if (data.eventAvatar && characterAssets[data.eventAvatar]) {
                 bossImg = characterAssets[data.eventAvatar].img;
             }
@@ -1477,7 +1477,7 @@
             if (vocabBtn) vocabBtn.style.display = 'block';
 
           } else {
-            eventBanner.style.backgroundImage = `url('https://cdn.jsdelivr.net/gh/damienkuo123/tappie-core@main/assets/event-bg.webp')`;
+            eventBanner.style.backgroundImage = `url('/assets/event-bg.webp')`;
             if (overlay) overlay.innerHTML = `<div class="locked-tag" style="color: #bdc3c7; border-color: #bdc3c7;">🔒 現在不開放</div>`;
             eventBanner.style.opacity = '0.5';
             eventBanner.style.pointerEvents = 'none';
