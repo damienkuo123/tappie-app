@@ -19,13 +19,13 @@
       --bg-color: #1a1e29;
       --gold: #f1c40f;
 
-      --grain: url("https://cdn.jsdelivr.net/gh/damienkuo123/marian-app@main/assets/grain.webp");
-      --glitter: url("https://cdn.jsdelivr.net/gh/damienkuo123/marian-app@main/assets/glitter.png");
-      --foil: url("https://cdn.jsdelivr.net/gh/damienkuo123/marian-app@main/assets/illusion.png");
-      --trainer-foil: url("https://cdn.jsdelivr.net/gh/damienkuo123/marian-app@main/assets/trainerbg.png");
-      --cosmos-bottom: url("https://cdn.jsdelivr.net/gh/damienkuo123/marian-app@main/assets/cosmos-bottom.png");
-      --cosmos-mid: url("https://cdn.jsdelivr.net/gh/damienkuo123/marian-app@main/assets/cosmos-middle-trans.png");
-      --cosmos-top: url("https://cdn.jsdelivr.net/gh/damienkuo123/marian-app@main/assets/cosmos-top-trans.png");
+      --grain: url("https://cdn.jsdelivr.net/gh/damienkuo123/tappie-core@main/assets/grain.webp");
+      --glitter: url("https://cdn.jsdelivr.net/gh/damienkuo123/tappie-core@main/assets/glitter.png");
+      --foil: url("https://cdn.jsdelivr.net/gh/damienkuo123/tappie-core@main/assets/illusion.png");
+      --trainer-foil: url("https://cdn.jsdelivr.net/gh/damienkuo123/tappie-core@main/assets/trainerbg.png");
+      --cosmos-bottom: url("https://cdn.jsdelivr.net/gh/damienkuo123/tappie-core@main/assets/cosmos-bottom.png");
+      --cosmos-mid: url("https://cdn.jsdelivr.net/gh/damienkuo123/tappie-core@main/assets/cosmos-middle-trans.png");
+      --cosmos-top: url("https://cdn.jsdelivr.net/gh/damienkuo123/tappie-core@main/assets/cosmos-top-trans.png");
 
       --space: 5%;
       --angle: 133deg;
@@ -2920,12 +2920,12 @@
     })
       .then(() => { 
         alert(MODE === 'review' ? "👍 練習辛苦了！" : "🎉 挑戰完成！"); 
-        window.location.href = `https://damienkuo123.github.io/marian-app/dashboard.html?id=${STUDENT_ID}`; 
+        window.location.href = `https://damienkuo123.github.io/tappie-core/dashboard.html?id=${STUDENT_ID}`; 
       }).catch(err => {
         // 如果遇到極端網路問題
         console.log("Fetch 失敗", err);
         alert("🎉 挑戰完成！(已進入背景備用存檔)");
-        window.location.href = `https://damienkuo123.github.io/marian-app/dashboard.html?id=${STUDENT_ID}`;
+        window.location.href = `https://damienkuo123.github.io/tappie-core/dashboard.html?id=${STUDENT_ID}`;
       });
   }
   
@@ -2947,7 +2947,7 @@
         if(data.status === "NotFound") { 
             alert("房間失效"); 
             // 🚀 房間失效時，也送回大廳
-            window.location.href = `https://damienkuo123.github.io/marian-app/lobby.html?id=${STUDENT_ID}`; 
+            window.location.href = `https://damienkuo123.github.io/tappie-core/lobby.html?id=${STUDENT_ID}`; 
             return; 
         }
         battleQuizArr = data.quiz; 
@@ -2957,7 +2957,7 @@
             // 從剛剛設定好的圖鑑中抓取 Boss 資料
             const boss = (typeof characterAssets !== 'undefined' && characterAssets[EVENT_AVATAR]) 
                          ? characterAssets[EVENT_AVATAR] 
-                         : { name: '活動 Boss', img: 'https://cdn.jsdelivr.net/gh/damienkuo123/marian-app@main/assets/BOX_COVER_SSR.webp' }; // 防呆底圖
+                         : { name: '活動 Boss', img: 'https://cdn.jsdelivr.net/gh/damienkuo123/tappie-core@main/assets/BOX_COVER_SSR.webp' }; // 防呆底圖
             
             // 強制覆寫全域變數！這樣後續的 VS畫面、Cut-in、結算，全都會變成 Boss！
             opName = `[突發事件] ${boss.name}`;
@@ -3373,7 +3373,7 @@
        setTimeout(() => { 
            showImpactOverlay(myTotalWins, opTotalWins, true); 
            setTimeout(() => {
-               window.location.href = `https://damienkuo123.github.io/marian-app/lobby.html?id=${STUDENT_ID}`;
+               window.location.href = `https://damienkuo123.github.io/tappie-core/lobby.html?id=${STUDENT_ID}`;
            }, 5000); 
        }, 1000);
        return; 
@@ -3605,7 +3605,7 @@
                       } else {
                           // 我方敗北... 摸摸鼻子回大廳
                           alert("挑戰失敗，再接再厲！");
-                          window.location.href = `https://damienkuo123.github.io/marian-app/lobby.html?id=${STUDENT_ID}`;
+                          window.location.href = `https://damienkuo123.github.io/tappie-core/lobby.html?id=${STUDENT_ID}`;
                       }
                   } 
                   else { 
@@ -3842,10 +3842,10 @@
 
   // 🚀 盲盒封面圖庫 (你可以隨時替換成你想要的網址)
   const BOX_COVERS = {
-    'N': 'https://cdn.jsdelivr.net/gh/damienkuo123/marian-app@main/assets/BOX_COVER_N.webp', /* 預設底圖 */
-    'R': 'https://cdn.jsdelivr.net/gh/damienkuo123/marian-app@main/assets/BOX_COVER_R.webp',
-    'SR': 'https://cdn.jsdelivr.net/gh/damienkuo123/marian-app@main/assets/BOX_COVER_SR.webp',
-    'SSR': 'https://cdn.jsdelivr.net/gh/damienkuo123/marian-app@main/assets/BOX_COVER_SSR.webp'
+    'N': 'https://cdn.jsdelivr.net/gh/damienkuo123/tappie-core@main/assets/BOX_COVER_N.webp', /* 預設底圖 */
+    'R': 'https://cdn.jsdelivr.net/gh/damienkuo123/tappie-core@main/assets/BOX_COVER_R.webp',
+    'SR': 'https://cdn.jsdelivr.net/gh/damienkuo123/tappie-core@main/assets/BOX_COVER_SR.webp',
+    'SSR': 'https://cdn.jsdelivr.net/gh/damienkuo123/tappie-core@main/assets/BOX_COVER_SSR.webp'
   };
 
   // 1. 先抽盲盒稀有度
@@ -4266,9 +4266,9 @@
         
         // 成功發送獎勵後，跳轉回對戰大廳
         fetch(finalUrl, { mode: 'no-cors' }).then(() => {
-            window.location.href = `https://damienkuo123.github.io/marian-app/lobby.html?id=${STUDENT_ID}`;
+            window.location.href = `https://damienkuo123.github.io/tappie-core/lobby.html?id=${STUDENT_ID}`;
         }).catch(() => {
-            window.location.href = `https://damienkuo123.github.io/marian-app/lobby.html?id=${STUDENT_ID}`;
+            window.location.href = `https://damienkuo123.github.io/tappie-core/lobby.html?id=${STUDENT_ID}`;
         });
     };
   }

@@ -6,25 +6,25 @@
 const GlobalAudio = {
     // 1. 音效網址庫 (改為網址對應)
     soundUrls: {
-        click: 'https://damienkuo123.github.io/marian-app/audio/click.mp3',
-        popupOpen: 'https://damienkuo123.github.io/marian-app/audio/popupOpen.mp3',
-        popupClose: 'https://damienkuo123.github.io/marian-app/audio/popupClose.mp3',
-        countdown: 'https://damienkuo123.github.io/marian-app/audio/countdown.mp3',
-        fireNormal: 'https://damienkuo123.github.io/marian-app/audio/fireNormal.mp3',
-        fireUlt: 'https://damienkuo123.github.io/marian-app/audio/fireUlt.mp3',
-        hit: 'https://damienkuo123.github.io/marian-app/audio/hit.mp3',
-        cutin: 'https://damienkuo123.github.io/marian-app/audio/cutin.mp3',
-        victory: 'https://damienkuo123.github.io/marian-app/audio/victory.mp3',
-        shatter: 'https://damienkuo123.github.io/marian-app/audio/shatter.mp3'
+        click: 'https://damienkuo123.github.io/tappie-core/audio/click.mp3',
+        popupOpen: 'https://damienkuo123.github.io/tappie-core/audio/popupOpen.mp3',
+        popupClose: 'https://damienkuo123.github.io/tappie-core/audio/popupClose.mp3',
+        countdown: 'https://damienkuo123.github.io/tappie-core/audio/countdown.mp3',
+        fireNormal: 'https://damienkuo123.github.io/tappie-core/audio/fireNormal.mp3',
+        fireUlt: 'https://damienkuo123.github.io/tappie-core/audio/fireUlt.mp3',
+        hit: 'https://damienkuo123.github.io/tappie-core/audio/hit.mp3',
+        cutin: 'https://damienkuo123.github.io/tappie-core/audio/cutin.mp3',
+        victory: 'https://damienkuo123.github.io/tappie-core/audio/victory.mp3',
+        shatter: 'https://damienkuo123.github.io/tappie-core/audio/shatter.mp3'
     },
 
     // 2. 背景音樂庫 (BGM 檔案大，仍保留傳統 Audio 標籤串流播放)
     bgm: {
-        dashboard: new Audio('https://damienkuo123.github.io/marian-app/audio/cyberwave-orchestra-puzzle-game-loop-bright-casual-video-game-music-249201_low.mp3'), 
-        lobby: new Audio('https://damienkuo123.github.io/marian-app/audio/決戦へ_low.mp3'),     
-        arenaNormal: new Audio('https://damienkuo123.github.io/marian-app/audio/wind_feelings_low.mp3'), 
-        arenaBattle: new Audio('https://damienkuo123.github.io/marian-app/audio/Devil_Disaster_low.mp3'), 
-        gacha: new Audio('https://damienkuo123.github.io/marian-app/audio/Battle_in_the_Moonlight_low.mp3')        
+        dashboard: new Audio('https://damienkuo123.github.io/tappie-core/audio/cyberwave-orchestra-puzzle-game-loop-bright-casual-video-game-music-249201_low.mp3'), 
+        lobby: new Audio('https://damienkuo123.github.io/tappie-core/audio/決戦へ_low.mp3'),     
+        arenaNormal: new Audio('https://damienkuo123.github.io/tappie-core/audio/wind_feelings_low.mp3'), 
+        arenaBattle: new Audio('https://damienkuo123.github.io/tappie-core/audio/Devil_Disaster_low.mp3'), 
+        gacha: new Audio('https://damienkuo123.github.io/tappie-core/audio/Battle_in_the_Moonlight_low.mp3')        
     },
 
     // 🚀 新增：Web Audio API 核心組件
