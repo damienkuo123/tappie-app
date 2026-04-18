@@ -598,6 +598,12 @@
         const GAS_URL = "https://script.google.com/macros/s/AKfycbyWm-WnRO5h3dliEPR36Cq1hCf5DgM4GIgJqXVUREclhtYOHjxq9DptApmQPkU5p5Ys/exec";
         const params = new URLSearchParams(window.location.search);
         
+        // 🚀 SaaS 升級：抓取並記憶「校區代碼」
+        if (params.get('school')) {
+            localStorage.setItem('tappie_school', params.get('school').toUpperCase());
+        }
+        const CURRENT_SCHOOL = localStorage.getItem('tappie_school') || "TP01"; // 預設給個 TP01 防呆
+        
         // 🛡️ 權限與角色驗證 (資安升級版：前端無密碼)
         if (params.get('secret')) {
             localStorage.setItem('marian_auth', params.get('secret'));
