@@ -4,7 +4,6 @@
  */
 
 const GlobalAudio = {
-    // 1. 音效網址庫 (🚀 修正為相對路徑，避開跨網域 CORS 阻擋)
     soundUrls: {
         click: './audio/click.mp3',
         popupOpen: './audio/popupOpen.mp3',
@@ -18,7 +17,6 @@ const GlobalAudio = {
         shatter: './audio/shatter.mp3'
     },
 
-    // 2. 背景音樂庫 (🚀 同樣修正為相對路徑)
     bgm: {
         dashboard: new Audio('./audio/cyberwave-orchestra-puzzle-game-loop-bright-casual-video-game-music-249201_low.mp3'), 
         lobby: new Audio('./audio/決戦へ_low.mp3'),     
@@ -27,16 +25,12 @@ const GlobalAudio = {
         gacha: new Audio('./audio/Battle_in_the_Moonlight_low.mp3')        
     },
 
-
-    // 🚀 新增：Web Audio API 核心組件
     audioCtx: null,
-    audioBuffers: {}, // 用來存放解碼後的純淨聲音數據
-
+    audioBuffers: {}, 
     currentBGM: null,       
     isDucking: false,       
 
     init: function() {
-        // 設定 BGM 預設音量與循環
         for (let key in this.bgm) {
             this.bgm[key].volume = 1; 
             this.bgm[key].loop = true;
@@ -47,92 +41,88 @@ const GlobalAudio = {
         this.bindMicDucking(); 
         this.autoPlayBGM();    
         
-        // 🚀 核心機制：等待使用者第一次點擊，才喚醒 AudioContext 並開始下載音效！
-        const initWebAudio = () => {
+        // 🚀 Safari 專用強化喚醒邏輯
+        const unlock = () => {
             if (!this.audioCtx) {
+                // 1. 建立 Context
                 this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                this.preloadAllSounds(); // 開始默默下載短音效
-                console.log("🔓 Web Audio API 喚醒成功！");
+                
+                // 2. 🚀 重要：立刻播放一段「靜音」來解鎖硬體
+                const buffer = this.audioCtx.createBuffer(1, 1, 22050);
+                const source = this.audioCtx.createBufferSource();
+                source.buffer = buffer;
+                source.connect(this.audioCtx.destination);
+                source.start(0);
+
+                // 3. 開始預載所有音效
+                this.preloadAllSounds();
+                console.log("🔓 Safari/Chrome Web Audio 啟動完成");
             }
+            
+            // 每次點擊都嘗試 Resume，確保 Context 沒睡著
             if (this.audioCtx.state === 'suspended') {
                 this.audioCtx.resume();
             }
-            // ...
-            document.removeEventListener('pointerdown', initWebAudio);
-            document.removeEventListener('touchstart', initWebAudio);
-            document.removeEventListener('click', initWebAudio);
-        };
-        // 🚀 多重綁定：確保在各種奇怪的蘋果裝置上都能成功喚醒！
-        document.addEventListener('pointerdown', initWebAudio);
-        document.addEventListener('touchstart', initWebAudio);
-        document.addEventListener('click', initWebAudio);
 
-        console.log("🎵 Global Audio Engine 3.2 Initialized (Web Audio API Mode)");
+            // 成功解鎖後移除監聽器
+            window.removeEventListener('click', unlock);
+            window.removeEventListener('touchstart', unlock);
+        };
+
+        window.addEventListener('click', unlock);
+        window.addEventListener('touchstart', unlock);
+
+        console.log("🎵 Global Audio Engine 3.5 Initialized (Safari Optimized)");
     },
 
-    // 🚀 將所有短音效下載並解碼到記憶體中 (背景執行，絕對不會發出聲音)
     preloadAllSounds: function() {
         for (let key in this.soundUrls) {
             fetch(this.soundUrls[key])
                 .then(response => response.arrayBuffer())
-                .then(arrayBuffer => this.audioCtx.decodeAudioData(arrayBuffer))
+                .then(arrayBuffer => {
+                    // 🚀 Safari 的 decodeAudioData 有時不支援 Promise 寫法
+                    // 使用回調函數寫法確保最強相容性
+                    return new Promise((resolve, reject) => {
+                        this.audioCtx.decodeAudioData(arrayBuffer, resolve, reject);
+                    });
+                })
                 .then(audioBuffer => {
-                    this.audioBuffers[key] = audioBuffer; // 存入記憶體
+                    this.audioBuffers[key] = audioBuffer;
                 })
                 .catch(e => console.warn(`音效 ${key} 載入失敗:`, e));
         }
     },
 
-    // 🚀 終極播放函數：從記憶體中提取聲音，零延遲噴發！
     play: function(soundName) {
-        if (!this.audioCtx || !this.audioBuffers[soundName]) return; // 如果還沒載入完就算了
+        // 🚀 關鍵修復：在播放前強迫再 Check 一次 Context 狀態
+        if (this.audioCtx && this.audioCtx.state === 'suspended') {
+            this.audioCtx.resume();
+        }
+
+        if (!this.audioCtx || !this.audioBuffers[soundName]) return; 
         
-        // 每次播放都要產生一個新的 Source (這是 Web Audio API 的規定)
         const source = this.audioCtx.createBufferSource();
         source.buffer = this.audioBuffers[soundName];
-
-        // 獨立控制音量 (Web Audio API GainNode)
         const gainNode = this.audioCtx.createGain();
         
-        // 🎚️ 在這裡定義每個音效的專屬音量 (範圍通常是 0.0 到 1.0，1.0 是原始音量，你甚至可以設到 1.5 放大音量)
-        let vol = 1.0; // 預設值
-        
+        let vol = 1.0; 
         switch (soundName) {
-            case 'click':
-                vol = 0.6;  // 點擊聲保持低調
-                break;
-            case 'popupOpen':
-                vol = 2.2;  // 🚀 彈窗打開調大聲一點！(原本是 0.5)
-                break;
-            case 'popupClose':
-                vol = 2;  // 🚀 彈窗收起也調大一點！(原本是 0.4)
-                break;
-            case 'fireNormal':
-                vol = 0.7;  
-                break;
-            case 'fireUlt':
-                vol = 0.7;  
-                break;
-            case 'hit':
-                vol = 0.8;  // 震動聲可以稍微收一點，以免太吵
-                break;
-            case 'countdown':
-                vol = 1.6;  // 逼逼聲
-                break;
-            case 'cutin':
-                vol = 2;  
-                break;
-            // 如果沒有列在上面的 (例如 fireNormal, victory)，就會自動使用預設的 vol = 1.0
+            case 'click': vol = 0.6; break;
+            case 'popupOpen': vol = 2.2; break;
+            case 'popupClose': vol = 2; break;
+            case 'fireNormal': vol = 0.7; break;
+            case 'fireUlt': vol = 0.7; break;
+            case 'hit': vol = 0.8; break;
+            case 'countdown': vol = 1.6; break;
+            case 'cutin': vol = 2; break;
         }
         
-        // 將設定好的音量套用到混音器上
         gainNode.gain.setValueAtTime(vol, this.audioCtx.currentTime);
-
-        // 連接線路並發射！
         source.connect(gainNode);
         gainNode.connect(this.audioCtx.destination);
         source.start(0);
     },
+
 
     // --- 以下為原本的 BGM 切換與監聽邏輯，完全沒變 ---
 
