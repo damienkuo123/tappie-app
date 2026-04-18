@@ -1048,7 +1048,7 @@
             msg.innerText = "⏳ 讀取學生資料中...";
             msg.style.color = "#ffd700";
 
-            fetch(`${GAS_URL}?action=get_admin_student_data&cardId=${encodeURIComponent(cardId)}&secret=${ADMIN_SECRET}&id=${CURRENT_SCHOOL}-ADMIN`)
+            fetch(`${GAS_URL}?action=get_admin_student_data&cardId=${encodeURIComponent(cardId)}&secret=${ADMIN_SECRET}`)
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
