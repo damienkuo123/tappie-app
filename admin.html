@@ -1062,7 +1062,7 @@
         }
 
         function loadStudentData(uid) {
-            fetch(`${GAS_URL}?action=get_admin_student_data&id=${uid}&secret=${ADMIN_SECRET}&id=${CURRENT_SCHOOL}-ADMIN`)
+            fetch(`${GAS_URL}?action=get_admin_student_data&id=${uid}&secret=${ADMIN_SECRET}`)
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
