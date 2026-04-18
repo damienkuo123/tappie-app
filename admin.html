@@ -643,7 +643,6 @@
         if (!ADMIN_SECRET) {
             document.getElementById('unauth-mask').style.display = 'flex';
         } else {
-            // 🚀 修正：這裡換成了「反引號 ( ` )」，這樣變數才會被正確讀取！
             fetch(`${GAS_URL}?action=verify_auth&secret=${ADMIN_SECRET}&id=${CURRENT_SCHOOL}-ADMIN`)
                 .then(res => res.json())
                 .then(data => {
@@ -723,8 +722,8 @@
             
             // 🚀 同時跟後端要「進度」與「排程」這兩包資料
             Promise.all([
-                fetch(`${GAS_URL}?action=get_all_progress&secret=${ADMIN_SECRET}&id=${CURRENT_SCHOOL}-ADMIN`).then(res => res.json()),
-                fetch(`${GAS_URL}?action=get_task_data&secret=${ADMIN_SECRET}&id=${CURRENT_SCHOOL}-ADMIN`).then(res => res.json())
+                fetch(`${GAS_URL}?action=get_all_progress&secret=${ADMIN_SECRET}`).then(res => res.json()),
+                fetch(`${GAS_URL}?action=get_task_data&secret=${ADMIN_SECRET}`).then(res => res.json())
             ])
             .then(([progressData, taskData]) => {
                 if(progressData.error) return document.getElementById('progress-container').innerHTML = `<p style="color:#e74c3c;">${progressData.error}</p>`;
@@ -824,7 +823,7 @@
             const container = document.getElementById('newsletter-container');
             container.innerHTML = '<p style="text-align:center; color:#6c5ce7;">⏳ 正在讀取庫存文章...</p>';
             
-            fetch(`${GAS_URL}?action=get_newsletters&secret=${ADMIN_SECRET}&id=${CURRENT_SCHOOL}-ADMIN`)
+            fetch(`${GAS_URL}?action=get_newsletters&secret=${ADMIN_SECRET}`)
                 .then(res => res.json())
                 .then(data => {
                     if(data.error) return container.innerHTML = `<p style="color:#e74c3c;">${data.error}</p>`;
@@ -925,7 +924,7 @@
             const formData = new URLSearchParams();
             formData.append('order', JSON.stringify(newOrder));
 
-            fetch(`${GAS_URL}?action=reorder_newsletters&secret=${ADMIN_SECRET}&id=${CURRENT_SCHOOL}-ADMIN`, { method: 'POST', body: formData })
+            fetch(`${GAS_URL}?action=reorder_newsletters&secret=${ADMIN_SECRET}`, { method: 'POST', body: formData })
                 .then(res => res.json())
                 .then(data => {
                     headerTitle.innerHTML = '📝 專欄編輯系統';
@@ -940,7 +939,7 @@
             const formData = new URLSearchParams();
             formData.append('content', 'AI_GENERATE');
             
-            fetch(`${GAS_URL}?action=add_newsletter&secret=${ADMIN_SECRET}&id=${CURRENT_SCHOOL}-ADMIN`, { method: 'POST', body: formData })
+            fetch(`${GAS_URL}?action=add_newsletter&secret=${ADMIN_SECRET}`, { method: 'POST', body: formData })
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
@@ -959,7 +958,7 @@
         function deleteNewsletter(row) {
             if(!confirm("確定要刪除這篇文章嗎？排在後面的文章會自動遞補上來喔！")) return;
             document.getElementById('newsletter-container').innerHTML = '<p style="text-align:center; color:#e74c3c;">🗑️ 正在刪除...</p>';
-            fetch(`${GAS_URL}?action=delete_newsletter&secret=${ADMIN_SECRET}&id=${CURRENT_SCHOOL}-ADMIN&row=${row}`).then(()=>loadNewsletters());
+            fetch(`${GAS_URL}?action=delete_newsletter&secret=${ADMIN_SECRET}&row=${row}`).then(()=>loadNewsletters());
         }
 
         function startEdit(row) {
@@ -981,7 +980,7 @@
             const formData = new URLSearchParams();
             formData.append('content', newContent);
 
-            fetch(`${GAS_URL}?action=edit_newsletter&secret=${ADMIN_SECRET}&id=${CURRENT_SCHOOL}-ADMIN&row=${row}`, { method: 'POST', body: formData })
+            fetch(`${GAS_URL}?action=edit_newsletter&secret=${ADMIN_SECRET}&row=${row}`, { method: 'POST', body: formData })
                 .then(() => loadNewsletters());
         }
 
@@ -1027,7 +1026,7 @@
             msg.innerText = "⏳ 讀取學生資料中...";
             msg.style.color = "#ffd700";
 
-            fetch(`${GAS_URL}?action=get_admin_student_data&cardId=${encodeURIComponent(cardId)}&secret=${ADMIN_SECRET}&id=${CURRENT_SCHOOL}-ADMIN`)
+            fetch(`${GAS_URL}?action=get_admin_student_data&cardId=${encodeURIComponent(cardId)}&secret=${ADMIN_SECRET}`)
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
@@ -1041,7 +1040,7 @@
         }
 
         function loadStudentData(uid) {
-            fetch(`${GAS_URL}?action=get_admin_student_data&id=${uid}&secret=${ADMIN_SECRET}&id=${CURRENT_SCHOOL}-ADMIN`)
+            fetch(`${GAS_URL}?action=get_admin_student_data&id=${uid}&secret=${ADMIN_SECRET}`)
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
@@ -1095,7 +1094,7 @@
             const originalText = btnElement.innerText;
             btnElement.innerText = "⏳";
 
-            fetch(`${GAS_URL}?action=admin_add_points&id=${currentStudentId}&val=${val}&secret=${ADMIN_SECRET}&id=${CURRENT_SCHOOL}-ADMIN`)
+            fetch(`${GAS_URL}?action=admin_add_points&id=${currentStudentId}&val=${val}&secret=${ADMIN_SECRET}`)
                 .then(res => res.json())
                 .then(resData => {
                     currentPointsValue += val;
@@ -1193,7 +1192,7 @@
             const listZone = document.getElementById('tm-list-zone');
             listZone.innerHTML = '<p style="text-align:center; color:#ffd700; margin-top:40px; font-size:18px; font-weight:bold;">⏳ 讀取任務庫中...</p>';
             
-            fetch(`${GAS_URL}?action=get_task_data&secret=${ADMIN_SECRET}&id=${CURRENT_SCHOOL}-ADMIN`)
+            fetch(`${GAS_URL}?action=get_task_data&secret=${ADMIN_SECRET}`)
                 .then(res => res.json())
                 .then(data => {
                     if (data.error) return listZone.innerHTML = `<p style="color:#e74c3c;">${data.error}</p>`;
@@ -1429,7 +1428,7 @@
             formData.append('type', 'word');
             formData.append('row', row);
 
-            fetch(`${GAS_URL}?action=delete_task_data&secret=${ADMIN_SECRET}&id=${CURRENT_SCHOOL}-ADMIN`, { method: 'POST', body: formData })
+            fetch(`${GAS_URL}?action=delete_task_data&secret=${ADMIN_SECRET}`, { method: 'POST', body: formData })
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) fetchTaskData(); // 重新讀取
@@ -1516,7 +1515,7 @@
             formData.append('unit', unit);
             formData.append('words', JSON.stringify(wordsArray));
 
-            fetch(`${GAS_URL}?action=save_word_bank&secret=${ADMIN_SECRET}&id=${CURRENT_SCHOOL}-ADMIN`, { method: 'POST', body: formData })
+            fetch(`${GAS_URL}?action=save_word_bank&secret=${ADMIN_SECRET}`, { method: 'POST', body: formData })
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
@@ -1621,7 +1620,7 @@
             formData.append('type', 'schedule');
             formData.append('row', calTargetTask.row);
 
-            fetch(`${GAS_URL}?action=delete_task_data&secret=${ADMIN_SECRET}&id=${CURRENT_SCHOOL}-ADMIN`, { method: 'POST', body: formData })
+            fetch(`${GAS_URL}?action=delete_task_data&secret=${ADMIN_SECRET}`, { method: 'POST', body: formData })
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
@@ -1753,7 +1752,7 @@
             formData.append('row', calTargetTask.row); // 🚀 送出 0 代表新增，送出數字代表覆寫！
             formData.append('avatar', document.getElementById('event-avatar-select') ? document.getElementById('event-avatar-select').value : ""); // 🚀 把大魔王 ID 一併送出
 
-            fetch(`${GAS_URL}?action=save_schedule&secret=${ADMIN_SECRET}&id=${CURRENT_SCHOOL}-ADMIN`, { method: 'POST', body: formData })
+            fetch(`${GAS_URL}?action=save_schedule&secret=${ADMIN_SECRET}`, { method: 'POST', body: formData })
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
@@ -1855,7 +1854,7 @@
             const listZone = document.getElementById('sm-list-zone');
             listZone.innerHTML = '<p style="text-align:center; color:#ffd700; margin-top:40px; font-size:18px; font-weight:bold;">⏳ 讀取學生資料庫中...</p>';
             
-            fetch(`${GAS_URL}?action=get_student_list&secret=${ADMIN_SECRET}&id=${CURRENT_SCHOOL}-ADMIN`)
+            fetch(`${GAS_URL}?action=get_student_list&secret=${ADMIN_SECRET}`)
                 .then(res => res.json())
                 .then(data => {
                     if (data.error) return listZone.innerHTML = `<p style="color:#e74c3c;">${data.error}</p>`;
@@ -1931,23 +1930,32 @@
                     ? `onclick="document.getElementById('chk-${stu.row}').click()"` 
                     : `onclick="openStudentEditor(${stu.row}, '${stu.uid}', '${stu.name}', '${stu.type}', '${stu.classId === '無' ? '' : stu.classId}')"`;
 
-                // 🚀 在這裡先處理好要顯示的 ID
-                let displayUid = stu.uid.includes('-') ? stu.uid.split('-')[1] : stu.uid;
-
-                html += `
-                <div class="task-card" style="cursor:pointer;" ${cardClickAction}>
-                    <input type="checkbox" id="chk-${stu.row}" class="stu-checkbox" value="${stu.row}" ${isChecked} onclick="event.stopPropagation(); toggleStuSelection(${stu.row}, this.checked)">
-                    <div class="task-info">
-                        <div class="task-class" style="border-color:${stu.type==='美語資優生'?'#f1c40f':'#3498db'}; color:${stu.type==='美語資優生'?'#f1c40f':'#3498db'};">
-                            ${stu.type} ${stu.classId !== '無' ? ' | ' + stu.classId : ''}
+                let html = '';
+                pageStus.forEach(stu => {
+                    const isChecked = selectedStuRows.has(stu.row) ? 'checked' : '';
+                    
+                    const cardClickAction = isBatchMode 
+                        ? `onclick="document.getElementById('chk-${stu.row}').click()"` 
+                        : `onclick="openStudentEditor(${stu.row}, '${stu.uid}', '${stu.name}', '${stu.type}', '${stu.classId === '無' ? '' : stu.classId}')"`;
+    
+                    // 🚀 在這裡先處理好要顯示的 ID
+                    let displayUid = stu.uid.includes('-') ? stu.uid.split('-')[1] : stu.uid;
+    
+                    html += `
+                    <div class="task-card" style="cursor:pointer;" ${cardClickAction}>
+                        <input type="checkbox" id="chk-${stu.row}" class="stu-checkbox" value="${stu.row}" ${isChecked} onclick="event.stopPropagation(); toggleStuSelection(${stu.row}, this.checked)">
+                        <div class="task-info">
+                            <div class="task-class" style="border-color:${stu.type==='美語資優生'?'#f1c40f':'#3498db'}; color:${stu.type==='美語資優生'?'#f1c40f':'#3498db'};">
+                                ${stu.type} ${stu.classId !== '無' ? ' | ' + stu.classId : ''}
+                            </div>
+                            <div class="task-unit" style="font-size:20px;">${stu.name}</div>
+                            <div style="font-size:12px; color:#94a3b8; margin-top:4px; font-weight:bold;">UID: ${displayUid}</div>
                         </div>
-                        <div class="task-unit" style="font-size:20px;">${stu.name}</div>
-                        <div style="font-size:12px; color:#94a3b8; margin-top:4px; font-weight:bold;">UID: ${displayUid}</div>
-                    </div>
-                    <div class="task-actions">
-                        <button class="btn-icon btn-schedule" title="編輯資料">✏️</button>
-                    </div>
-                </div>`;
+                        <div class="task-actions">
+                            <button class="btn-icon btn-schedule" title="編輯資料">✏️</button>
+                        </div>
+                    </div>`;
+                });
             });
             listZone.innerHTML = html;
         }
@@ -1992,7 +2000,7 @@
             const formData = new URLSearchParams();
             formData.append('data', JSON.stringify(stuData));
 
-            fetch(`${GAS_URL}?action=save_student_data&secret=${ADMIN_SECRET}&id=${CURRENT_SCHOOL}-ADMIN`, { method: 'POST', body: formData })
+            fetch(`${GAS_URL}?action=save_student_data&secret=${ADMIN_SECRET}`, { method: 'POST', body: formData })
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
@@ -2030,7 +2038,7 @@
             const formData = new URLSearchParams();
             formData.append('row', editingStuRow);
 
-            fetch(`${GAS_URL}?action=delete_student_data&secret=${ADMIN_SECRET}&id=${CURRENT_SCHOOL}-ADMIN`, { method: 'POST', body: formData })
+            fetch(`${GAS_URL}?action=delete_student_data&secret=${ADMIN_SECRET}`, { method: 'POST', body: formData })
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
@@ -2152,7 +2160,7 @@
             const formData = new URLSearchParams();
             formData.append('data', JSON.stringify(payload));
 
-            fetch(`${GAS_URL}?action=batch_save_students&secret=${ADMIN_SECRET}&id=${CURRENT_SCHOOL}-ADMIN`, { method: 'POST', body: formData })
+            fetch(`${GAS_URL}?action=batch_save_students&secret=${ADMIN_SECRET}`, { method: 'POST', body: formData })
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
