@@ -1004,8 +1004,8 @@
                 if (finalID.length >= 4) { // 稍微放寬長度限制，因為 S001 只有四個字
                     fetchStudent(finalID);
                 }
-                    fetchStudent(finalID);
-                }
+                    fetchStudent(finalID); // ❌ 這裡重複了！
+                } // ❌ 這裡多了一個括號！
                 scanner.value = "";
             }
         });
@@ -1019,9 +1019,9 @@
                 if (finalID.length >= 4) { // 稍微放寬長度限制，因為 S001 只有四個字
                     fetchStudent(finalID);
                 }
-                    fetchStudent(finalID);
+                    fetchStudent(finalID); // ❌ 這裡也重複了！
                     scanner.value = "";
-                }
+                } // ❌ 這裡也多了一個括號！
             }, 200);
         });
 
