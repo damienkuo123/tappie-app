@@ -1041,12 +1041,22 @@
 
         function fetchStudent(cardId) {
             if (actionUI.style.display === 'block') return;
-            
+
+            // 1. 確保拿到完整的 UID (例如 TP02-S001)
+            const finalUid = String(cardId).includes('-') ? String(cardId).trim() : `${CURRENT_SCHOOL}-${String(cardId).trim()}`;
+
+            // 🚀 【前端邊境攔截】：檢查卡片上的校區代碼，跟管理員的校區一不一樣？
+            const targetSchool = finalUid.split('-')[0].toUpperCase();
+            if (targetSchool !== CURRENT_SCHOOL) {
+                showError(`⛔ 越權警告：您無法查詢 ${targetSchool} 校區的學生卡片！`);
+                return; // 直接擋下，絕對不送出給後端！
+            }
+
             card.className = 'container loading';
             msg.innerText = "⏳ 讀取學生資料中...";
             msg.style.color = "#ffd700";
 
-            fetch(`${GAS_URL}?action=get_admin_student_data&cardId=${encodeURIComponent(cardId)}&secret=${ADMIN_SECRET}`)
+            fetch(`${GAS_URL}?action=get_admin_student_data&cardId=${encodeURIComponent(finalUid)}&secret=${ADMIN_SECRET}`)
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
@@ -1060,7 +1070,16 @@
         }
 
         function loadStudentData(uid) {
-            fetch(`${GAS_URL}?action=get_admin_student_data&id=${uid}&secret=${ADMIN_SECRET}`)
+            const finalUid = String(uid).includes('-') ? String(uid).trim() : `${CURRENT_SCHOOL}-${String(uid).trim()}`;
+            
+            // 🚀 【前端邊境攔截】
+            const targetSchool = finalUid.split('-')[0].toUpperCase();
+            if (targetSchool !== CURRENT_SCHOOL) {
+                showError(`⛔ 越權警告：無法讀取 ${targetSchool} 的資料`);
+                return; 
+            }
+
+            fetch(`${GAS_URL}?action=get_admin_student_data&id=${encodeURIComponent(finalUid)}&secret=${ADMIN_SECRET}`)
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
