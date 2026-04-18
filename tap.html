@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tappie 嗶卡登入中...</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #f8f9fa;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: #333;
+    }
+    .loader {
+      text-align: center;
+    }
+    .spinner {
+      font-size: 40px;
+      animation: spin 1s linear infinite;
+      margin-bottom: 20px;
+    }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="loader">
+    <div class="spinner">🪄</div>
+    <h2>讀取卡片中...</h2>
+  </div>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const uid = urlParams.get('uid'); 
+
+    if (uid) {
+      // 🚀 SaaS 模式：不再切割！把完整的 TP01-S001 直接往後傳
+      window.location.href = `dashboard.html?id=${uid}`;
+    } else {
+      document.body.innerHTML = "<h2>❌ 無效的卡片，請洽詢櫃檯老師。</h2>";
+    }
+  </script>
+</body>
+</html>
