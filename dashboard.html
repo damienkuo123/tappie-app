@@ -766,7 +766,7 @@
     document.addEventListener('touchstart', resetIdleTimer); document.addEventListener('mousedown', resetIdleTimer); resetIdleTimer();
 
     // =======================================================
-    // 🚀 瑪麗安「無痕換人攔截器」：SaaS 萬能網址萃取版
+    // 🚀 瑪麗安「無痕換人攔截器」：正式上線版
     // =======================================================
     (function() {
       let rawBuffer = ""; let lastPress = Date.now();
@@ -785,82 +785,42 @@
       }, 1000);
 
       focusHunter.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault(); // 🚀 防護：防止瀏覽器以為你要跳轉網址
-        }
-
         const now = Date.now();
-        // 讀卡機輸入極快，超過 100ms 的停頓視為手動按鍵干擾，清空重來
-        if (now - lastPress > 100 && e.key !== 'Enter') rawBuffer = ""; 
+        if (now - lastPress > 300) rawBuffer = ""; 
         lastPress = now;
 
         if (e.key.length === 1) rawBuffer += e.key;
 
-        // 🚀 核心修復：拔除 length >= 10 的限制，全權交給 Enter 鍵來結算，確保超長網址能完整讀完！
-        if (e.key === 'Enter') {
-          let inputStr = rawBuffer.trim();
-          rawBuffer = ""; // 瞬間清空
-          focusHunter.value = "";
-          
-          if (inputStr.length < 4) return;
+        if (e.key === 'Enter' || rawBuffer.length >= 10) {
+          const finalID = rawBuffer.trim();
+          if (finalID.length >= 6) {
+            
+            // 🚀 新版質感遮罩
+            const loader = document.createElement('div');
+            loader.style = "position:fixed;inset:0; width:100vw; height:100dvh;background:radial-gradient(circle at center, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.98) 100%);z-index:999999;display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;backdrop-filter:blur(15px); -webkit-backdrop-filter:blur(15px); font-family:sans-serif; transition:opacity 0.3s;";
+            loader.innerHTML = `
+              <h2 style="color:#ffd700; font-size: 26px; font-weight: 900; margin: 0 0 10px 0; letter-spacing: 2px;">🔄 身分驗證中</h2>
+              <p style="color:#94a3b8; font-size: 14px; margin: 0 0 40px 0;">數位系統資料對接，請稍候...</p>
+              <div style="position:relative; width:80px; height:80px; display:flex; align-items:center; justify-content:center;">
+                <div style="position:absolute; width:100%; height:100%; border-radius:50%; border:4px solid #ffd700; border-top-color: #ffd700; animation:spin 1s linear infinite;"></div>
+                <div style="font-size:30px; animation:blink 1.5s infinite;">🪪</div>
+              </div>
+              <style>
+                @keyframes spin { to { transform: rotate(360deg); } }
+                @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+              </style>
+            `;
+            document.body.appendChild(loader);
 
-          // 🚀 萬能萃取器：把網址裡的 uid 或 id 挖出來
-          let extractedUid = null;
-          if (inputStr.includes("uid=")) {
-              extractedUid = inputStr.split("uid=")[1].split("&")[0];
-          } else if (inputStr.includes("id=")) {
-              extractedUid = inputStr.split("id=")[1].split("&")[0];
+            fetch(`${GAS_URL}?action=verify_card&cardId=${encodeURIComponent(finalID)}`)
+              .then(res => res.json())
+              .then(data => {
+                if (data.success) { window.location.href = `dashboard.html?id=${data.uid}`; } 
+                else { alert("❌ 查無此卡！請確認是否拿錯卡片。"); document.body.removeChild(loader); }
+              })
+              .catch(err => { alert("⚠️ 網路異常，無法切換學生。"); document.body.removeChild(loader); });
           }
-
-          // 檢查目前這台裝置有沒有管理員鑰匙
-          const adminAuth = localStorage.getItem('marian_auth');
-
-          if (extractedUid) {
-              // 🌟 狀況 A：這是新版 tap 網址卡，已經內含 UID，直接光速跳轉！
-              if (adminAuth) {
-                  window.location.replace(`/admin.html?id=${extractedUid}`);
-              } else {
-                  window.location.replace(`/dashboard.html?id=${extractedUid}`);
-              }
-          } else {
-              // 🌟 狀況 B：這是舊版純數字卡，需要連線去問 GAS 大腦
-              const loader = document.createElement('div');
-              loader.style = "position:fixed;inset:0; width:100vw; height:100dvh;background:radial-gradient(circle at center, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.98) 100%);z-index:999999;display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;backdrop-filter:blur(15px); -webkit-backdrop-filter:blur(15px); font-family:sans-serif; transition:opacity 0.3s;";
-              loader.innerHTML = `
-                <h2 style="color:#ffd700; font-size: 26px; font-weight: 900; margin: 0 0 10px 0; letter-spacing: 2px;">🔄 身分驗證中</h2>
-                <p style="color:#94a3b8; font-size: 14px; margin: 0 0 40px 0;">數位系統資料對接，請稍候...</p>
-                <div style="position:relative; width:80px; height:80px; display:flex; align-items:center; justify-content:center;">
-                  <div style="position:absolute; width:100%; height:100%; border-radius:50%; border:4px solid #ffd700; border-top-color: #ffd700; animation:spin 1s linear infinite;"></div>
-                  <div style="font-size:30px; animation:blink 1.5s infinite;">🪪</div>
-                </div>
-                <style>
-                  @keyframes spin { to { transform: rotate(360deg); } }
-                  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-                </style>
-              `;
-              document.body.appendChild(loader);
-
-              fetch(`${GAS_URL}?action=verify_card&cardId=${encodeURIComponent(inputStr)}`)
-                .then(res => res.json())
-                .then(data => {
-                  if (data.success) { 
-                      // 一樣具備智慧分流功能
-                      if (adminAuth) {
-                          window.location.replace(`/admin.html?id=${data.uid}`);
-                      } else {
-                          window.location.replace(`/dashboard.html?id=${data.uid}`);
-                      }
-                  } 
-                  else { 
-                      alert("❌ 查無此卡！請確認是否拿錯卡片。"); 
-                      document.body.removeChild(loader); 
-                  }
-                })
-                .catch(err => { 
-                    alert("⚠️ 網路異常，無法切換學生。"); 
-                    document.body.removeChild(loader); 
-                });
-          }
+          rawBuffer = ""; focusHunter.value = "";
         }
       });
     })();
