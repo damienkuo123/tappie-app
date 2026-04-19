@@ -35,9 +35,17 @@
     const urlParams = new URLSearchParams(window.location.search);
     const uid = urlParams.get('uid'); 
 
+    // 🚀 核心大絕招：去系統記憶區檢查，這台手機有沒有登入過管理員？
+    const adminAuth = localStorage.getItem('marian_auth');
+
     if (uid) {
-      // 🚀 SaaS 模式：不再切割！把完整的 TP01-S001 直接往後傳
-      window.location.href = `/dashboard.html?id=${uid}`;
+      if (adminAuth) {
+          // 👨‍🏫 如果有鑰匙，代表是老師的手機感應的，瞬間帶回中控台加扣分！
+          window.location.replace(`/admin.html?id=${uid}`);
+      } else {
+          // 🧑‍🎓 如果沒鑰匙，代表是家長/學生的手機感應的，帶去前台主頁！
+          window.location.replace(`/dashboard.html?id=${uid}`);
+      }
     } else {
       document.body.innerHTML = "<h2>❌ 無效的卡片，請洽詢櫃檯老師。</h2>";
     }
