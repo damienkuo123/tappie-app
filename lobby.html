@@ -1585,23 +1585,12 @@
     }
 
     // =======================================================
-    // 🚀 升級 2：靜置 3 分鐘自動登出回首頁 (Portal)
-    // =======================================================
-    let idleTimer;
-    const resetIdleTimer = () => {
-      clearTimeout(idleTimer);
-      idleTimer = setTimeout(() => {
-        window.location.href = "index.html"; 
-      }, 180000); 
-    };
-    document.addEventListener('touchstart', resetIdleTimer);
-    document.addEventListener('mousedown', resetIdleTimer);
-    resetIdleTimer();
-
-    // =======================================================
-    // 🚀 升級 3：瑪麗安「無痕換人攔截器」 
+    // 🚀 升級 3：Tappie「無痕換人攔截器」：SaaS 萬能網址萃取版
     // =======================================================
     (function() {
+      let rawBuffer = ""; let lastPress = Date.now();
+      
+      // 動態建立無痕掃描輸入框，100% 確保不干擾正常操作
       const focusHunter = document.createElement('input');
       focusHunter.type = "text";
       focusHunter.style.position = "fixed";
@@ -1611,66 +1600,91 @@
 
       setInterval(() => { 
         const active = document.activeElement;
-        if (active.tagName !== 'INPUT' && active.tagName !== 'TEXTAREA') { 
+        // 如果畫面上有彈窗或輸入框，不要搶 Focus
+        if (active.tagName !== 'INPUT' && active.tagName !== 'TEXTAREA' && !document.querySelector('.modal')) { 
           focusHunter.focus(); 
         }
       }, 1000);
 
-      let scanTimer;
-      
       focusHunter.addEventListener('keydown', function(e) {
         if (e.key === 'Enter') {
-          clearTimeout(scanTimer);
-          const finalID = focusHunter.value.trim();
-          if (finalID.length >= 6) verifyCardForLobby(finalID);
+            e.preventDefault(); // 🚀 防護：防止瀏覽器以為你要跳轉網址
+        }
+
+        const now = Date.now();
+        // 讀卡機極快，超過 100ms 視為手動干擾，清空
+        if (now - lastPress > 100 && e.key !== 'Enter') rawBuffer = ""; 
+        lastPress = now;
+
+        if (e.key.length === 1) rawBuffer += e.key;
+
+        // 🚀 核心修復：拔除長度限制，全權交給 Enter 鍵來結算！
+        if (e.key === 'Enter') {
+          let inputStr = rawBuffer.trim();
+          rawBuffer = ""; // 瞬間清空
           focusHunter.value = "";
+          
+          if (inputStr.length < 4) return;
+
+          // 🚀 萬能萃取器：把網址裡的 uid 或 id 挖出來
+          let extractedUid = null;
+          if (inputStr.includes("uid=")) {
+              extractedUid = inputStr.split("uid=")[1].split("&")[0];
+          } else if (inputStr.includes("id=")) {
+              extractedUid = inputStr.split("id=")[1].split("&")[0];
+          }
+
+          const adminAuth = localStorage.getItem('tappie_admin_key'); // 讀取新鑰匙
+
+          if (extractedUid) {
+              // 🌟 狀況 A：這是新版 tap 網址卡，已經內含 UID，直接光速跳轉！
+              if (adminAuth) {
+                  window.location.replace(`admin.html?id=${extractedUid}`);
+              } else {
+                  window.location.href = `dashboard.html?id=${extractedUid}`;
+              }
+          } else {
+              // 🌟 狀況 B：這是舊版純數字卡，需要連線去問 GAS 大腦
+              const loader = document.createElement('div');
+              // 保持 Lobby 的暗黑風格 Loading
+              loader.style = "position:fixed;inset: 0; width: 100vw; height: 100dvh;background:radial-gradient(circle at center, rgba(10, 15, 25, 0.95) 0%, rgba(5, 9, 15, 0.98) 100%);z-index:999999;display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;backdrop-filter:blur(25px); -webkit-backdrop-filter:blur(25px); font-family:sans-serif; transition:opacity 0.3s;";
+              loader.id = "swap-loader";
+              loader.innerHTML = `
+                <h2 style="color:#ffd700; font-size: 26px; font-weight: 900; margin: 0 0 10px 0; letter-spacing: 2px;">🔄 身分驗證中</h2>
+                <p style="color:#a4b0be; font-size: 14px; margin: 0 0 40px 0;">數位系統資料對接，請稍候...</p>
+                <div style="position:relative; width:80px; height:80px; display:flex; align-items:center; justify-content:center;">
+                  <div style="position:absolute; width:100%; height:100%; border-radius:50%; border:4px solid #ffd700; border-top-color: transparent; animation:spin 1s linear infinite;"></div>
+                  <div style="font-size:30px; animation:blink 1.5s infinite;">🪪</div>
+                </div>
+                <style>
+                  @keyframes spin { to { transform: rotate(360deg); } }
+                  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+                </style>
+              `;
+              document.body.appendChild(loader);
+
+              fetch(`${GAS_URL}?action=verify_card&cardId=${encodeURIComponent(inputStr)}`)
+                .then(res => res.json())
+                .then(data => {
+                  if (data.success) { 
+                      if (adminAuth) {
+                          window.location.replace(`admin.html?id=${data.uid}`);
+                      } else {
+                          window.location.href = `dashboard.html?id=${data.uid}`;
+                      }
+                  } 
+                  else { 
+                      alert("❌ 查無此卡！請確認是否拿錯卡片。"); 
+                      document.body.removeChild(loader); 
+                  }
+                })
+                .catch(err => { 
+                    alert("⚠️ 網路異常，無法切換學生。"); 
+                    document.body.removeChild(loader); 
+                });
+          }
         }
       });
-
-      focusHunter.addEventListener('input', function() {
-        clearTimeout(scanTimer);
-        scanTimer = setTimeout(() => {
-          const finalID = focusHunter.value.trim();
-          if (finalID.length >= 6) {
-            verifyCardForLobby(finalID);
-            focusHunter.value = "";
-          }
-        }, 200);
-      });
-
-      function verifyCardForLobby(cardId) {
-        const loader = document.createElement('div');
-        loader.style = "position:fixed;inset: 0; width: 100vw; height: 100dvh;background:radial-gradient(circle at center, rgba(10, 15, 25, 0.95) 0%, rgba(5, 9, 15, 0.98) 100%);z-index:999999;display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;backdrop-filter:blur(25px); -webkit-backdrop-filter:blur(25px); font-family:sans-serif; transition:opacity 0.3s;";
-        loader.id = "swap-loader";
-        
-        loader.innerHTML = `
-          <h2 style="color:#ffd700; font-size: 26px; font-weight: 900; margin: 0 0 10px 0; letter-spacing: 2px;">🔄 身分驗證中</h2>
-          <p style="color:#a4b0be; font-size: 14px; margin: 0 0 40px 0;">數位系統資料對接，請稍候...</p>
-          <div style="position:relative; width:80px; height:80px; display:flex; align-items:center; justify-content:center;">
-            <div style="position:absolute; width:100%; height:100%; border-radius:50%; border:4px solid #ffd700; border-top-color: transparent; animation:spin 1s linear infinite;"></div>
-            <div style="font-size:30px; animation:blink 1.5s infinite;">🪪</div>
-          </div>
-          <style>
-            @keyframes spin { to { transform: rotate(360deg); } }
-            @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-          </style>
-        `;
-        document.body.appendChild(loader);
-
-        fetch(`${GAS_URL}?action=verify_card&cardId=${encodeURIComponent(cardId)}`)
-          .then(res => res.json())
-          .then(data => {
-            if (data.success) {
-               window.location.href = `dashboard.html?id=${data.uid}`;
-            } else {
-               alert("❌ 查無此卡！");
-               document.body.removeChild(loader);
-            }
-          })
-          .catch(err => {
-             document.body.removeChild(loader);
-          });
-      }
     })();
     
   </script>
