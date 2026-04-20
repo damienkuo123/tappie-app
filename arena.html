@@ -2178,6 +2178,45 @@
     document.getElementById('status').innerText = "按住錄音，放開打分";
     document.getElementById('status').style.color = "#636e72"; 
   }
+
+  // =======================================================
+  // 🎤 智能音量偵測引擎 (太小聲直接擋截)
+  // =======================================================
+  const MIN_VOLUME_THRESHOLD = 30; // 🚀 音量門檻 (0~255)，你可以依據現場平板收音狀況上下調整
+
+  function startVolumeMonitor() {
+      maxVolume = 0;
+      try {
+          if (!analyser && globalMicStream && sysAudioCtx) {
+              analyser = sysAudioCtx.createAnalyser();
+              analyser.fftSize = 256;
+              dataArray = new Uint8Array(analyser.frequencyBinCount);
+              source = sysAudioCtx.createMediaStreamSource(globalMicStream);
+              source.connect(analyser);
+          }
+          if (!analyser) return;
+
+          if (gradingInterval) clearInterval(gradingInterval);
+          // 每 50 毫秒採樣一次，找出整段錄音中的「最高峰值」
+          gradingInterval = setInterval(() => {
+              analyser.getByteFrequencyData(dataArray);
+              let peak = 0;
+              for (let i = 0; i < dataArray.length; i++) {
+                  if (dataArray[i] > peak) peak = dataArray[i];
+              }
+              if (peak > maxVolume) maxVolume = peak;
+          }, 50); 
+      } catch(e) { console.log("音量偵測初始化略過"); }
+  }
+
+  function stopVolumeMonitor() {
+      if (gradingInterval) {
+          clearInterval(gradingInterval);
+          gradingInterval = null;
+      }
+      console.log("🎤 最終採樣最高音量：", maxVolume);
+      return maxVolume; // 回傳這段錄音的最高音量
+  }
   
   let isGrading = false; 
   let tooQuietFlag = false; 
@@ -2206,6 +2245,7 @@
             return;
         }
 
+        startVolumeMonitor(); // 🚀 開始監聽音量
         practiceRecorder = new MediaRecorder(globalMicStream);
         practiceChunks = [];
         practiceRecorder.ondataavailable = ev => { if(ev.data.size > 0) practiceChunks.push(ev.data); };
@@ -2254,14 +2294,23 @@
 
         practiceRecorder.onstop = async () => {
             const rawBlob = new Blob(practiceChunks); 
-            
+            let peakVol = stopVolumeMonitor(); // 🚀 停止監聽並取得最高音量
+
             if (practiceChunks.length === 0 || rawBlob.size < 500) {
-                document.getElementById('status').innerText = "🚨 錄音太短，請按住重唸";
+                document.getElementById('status').innerText = "🚨 錄音太短，請長按";
                 document.getElementById('status').style.color = "#e74c3c";
-                renderWord(); // 🚀 發生錯誤也立刻一鍵恢復
+                renderWord(); 
                 return;
             }
-            
+
+            // 🚀 擋截點：太小聲了！(不送 Azure，直接退回重唸)
+            if (peakVol < MIN_VOLUME_THRESHOLD) {
+                document.getElementById('status').innerText = "🤫 太小聲嘍！再大聲一點試試～";
+                document.getElementById('status').style.color = "#e74c3c";
+                renderWord(); 
+                return;
+            }
+
             try {
                 const wavFile = await createWavFileFromBlob(rawBlob);
                 document.getElementById('status').innerText = "🟢 傳送至聲學引擎...";
@@ -2648,6 +2697,7 @@
             return;
         }
 
+        startVolumeMonitor(); // 🚀 開始監聽音量
         battleRecorder = new MediaRecorder(globalMicStream);
         battleChunks = [];
         battleRecorder.ondataavailable = ev => { if (ev.data.size > 0) battleChunks.push(ev.data); };
@@ -2688,15 +2738,26 @@
 
         battleRecorder.onstop = async () => {
             const rawBlob = new Blob(battleChunks); 
+            let peakVol = stopVolumeMonitor(); // 🚀 停止監聽並取得最高音量
             
-            // 🚀 防呆，短按空包彈直接給 0 分，不當機
             if (battleChunks.length === 0 || rawBlob.size < 500) {
                 document.getElementById('battle-info').innerText = "🚨 錄音太短，挑戰失敗";
                 document.getElementById('battle-info').style.color = "#e74c3c";
                 submitBattleScore(ROOM_ID, 0);
                 return;
             }
-            
+
+            // 🚀 擋截點：太小聲！(退回戰鬥狀態，讓小朋友可以補按一發)
+            if (peakVol < MIN_VOLUME_THRESHOLD) {
+                document.getElementById('battle-info').innerText = "🤫 太小聲嘍！請趕快再按一次重唸！";
+                document.getElementById('battle-info').style.color = "#e74c3c";
+                
+                // 🚀 關鍵解鎖：讓玩家可以立刻重按，不會被系統判定為 0 分！
+                roundSubmitted = false;
+                battleBtn.style.pointerEvents = "auto";
+                return;
+            }
+
             try {
                 const wavFile = await createWavFileFromBlob(rawBlob);
                 document.getElementById('battle-info').innerText = "🟢 傳送至聲學引擎...";
