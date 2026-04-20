@@ -228,13 +228,14 @@
 
             const now = Date.now();
             
-            // 讀卡機輸入極快，超過 100ms 的停頓視為手動干擾，清空重來
-            if (now - lastPressTime > 100 && e.key !== 'Enter') {
+            // 🚀 放寬時間：讀卡機輸入極快，超過 300ms 的停頓才視為手動干擾
+            if (now - lastPressTime > 300 && e.key !== 'Enter') {
                 rawBuffer = "";
             }
             lastPressTime = now;
 
-            if (e.key.length === 1) {
+            // 🚀 防呆：只允許長度為 1 的可見字元進入緩衝區 (過濾掉 Shift, Tab 等系統鍵)
+            if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
                 rawBuffer += e.key;
             }
 
