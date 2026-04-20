@@ -2225,26 +2225,17 @@
   let practiceRecorder;
   let practiceChunks = [];
   let isRecording = false;
-  let stopPracticeTimer = null; // 🚀 新增：防斷觸計時器
 
   if(rb) {
     const startPracticeRecord = (e) => { 
-        // 🚀 防護 1：全螢幕鎖定追蹤手指
-        if(e && e.pointerId) e.target.setPointerCapture(e.pointerId);
-
-        // 🚀 防護 2：如果在 0.5 秒寬限期內又按回來了，取消停止，假裝沒事繼續錄！
-        if(stopPracticeTimer) {
-            clearTimeout(stopPracticeTimer);
-            stopPracticeTimer = null;
-            if(isRecording) return; 
-        }
-
         if(isGrading || isRecording) return;
         e.preventDefault(); 
         isRecording = true;
         
+        // 🚀 觸感回歸：立刻觸發縮小動畫
         rb.classList.add('active'); 
         
+        // 🚀 提早喚醒解碼器 (破解 iOS 凍結)
         if (!sysAudioCtx) sysAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
         if (sysAudioCtx.state === 'suspended') sysAudioCtx.resume();
         
@@ -2254,8 +2245,7 @@
             return;
         }
 
-        startVolumeMonitor(); // 🚀 啟動：開始監聽音量
-
+        startVolumeMonitor(); // 🚀 開始監聽音量
         practiceRecorder = new MediaRecorder(globalMicStream);
         practiceChunks = [];
         practiceRecorder.ondataavailable = ev => { if(ev.data.size > 0) practiceChunks.push(ev.data); };
@@ -2268,133 +2258,127 @@
         document.getElementById('next-btn').disabled = true;
         document.getElementById('back-summary-btn').disabled = true;
         
+        // 🚀 新增：10 秒防呆截斷
         if (practiceTimeout) clearTimeout(practiceTimeout);
         practiceTimeout = setTimeout(() => {
             if (isRecording) {
                 console.log("⏱️ 錄音超時 7 秒，強制截斷！");
-                stopPracticeRecord(e); 
+                stopPracticeRecord(e); // 呼叫下方的停止函數
             }
         }, 7000);
     };
 
     const stopPracticeRecord = (e) => {
         if(!isRecording) return;
-        if(e && e.preventDefault) e.preventDefault(); 
+        if(e && e.preventDefault) e.preventDefault(); // 防呆處理
+        isRecording = false;
+        rb.classList.remove('active'); 
+        
+        if (practiceTimeout) clearTimeout(practiceTimeout); // 🚀 新增：拆除炸彈 
+        
+        if (!practiceRecorder || practiceRecorder.state !== "recording") {
+            document.getElementById('status').innerText = "🚨 錄音異常，請重試";
+            document.getElementById('status').style.color = "#e74c3c";
+            // 🚀 確保解鎖
+            isGrading = false; 
+            document.getElementById('next-btn').disabled = false;
+            if (currentIndex > 0) document.getElementById('prev-btn').disabled = false;
+            return;
+        }
 
-        // 🚀 釋放手指鎖定
-        if(e && e.pointerId) e.target.releasePointerCapture(e.pointerId);
+        isGrading = true;
+        rb.style.pointerEvents = "none"; 
+        rb.style.opacity = "0.5"; 
+        document.getElementById('status').innerText = "⚙️ 封裝音檔中...";
+        document.getElementById('status').style.color = "#f1c40f";
 
-        // 🚀 關鍵修復：在準備進入 0.5 秒寬限期前，立刻把「現在為止的最高音量」先抓下來鎖定！
-        let finalPeakVol = stopVolumeMonitor(); 
+        practiceRecorder.onstop = async () => {
+            const rawBlob = new Blob(practiceChunks); 
+            let peakVol = stopVolumeMonitor(); // 🚀 停止監聽並取得最高音量
 
-        // 🚀 防護 3：給予 0.5 秒的「防斷觸寬限期」
-        stopPracticeTimer = setTimeout(() => {
-            isRecording = false;
-            rb.classList.remove('active'); 
-            
-            if (practiceTimeout) clearTimeout(practiceTimeout); 
-            
-            if (!practiceRecorder || practiceRecorder.state !== "recording") {
-                document.getElementById('status').innerText = "🚨 錄音異常，請重試";
+            if (practiceChunks.length === 0 || rawBlob.size < 500) {
+                document.getElementById('status').innerText = "🚨 錄音太短，請長按";
                 document.getElementById('status').style.color = "#e74c3c";
-                isGrading = false; 
-                document.getElementById('next-btn').disabled = false;
-                if (currentIndex > 0) document.getElementById('prev-btn').disabled = false;
+                renderWord(); 
                 return;
             }
 
-            isGrading = true;
-            rb.style.pointerEvents = "none"; 
-            rb.style.opacity = "0.5"; 
-            document.getElementById('status').innerText = "⚙️ 封裝音檔中...";
-            document.getElementById('status').style.color = "#f1c40f";
+            // 🚀 擋截點：太小聲了！(不送 Azure，直接退回重唸)
+            if (peakVol < MIN_VOLUME_THRESHOLD) {
+                document.getElementById('status').innerText = "🤫 太小聲嘍！再大聲一點試試～";
+                document.getElementById('status').style.color = "#e74c3c";
+                renderWord(); 
+                return;
+            }
 
-            practiceRecorder.onstop = async () => {
-                const rawBlob = new Blob(practiceChunks); 
-                // 🚀 直接使用剛剛我們瞬間截取的真實最高音量
-                let peakVol = finalPeakVol; 
+            try {
+                const wavFile = await createWavFileFromBlob(rawBlob);
+                document.getElementById('status').innerText = "🟢 傳送至聲學引擎...";
+                document.getElementById('status').style.color = "#3498db";
 
-                if (practiceChunks.length === 0 || rawBlob.size < 500) {
-                    document.getElementById('status').innerText = "🚨 錄音太短，請長按";
-                    document.getElementById('status').style.color = "#e74c3c";
-                    renderWord(); 
-                    return;
-                }
+                const targetWord = quizData[currentIndex].en;
+                const speechConfig = SpeechSDK.SpeechConfig.fromAuthorizationToken(azureAuthToken, azureRegionCode);
+                speechConfig.speechRecognitionLanguage = "en-US";
+                
+                const audioConfig = SpeechSDK.AudioConfig.fromWavFileInput(wavFile);
+                const pronConfig = new SpeechSDK.PronunciationAssessmentConfig(
+                    targetWord, SpeechSDK.PronunciationAssessmentGradingSystem.HundredMark,
+                    SpeechSDK.PronunciationAssessmentGranularity.Phoneme, true
+                );
 
-                // 🚀 擋截點：太小聲了！(不送 Azure，直接退回重唸)
-                if (peakVol < MIN_VOLUME_THRESHOLD) {
-                    document.getElementById('status').innerText = "🤫 太小聲嘍！再大聲一點試試～";
-                    document.getElementById('status').style.color = "#e74c3c";
-                    renderWord(); 
-                    return;
-                }
+                const recognizer = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig);
+                pronConfig.applyTo(recognizer);
 
-                try {
-                    const wavFile = await createWavFileFromBlob(rawBlob);
-                    document.getElementById('status').innerText = "🟢 傳送至聲學引擎...";
-                    document.getElementById('status').style.color = "#3498db";
+                recognizer.recognizeOnceAsync(
+                    (result) => {
+                        if (result.reason === SpeechSDK.ResultReason.RecognizedSpeech) {
+                            document.getElementById('status').innerText = "呼叫導師評論中...";
+                            let rawAzureData = SpeechSDK.PronunciationAssessmentResult.fromResult(result).detailResult;
+                            azureReports[currentIndex] = rawAzureData;
 
-                    const targetWord = quizData[currentIndex].en;
-                    const speechConfig = SpeechSDK.SpeechConfig.fromAuthorizationToken(azureAuthToken, azureRegionCode);
-                    speechConfig.speechRecognitionLanguage = "en-US";
-                    
-                    const audioConfig = SpeechSDK.AudioConfig.fromWavFileInput(wavFile);
-                    const pronConfig = new SpeechSDK.PronunciationAssessmentConfig(
-                        targetWord, SpeechSDK.PronunciationAssessmentGradingSystem.HundredMark,
-                        SpeechSDK.PronunciationAssessmentGranularity.Phoneme, true
-                    );
-
-                    const recognizer = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig);
-                    pronConfig.applyTo(recognizer);
-
-                    recognizer.recognizeOnceAsync(
-                        (result) => {
-                            if (result.reason === SpeechSDK.ResultReason.RecognizedSpeech) {
-                                document.getElementById('status').innerText = "呼叫導師評論中...";
-                                let rawAzureData = SpeechSDK.PronunciationAssessmentResult.fromResult(result).detailResult;
-                                azureReports[currentIndex] = rawAzureData;
-
-                                fetch(`${GAS_URL}?action=evaluate_speech_azure&word=${encodeURIComponent(targetWord)}&id=${STUDENT_ID}`, { 
-                                    method: 'POST', body: JSON.stringify(rawAzureData) 
-                                }).then(res => res.json()).then(data => {
-                                    scores[currentIndex] = data.score; 
-                                    if(!window.feedbacks) window.feedbacks = [];
-                                    window.feedbacks[currentIndex] = data.feedback;
-                                    renderWord();
-                                }).catch(() => {
-                                    document.getElementById('status').innerText = "⚠️ 導師寫評語失敗";
-                                    document.getElementById('status').style.color = "#e74c3c";
-                                    renderWord();
-                                });
-                            } else {
-                                document.getElementById('status').innerText = "❌ 發音含糊或無關，請重唸";
+                            fetch(`${GAS_URL}?action=evaluate_speech_azure&word=${encodeURIComponent(targetWord)}&id=${STUDENT_ID}`, { 
+                                method: 'POST', body: JSON.stringify(rawAzureData) 
+                            }).then(res => res.json()).then(data => {
+                                // 存入數據
+                                scores[currentIndex] = data.score; 
+                                if(!window.feedbacks) window.feedbacks = [];
+                                window.feedbacks[currentIndex] = data.feedback;
+                                
+                                // 🚀 關鍵：一鍵恢復所有按鈕觸發與樣式！
+                                renderWord();
+                            }).catch(() => {
+                                document.getElementById('status').innerText = "⚠️ 導師寫評語失敗";
                                 document.getElementById('status').style.color = "#e74c3c";
                                 renderWord();
-                            }
-                            recognizer.close();
-                        },
-                        (err) => {
-                            document.getElementById('status').innerText = "🚨 引擎連線錯誤";
+                            });
+                        } else {
+                            document.getElementById('status').innerText = "❌ 發音含糊或無關，請重唸";
                             document.getElementById('status').style.color = "#e74c3c";
                             renderWord();
-                            recognizer.close();
                         }
-                    );
-                } catch(err) {
-                    console.error(err);
-                    document.getElementById('status').innerText = "🚨 音檔處理失敗，請重試";
-                    document.getElementById('status').style.color = "#e74c3c";
-                    renderWord(); 
-                }
-            };
-            practiceRecorder.stop();
-        }, 500); // 🚀 延遲 500 毫秒才切斷錄音
+                        recognizer.close();
+                    },
+                    (err) => {
+                        document.getElementById('status').innerText = "🚨 引擎連線錯誤";
+                        document.getElementById('status').style.color = "#e74c3c";
+                        renderWord();
+                        recognizer.close();
+                    }
+                );
+            } catch(err) {
+                console.error(err);
+                document.getElementById('status').innerText = "🚨 音檔處理失敗，請重試";
+                document.getElementById('status').style.color = "#e74c3c";
+                renderWord(); 
+            }
+        };
+        practiceRecorder.stop();
     };
 
     rb.onpointerdown = startPracticeRecord;
     rb.onpointerup = stopPracticeRecord;
+    rb.onpointerout = stopPracticeRecord; 
     rb.onpointercancel = stopPracticeRecord;
-    // 🚀 致命拔除：把 rb.onpointerout 刪掉！手指滑出去不會再斷開了！
   }
 
   function showSummary() {
