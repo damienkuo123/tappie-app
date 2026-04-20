@@ -2731,7 +2731,12 @@
                                 });
                             }
 
-                            let penalty = (missingCount * 15) + (brokenCount * 10) + dynamicPhonemePenalty;
+                            // 🚀 動態長度平衡算法：字數越多，單一錯誤的扣分權重越輕
+                            let wordCount = pronResult.detailResult.Words ? pronResult.detailResult.Words.length : 1;
+                            // 加上 Math.max(1, Math.sqrt(wordCount)) 來稀釋懲罰
+                            let scaleFactor = Math.max(1, Math.sqrt(wordCount)); 
+                            
+                            let penalty = ((missingCount * 15) + (brokenCount * 10) + dynamicPhonemePenalty) / scaleFactor;
                             if (fluScore < 50) penalty += 15; else if (fluScore < 75) penalty += 6;
                             
                             let strictScore = Math.max(0, Math.min(100, Math.round(baseScore - penalty)));
