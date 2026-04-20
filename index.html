@@ -216,12 +216,28 @@
         const card = document.getElementById('mainCard');
 
         // =======================================================
-        // 🚀 終極無痕掃描系統 (SaaS 萬能萃取版)
+        // 🚀 終極無痕掃描系統 (SaaS 萬能萃取版 + 焦點霸體鎖定)
         // =======================================================
         let rawBuffer = "";
         let lastPressTime = Date.now();
 
-        document.addEventListener('keydown', function(e) {
+        // 1. 建立隱形吸鐵（專門用來吸讀卡機的輸入）
+        const focusHunter = document.createElement('input');
+        focusHunter.type = "text";
+        focusHunter.style.position = "fixed";
+        focusHunter.style.top = "-500px"; 
+        focusHunter.style.opacity = "0";
+        document.body.appendChild(focusHunter);
+
+        // 2. 每 0.5 秒強制奪回焦點 (避開開發者模擬器)
+        setInterval(() => { 
+            if (document.activeElement !== focusHunter && document.activeElement.id !== 'dev-sim-input') { 
+                focusHunter.focus(); 
+            }
+        }, 500);
+
+        // 3. 綁定監聽器到隱形吸鐵上
+        focusHunter.addEventListener('keydown', function(e) {
             if (e.key === 'Enter') {
                 e.preventDefault(); // 🚀 防止瀏覽器把輸入的網址當真而跳轉
             }
@@ -234,15 +250,16 @@
             }
             lastPressTime = now;
 
-            // 🚀 防呆：只允許長度為 1 的可見字元進入緩衝區 (過濾掉 Shift, Tab 等系統鍵)
+            // 🚀 防呆：只允許長度為 1 的可見字元進入緩衝區
             if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
                 rawBuffer += e.key;
             }
 
-            // 🚀 核心修復：拔除長度限制，全權交由 Enter 鍵來結算，確保長網址完整讀取！
+            // 🚀 全權交給 Enter 鍵來結算
             if (e.key === 'Enter') {
                 let inputStr = rawBuffer.trim();
                 rawBuffer = ""; // 瞬間清空，準備下一發
+                focusHunter.value = ""; // 清空吸鐵內的文字
                 
                 if (inputStr.length < 4) return;
 
@@ -282,6 +299,7 @@
                                 msg.innerText = "❌ 查無此卡，請重試";
                                 msg.style.color = "#e74c3c";
                                 setTimeout(resetUI, 2000);
+                                focusHunter.focus(); // 錯誤後立刻奪回焦點
                             }
                         })
                         .catch(err => {
@@ -289,6 +307,7 @@
                             msg.innerText = "⚠️ 網路異常，請重試";
                             msg.style.color = "#e74c3c";
                             setTimeout(resetUI, 2000);
+                            focusHunter.focus(); // 錯誤後立刻奪回焦點
                         });
                 }
             }
