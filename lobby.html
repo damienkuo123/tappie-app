@@ -1294,6 +1294,12 @@
     }
 
     function joinBattle(roomId) {
+      // 🚀 核心防禦：如果自己身上有房間，先無情炸毀！
+      if (currentRoomId) {
+          fetch(`${GAS_URL}?action=cancel_battle&id=${STUDENT_ID}&roomId=${currentRoomId}`);
+          currentRoomId = null;
+      }
+
       if(lobbyRefreshTimer) clearInterval(lobbyRefreshTimer);
       document.getElementById('pvp-room-list').innerHTML = '<p style="color:var(--gold); text-align:center; font-weight:bold; letter-spacing:2px; margin-top:20px;">🔗 正在建立連線...</p>';
       
@@ -1320,6 +1326,19 @@
 
     function startAiChallenge(level) {
       if(aiTimerInterval) return;
+
+      // 🚀 核心防禦：要去打 Ai 了，炸掉自己開的 1v1 房間！
+      if (currentRoomId) {
+          fetch(`${GAS_URL}?action=cancel_battle&id=${STUDENT_ID}&roomId=${currentRoomId}`);
+          currentRoomId = null;
+          // 順便把 UI 上的按鈕恢復原狀
+          const createBtn = document.getElementById('create-room-btn');
+          if (createBtn) {
+              createBtn.innerText = "開啟 1v1 戰場";
+              createBtn.style.filter = "none"; 
+              createBtn.onclick = () => createBattleRoom();
+          }
+      }
       
       const overlay = document.getElementById('ai-countdown-overlay');
       overlay.style.display = 'flex'; 
@@ -1545,6 +1564,19 @@
 
       if(aiTimerInterval) return;
 
+      // 🚀 核心防禦：要去打 Boss 了，炸掉自己開的 1v1 房間！
+      if (currentRoomId) {
+          fetch(`${GAS_URL}?action=cancel_battle&id=${STUDENT_ID}&roomId=${currentRoomId}`);
+          currentRoomId = null;
+          // 順便把 UI 上的按鈕恢復原狀
+          const createBtn = document.getElementById('create-room-btn');
+          if (createBtn) {
+              createBtn.innerText = "開啟 1v1 戰場";
+              createBtn.style.filter = "none"; 
+              createBtn.onclick = () => createBattleRoom();
+          }
+      }
+
       const overlay = document.getElementById('ai-countdown-overlay');
       overlay.style.display = 'flex';
 
@@ -1640,6 +1672,9 @@
           const adminAuth = localStorage.getItem('tappie_admin_key'); // 讀取新鑰匙
 
           if (extractedUid) {
+              // 🚀 逃走前炸房！
+              if (currentRoomId) fetch(`${GAS_URL}?action=cancel_battle&id=${STUDENT_ID}&roomId=${currentRoomId}`);
+              
               // 🌟 狀況 A：這是新版 tap 網址卡，已經內含 UID，直接光速跳轉！
               if (adminAuth) {
                   window.location.replace(`admin.html?id=${extractedUid}`);
@@ -1670,6 +1705,9 @@
                 .then(res => res.json())
                 .then(data => {
                   if (data.success) { 
+                      // 🚀 逃走前炸房！
+                      if (currentRoomId) fetch(`${GAS_URL}?action=cancel_battle&id=${STUDENT_ID}&roomId=${currentRoomId}`);
+                      
                       if (adminAuth) {
                           window.location.replace(`admin.html?id=${data.uid}`);
                       } else {
