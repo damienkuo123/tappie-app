@@ -1210,7 +1210,8 @@
     // =======================================================
 
     function refreshLobby() {
-      fetch(`${GAS_URL}?action=get_lobby&t=${new Date().getTime()}`)
+      // 🚀 加上 &id=${STUDENT_ID} 讓大腦知道去哪間學校掃描
+      fetch(`${GAS_URL}?action=get_lobby&id=${STUDENT_ID}&t=${new Date().getTime()}`)
         .then(res => res.json())
         .then(data => {
           const container = document.getElementById('pvp-room-list');
@@ -1306,7 +1307,8 @@
 
     function checkRoomStatus() {
       if(!currentRoomId) return;
-      fetch(`${GAS_URL}?action=get_battle_status&roomId=${currentRoomId}&t=${new Date().getTime()}`)
+      // 🚀 加上 &id=${STUDENT_ID}
+      fetch(`${GAS_URL}?action=get_battle_status&id=${STUDENT_ID}&roomId=${currentRoomId}&t=${new Date().getTime()}`)
         .then(res => res.json())
         .then(data => {
           if (data.status === "InGame") {
@@ -1399,8 +1401,8 @@
       const selector = document.getElementById('dynamic-difficulty-selector');
       const levelInput = document.getElementById('pvp-level');
       
-      // 呼叫 GAS 取得有資料的班級代碼 (需確保後端有此 action)
-      fetch(`${GAS_URL}?action=get_available_classes`)
+      // 🚀 加上 &id=${STUDENT_ID}
+      fetch(`${GAS_URL}?action=get_available_classes&id=${STUDENT_ID}`)
         .then(res => res.json())
         .then(data => {
           if (data.status === 'success' && data.classes && data.classes.length > 0) {
@@ -1453,7 +1455,8 @@
       if (overlay) overlay.innerHTML = '<div class="locked-tag" style="background: rgba(0,0,0,0.8); color: #fff; border-color: #fff;">⏳ 檢查活動中...</div>';
       eventBanner.style.pointerEvents = 'none';
 
-      fetch(`${GAS_URL}?action=get_current_event`)
+      // 🚀 加上 &id=${STUDENT_ID}
+      fetch(`${GAS_URL}?action=get_current_event&id=${STUDENT_ID}`)
         .then(res => res.json())
         .then(data => {
           if (data.status === 'success') {
