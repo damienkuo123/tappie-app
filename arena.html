@@ -2735,30 +2735,29 @@
         if (!isBattleRecording) {
             isBattleRecording = true;
             
-            // 🚀 強制切斷所有正在播放的讀音
+            // 強制切斷所有正在播放的讀音
             window.speechSynthesis.cancel();
             if (audioCtx && audioCtx.state === 'running') {
                 audioCtx.suspend().then(() => audioCtx.resume());
             }
             clearInterval(currentLimitTimer);
 
-            // 🚀 一按下錄音，就隱藏那兩個懸浮按鈕
+            // 一按下錄音，就隱藏那兩個懸浮按鈕
             const hintBtn = document.getElementById('hint-btn');
             const skillBtn = document.getElementById('skill-btn');
             if (hintBtn) hintBtn.style.display = 'none';
             if (skillBtn) skillBtn.style.display = 'none';
 
-            // 🚀 觸發按鈕與卡片的充能狀態
+            // 觸發按鈕與卡片的充能狀態
             const myCard = document.getElementById('my-card'); 
             if (isUltimateMode) {
-                battleBtn.classList.add('ult-recording-active'); // 變金色大招錄音狀態
+                battleBtn.classList.add('ult-recording-active'); // 變金色大招狀態
                 if(myCard) myCard.classList.add('ultimate-charging'); 
             } else {
-                battleBtn.classList.add('recording-active'); // 變藍綠色一般錄音狀態
+                battleBtn.classList.add('recording-active'); // 變藍色錄音狀態
                 if(myCard) myCard.classList.add('charging-mana');     
             }
 
-            // 🚀 提早喚醒戰場解碼器
             if (!sysAudioCtx) sysAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
             if (sysAudioCtx.state === 'suspended') sysAudioCtx.resume();
 
@@ -2777,7 +2776,7 @@
             document.getElementById('battle-info').innerText = "🔴 錄音中... (再次點擊結束)";
             document.getElementById('battle-info').style.color = "#eb3b5a";
             
-            // 🚀 10 秒防呆截斷
+            // 10 秒防呆截斷
             if (battleTimeout) clearTimeout(battleTimeout);
             battleTimeout = setTimeout(() => {
                 if (isBattleRecording) {
@@ -2809,7 +2808,7 @@
             battleRecorder.onstop = async () => {
                 const rawBlob = new Blob(battleChunks); 
                 
-                // 🚀 防呆，短按空包彈直接給 0 分
+                // 防呆，短按空包彈直接給 0 分
                 if (battleChunks.length === 0 || rawBlob.size < 500) {
                     document.getElementById('battle-info').innerText = "🚨 錄音太短，挑戰失敗";
                     document.getElementById('battle-info').style.color = "#e74c3c";
@@ -2910,7 +2909,7 @@
         }
     };
 
-    // 🚀 將點擊事件綁定到 toggle 函式上
+    // 🚀 將按鈕改為單擊觸發
     battleBtn.onclick = toggleBattleRecord;
   }
   
@@ -3039,12 +3038,10 @@
     isUltimateMode = false;
     arenaBg.classList.remove('ultimate-mode-bg');
     document.getElementById('target-word').classList.remove('ultimate-word');
-    // 🚀 確保清除所有的錄音與鎖定狀態！
+    // 🚀 確保清除所有的錄音與鎖定狀態，恢復原始模樣！
     const rb = document.getElementById('battle-record-btn');
-    rb.classList.remove('recording-active', 'ult-recording-active', 'processing-locked');
+    rb.classList.remove('ultimate-record-btn', 'recording-active', 'ult-recording-active', 'processing-locked');
     rb.innerHTML = "🎤";
-
-    // 🚀 加上這行：新回合開始，解除麥克風封印！
     rb.style.pointerEvents = "auto";
 
     const skillBtn = document.getElementById('skill-btn');
