@@ -2424,8 +2424,21 @@
         }
     };
 
-    // 🚀 將所有滑鼠、觸控事件統一綁定到 toggle 函式上
-    rb.onclick = togglePracticeRecord;
+    // 🚀 核心修復：騙過系統的「放開」偵測！
+    // 改用 pointerdown 觸發，並在錄音期間攔截所有「放開」的訊號，音樂就不會自己跑出來了
+    rb.onpointerdown = togglePracticeRecord;
+    rb.onclick = null; // 確保不會與舊事件衝突
+    
+    // 🛡️ 訊號攔截結界
+    rb.onpointerup = (e) => { 
+        if (isRecording) { e.stopImmediatePropagation(); e.stopPropagation(); e.preventDefault(); } 
+    };
+    rb.onpointerout = (e) => { 
+        if (isRecording) { e.stopImmediatePropagation(); e.stopPropagation(); e.preventDefault(); } 
+    };
+    rb.onpointercancel = (e) => { 
+        if (isRecording) { e.stopImmediatePropagation(); e.stopPropagation(); e.preventDefault(); } 
+    };
   }
 
   function showSummary() {
@@ -2909,8 +2922,20 @@
         }
     };
 
-    // 🚀 將按鈕改為單擊觸發
-    battleBtn.onclick = toggleBattleRecord;
+    // 🚀 核心修復：戰鬥模式同步騙過系統的「放開」偵測
+    battleBtn.onpointerdown = toggleBattleRecord;
+    battleBtn.onclick = null; // 確保不會與舊事件衝突
+    
+    // 🛡️ 訊號攔截結界
+    battleBtn.onpointerup = (e) => { 
+        if (isBattleRecording) { e.stopImmediatePropagation(); e.stopPropagation(); e.preventDefault(); } 
+    };
+    battleBtn.onpointerout = (e) => { 
+        if (isBattleRecording) { e.stopImmediatePropagation(); e.stopPropagation(); e.preventDefault(); } 
+    };
+    battleBtn.onpointercancel = (e) => { 
+        if (isBattleRecording) { e.stopImmediatePropagation(); e.stopPropagation(); e.preventDefault(); } 
+    };
   }
   
 
