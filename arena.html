@@ -2280,7 +2280,8 @@
             practiceRecorder.start();
 
             document.getElementById('status').innerText = "🔵 錄音中... (再次點擊結束)";
-            document.getElementById('status').style.color = var(--primary-blue);
+            // 🚀 修復點：改用標準的色碼，或正確抓取變數
+            document.getElementById('status').style.color = "#0066cc"; 
             document.getElementById('feedback').innerHTML = ""; 
             document.getElementById('prev-btn').disabled = true;
             document.getElementById('next-btn').disabled = true;
@@ -2325,6 +2326,7 @@
                 if (practiceChunks.length === 0 || rawBlob.size < 500) {
                     document.getElementById('status').innerText = "🚨 錄音太短，請重唸";
                     document.getElementById('status').style.color = "#e74c3c";
+                    rb.classList.remove('processing-locked'); // 🚀 失敗也要解鎖按鈕
                     renderWord(); 
                     return;
                 }
@@ -2361,7 +2363,7 @@
                                     if(!window.feedbacks) window.feedbacks = [];
                                     window.feedbacks[currentIndex] = data.feedback;
                                     
-                                    // 解除灰色裝甲，恢復原始紅色按鈕
+                                    // 🚀 成功！解除灰色裝甲，恢復原始紅色按鈕
                                     rb.classList.remove('processing-locked');
                                     renderWord();
                                 }).catch(() => {
@@ -2399,7 +2401,6 @@
     };
 
     // 🚀 將所有滑鼠、觸控事件統一綁定到 toggle 函式上
-    // 只保留 click 和 touchend 作為觸發點，避免滑動時誤觸
     rb.onclick = togglePracticeRecord;
   }
 
