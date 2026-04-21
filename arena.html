@@ -1343,7 +1343,7 @@
     </div>
 
     <button type="button" id="record-btn" oncontextmenu="return false;" style="margin-top: 0px;">🎤</button>
-    <p id="status" style="font-weight:bold; color:#636e72; margin-top: 5px;">按住錄音，放開打分</p>
+    <p id="status" style="font-weight:bold; color:#636e72; margin-top: 5px;">按下錄音，再按打分</p>
     <div id="feedback" style="font-size: 26px; font-weight: 800; color: var(--marian-green); margin-top: 10px;"></div>
     <div style="margin-top: 30px; display:flex; justify-content:center;">
       <button class="btn btn-nav" id="prev-btn">◀ 上一題</button>
@@ -2277,7 +2277,7 @@
 
     isGrading = false;
     isRecording = false;
-    document.getElementById('status').innerText = "按住錄音，放開打分";
+    document.getElementById('status').innerText = "按住錄音，再按打分";
     document.getElementById('status').style.color = "#636e72"; 
   }
   
