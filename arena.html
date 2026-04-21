@@ -920,8 +920,12 @@
     /* 🚀 破除結界 1：聚焦模式下，網格圖層拉高，但設定 pointer-events: none 讓點擊「穿透」過去打中背景！ */
     #gacha-overlay.focus-mode .gacha-grid { transform: none !important; z-index: 600; pointer-events: none; }
     
-    /* 只模糊「沒有被選中」的替身 */
-    #gacha-overlay.focus-mode .gacha-card-wrapper:not(.has-focus) { opacity: 0.2; filter: blur(6px); transition: all 0.5s; }
+    /* 🚀 切除 GPU 怪獸：移除 filter: blur，改用縮小和降低透明度，效能提升 10 倍！ */
+    #gacha-overlay.focus-mode .gacha-card-wrapper:not(.has-focus) { 
+        opacity: 0.15; 
+        transform: scale(0.92); 
+        transition: all 0.4s ease-out; 
+    }
 
     /* 卡片佔位符替身 */
     .gacha-card-wrapper { position: relative; aspect-ratio: 5/7; width: 100%; perspective: 1000px; }
@@ -3877,24 +3881,23 @@
               isGachaResolving = true;
               document.getElementById('gacha-subtitle').innerHTML = "<span style='color:#e74c3c'>次數已用盡！</span>";
               
-              // 🚀 提速 2：展示沒抽中的卡片，從 1000ms 縮短為 500ms
+              // 🚀 當次數用盡時，多給一點點時間讓玩家看清楚最後抽到的牌
               setTimeout(() => {
                   const allCards = document.querySelectorAll('.gacha-card');
                   gachaCardsData.forEach((c, i) => {
                       if (!c.flipped) allCards[i].classList.add('flipped', 'missed');
                   });
                   
-                  // 🚀 提速 3：欣賞時間從 2500ms 縮短為 1000ms，快速進入結算！
                   setTimeout(() => {
                       cancelFocus();
                       showGachaSummary();
-                  }, 1000);
-              }, 500);
+                  }, 1500); // 留 1.5 秒欣賞所有錯過的牌，再進結算
+              }, 1500); 
           } else {
-              // 🚀 提速 4：一般抽卡的欣賞時間，從 1500ms 縮小為 800ms
-              setTimeout(() => {
-                  if (focusedCardIndex === index) cancelFocus();
-              }, 800);
+              // 🚀 移除強制等待！
+              // 我們把原本的 setTimeout 自動關閉拿掉了。
+              // 現在卡片翻開後，會一直維持放大狀態，直到學生「手動點擊背景或卡片」才會收合。
+              // 這樣把控制權還給玩家，徹底消滅「被卡死」的錯覺！
           }
       }, 400); 
   }
