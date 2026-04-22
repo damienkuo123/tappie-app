@@ -1771,7 +1771,11 @@
       
       // 動態建立無痕掃描輸入框，100% 確保不干擾正常操作
       const focusHunter = document.createElement('input');
-      focusHunter.type = "text";
+      focusHunter.type = "text"; 
+      
+      // 🚀 核心防護：明確告訴平板/手機「絕對不要彈出虛擬小鍵盤」！
+      focusHunter.setAttribute('inputmode', 'none'); 
+
       focusHunter.style.position = "fixed";
       focusHunter.style.top = "-500px"; 
       focusHunter.style.opacity = "0";
