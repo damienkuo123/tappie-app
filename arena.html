@@ -2953,7 +2953,8 @@
       .then(() => { 
         if(waitOpTimer) clearInterval(waitOpTimer); 
         
-        // 🚀 關鍵提速：不等 2 秒了，立刻去查！因為 AI 早就把分數填好了！
+        // 🚀 關鍵提速與防禦：確保不會有殘留的 isChecking 擋住我們第一次的檢查
+        isChecking = false;
         checkBoth(roomId); 
         
         // 萬一對手是真人還沒答題，才繼續每 2 秒輪詢
@@ -3173,9 +3174,10 @@
     }, delayBeforeAttack); 
   }
 
-  // 2. 檢查雙方分數 (修復括號錯誤與整合抽獎系統)
+  // 2. 檢查雙方分數 (修復括號錯誤、整合抽獎系統、並加入嚴格鎖定機制)
   function checkBoth(roomId) {
-    if(isChecking) return; isChecking = true;
+    if(isChecking) return; 
+    isChecking = true;
     // 🚀 補上 &id=${STUDENT_ID}
     fetch(`${GAS_URL}?action=get_battle_status&id=${STUDENT_ID}&roomId=${roomId}&t=${new Date().getTime()}`)
       .then(res => res.json()).then(data => {
@@ -3183,7 +3185,9 @@
         const gS = data.guestScores.filter(s => s !== -1);
 
         if (hS.length > currentBattleRound && gS.length > currentBattleRound) {
+          // 🚀 發現雙方都答題了！立刻把輪詢的計時器殺死，防止重複進入此區塊！
           clearInterval(waitOpTimer);
+          waitOpTimer = null; 
           
           const isMeHost = (normalizeStr(STUDENT_ID) === normalizeStr(data.hostId));
           const rawMyS = isMeHost ? hS[currentBattleRound] : gS[currentBattleRound];
@@ -3280,11 +3284,24 @@
                       currentBattleRound++; 
                       startRoundCountdown(roomId); 
                   }
+                  
+                  // 🚀 極度關鍵的修復：
+                  // 等到這整個回合的動畫與跳轉決定「徹底結束」後，才把鎖解開！
+                  // 這樣就不會因為網路延遲造成下一個輪詢提早進入！
+                  isChecking = false;
+
               }, 600); // 退場動畫時間 0.6 秒
           }, totalWaitTime);
+          
+          // 注意：我們把 isChecking = false 從原本的 Promise 結尾，移到了上面動畫結束的地方！
+        } else {
+            // 🚀 如果對方還沒答題，我們就把鎖解開，讓 2 秒後的下一次輪詢可以進來查
+            isChecking = false;
         }
-        isChecking = false;
-      }).catch(() => isChecking = false);
+      }).catch(() => {
+          // 🚀 網路錯誤時，也必須解開鎖，否則會永遠卡死在等待對手
+          isChecking = false;
+      });
   }
 
   function showImpactOverlay(myNum, opNum, isFinal, myImgUrl, opImgUrl) {
