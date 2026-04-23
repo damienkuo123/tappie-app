@@ -107,7 +107,7 @@ const GlobalAudio = {
         
         let vol = 1.0; 
         switch (soundName) {
-            case 'click': vol = 0.6; break;
+            case 'click': vol = 0.4; break;
             case 'popupOpen': vol = 2.2; break;
             case 'popupClose': vol = 2; break;
             case 'fireNormal': vol = 0.7; break;
