@@ -696,141 +696,149 @@
         badge.classList.remove('hidden');
       }
 
-      // 👑 美語資優生專屬功能 (解鎖 Tab 按鈕)
+      // 👑 權限判定：拔除鎖頭與顯示專屬功能
       if (data.studentType === "美語資優生") {
-        // 🔓 拔掉鎖頭！
+        // 🔓 拔掉底部導航的鎖頭，允許切換！
         document.querySelectorAll('.elite-tab-btn').forEach(btn => btn.classList.remove('locked'));
+        // 顯示專屬的 Email 訂閱區塊
         document.getElementById('newsletter-zone').classList.remove('hidden'); 
-
-
-        // 今日挑戰 Box
-        const unitText = data.currentUnit || "未排定";
-        document.getElementById('current-unit').innerText = unitText;
-        const hwBox = document.getElementById('hw-box');
-        const oralBtn = document.getElementById('oral-btn');
-        const hwIcon = document.getElementById('hw-icon');
-        const hwTitle = document.getElementById('hw-title');
-        const hwScoreInfo = document.getElementById('hw-score-info');
-        
-        if (unitText === "未排定") {
-          hwBox.className = "hw-box"; 
-          hwIcon.innerText = '⏳';
-          hwIcon.style.color = '#7f8c8d';
-          hwIcon.style.background = 'rgba(0,0,0,0.05)';
-          hwTitle.innerText = "今日無任務";
-          hwScoreInfo.classList.add('hidden');
-          
-          oralBtn.className = "btn btn-disabled";
-          oralBtn.innerText = "尚未開放";
-          oralBtn.href = "#";
-          oralBtn.onclick = (e) => e.preventDefault(); 
-          
-        } else if (data.isCompleted) {
-          hwBox.className = "hw-box hw-done";
-          hwIcon.innerText = '✅';
-          hwIcon.style.color = 'var(--marian-green)';
-          hwIcon.style.background = 'rgba(46,204,113,0.12)';
-          hwTitle.innerText = "今日已完成";
-          
-          hwScoreInfo.classList.remove('hidden');
-          document.getElementById('last-score').innerText = data.lastScore;
-          document.getElementById('awarded-points').innerText = data.awardedPoints;
-          
-          oralBtn.className = "btn btn-green";
-          oralBtn.innerText = "再次練習";
-          oralBtn.href = "#";
-          oralBtn.onclick = (e) => { 
-              e.preventDefault(); 
-              checkVoiceLimitAndGo(`arena.html?id=${STUDENT_ID}`, oralBtn, "今日練習已達上限"); 
-          };
-          
-        } else {
-          hwBox.className = "hw-box hw-active";
-          hwIcon.innerText = '🎯';
-          hwIcon.style.color = '#e67e22';
-          hwIcon.style.background = 'linear-gradient(135deg, rgba(255,255,255,1), rgba(255,255,255,0.5))';
-          hwTitle.innerText = "今日口說挑戰";
-          hwScoreInfo.classList.add('hidden');
-          
-          oralBtn.className = "btn btn-yellow";
-          oralBtn.innerText = "開啟挑戰";
-          oralBtn.href = "#";
-          oralBtn.onclick = (e) => { 
-              e.preventDefault(); 
-              checkVoiceLimitAndGo(`arena.html?id=${STUDENT_ID}`, oralBtn, "今日練習已達上限"); 
-          };
-        }
-
-        // 單元任務
-        const count = data.missionCount || 0;
-        document.getElementById('mission-count').innerText = `${count} 次`;
-        
-        let estText = ""; 
-        let estColor = ""; 
-        let barColor = "";
-
-        if (count >= 15) { 
-          estText = "+200 點"; estColor = "var(--marian-green)"; barColor = "linear-gradient(90deg, #f1c40f, #2ecc71)"; 
-        } else if (count >= 10) { 
-          estText = "+100 點"; estColor = "var(--marian-green)"; barColor = "linear-gradient(90deg, #f1c40f, #2ecc71)"; 
-        } else if (count >= 5) { 
-          estText = "安全 (不扣點)"; estColor = "var(--text-main)"; barColor = "linear-gradient(90deg, #f1c40f, #2ecc71)"; 
-        } else {
-          const penalty = -250 + (count * 50);
-          estText = `${penalty} 點`;
-          estColor = "var(--marian-red)";
-          barColor = "#e74c3c";
-        }
-        
-        document.getElementById('mission-est').innerText = estText;
-        document.getElementById('mission-est').style.color = estColor;
-        document.querySelectorAll('.end-date-display').forEach(el => el.innerText = data.endDate);
-        
-        setTimeout(() => {
-          const fill = document.getElementById('mission-fill');
-          fill.style.background = barColor;
-          fill.style.width = `${Math.min(100, (count/15)*100)}%`; 
-          if (count >= 5) document.getElementById('node-1').classList.add('active');
-          if (count >= 10) document.getElementById('node-2').classList.add('active');
-          if (count >= 15) document.getElementById('node-3').classList.add('active');
-        }, 800);
-
-        // 榮譽榜
-        document.getElementById('lb-unit-name').innerText = data.currentUnit;
-        const lbContainer = document.getElementById('lb-container');
-        if (!data.leaderboard || data.leaderboard.length === 0) {
-          lbContainer.innerHTML = `<p style="color:var(--text-sub); font-size: 14px; text-align:center; font-weight:bold;">單元挑戰進行中，快來搶佔榜單！</p>`;
-        } else {
-          let lbHtml = data.leaderboard.map((lb, index) => {
-            let isMe = lb.uid === STUDENT_ID;
-            let rankCrown = index === 0 ? "🥇" : (index === 1 ? "🥈" : (index === 2 ? "🥉" : `${index+1}`));
-            let bonusTag = "";
-            if (index === 0) bonusTag = `<span style="font-size:11px; color:#d35400; background:linear-gradient(135deg, #ffeaa7, #f1c40f); padding:3px 8px; border-radius:8px; margin-left:10px; box-shadow: 0 4px 10px rgba(241,196,15,0.3); border:1px solid rgba(255,255,255,0.8);">+100</span>`;
-            else if (index === 1) bonusTag = `<span style="font-size:11px; color:#576574; background:linear-gradient(135deg, #f5f6fa, #dcdde1); padding:3px 8px; border-radius:8px; margin-left:10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border:1px solid rgba(255,255,255,0.8);">+50</span>`;
-            else if (index === 2) bonusTag = `<span style="font-size:11px; color:#b71540; background:linear-gradient(135deg, #ffda79, #e17055); padding:3px 8px; border-radius:8px; margin-left:10px; box-shadow: 0 4px 10px rgba(225,112,85,0.2); border:1px solid rgba(255,255,255,0.8);">+30</span>`;
-
-            let rowStyle = isMe ? 'background:linear-gradient(135deg, rgba(241,196,15,0.2), rgba(243,156,18,0.1)); border:1px solid rgba(241,196,15,0.6); box-shadow: 0 8px 20px rgba(241,196,15,0.15), inset 0 1px 2px rgba(255,255,255,0.9);' : '';
-
-            return `
-              <div class="lb-row" style="${rowStyle}">
-                <span class="lb-rank">${rankCrown}</span>
-                <span class="lb-name">${lb.name}${bonusTag}</span>
-                <span class="lb-score">${lb.score} 分</span>
-              </div>
-            `;
-          }).join('');
-          lbContainer.innerHTML = lbHtml;
-        }
-
-        // 自由練習區
-        if (data.reviewUnits && data.reviewUnits.length > 0) {
-          document.getElementById('review-grid').innerHTML = data.reviewUnits.map(u => 
-            `<a href="#" onclick="event.preventDefault(); checkVoiceLimitAndGo('arena.html?id=${STUDENT_ID}&unit=${encodeURIComponent(u)}&mode=review', this)" class="btn-review">📖 ${u}</a>`
-          ).join('');
-        }
+      } else {
+        // 🔒 一般生：確保鎖頭存在 (HTML裡已經預設有加了，這裡只是保險)
+        document.querySelectorAll('.elite-tab-btn').forEach(btn => btn.classList.add('locked'));
+        // 隱藏專屬的 Email 訂閱區塊
+        document.getElementById('newsletter-zone').classList.add('hidden');
       }
 
-      // 點數明細
+      // 📊 以下的數據渲染，不管是不是資優生都照常執行！
+      // 這樣當一般生偷偷用開發者工具把 .locked 拿掉時，看到的也是正確的數據，而不是空版。
+
+      // 今日挑戰 Box 渲染
+      const unitText = data.currentUnit || "未排定";
+      document.getElementById('current-unit').innerText = unitText;
+      const hwBox = document.getElementById('hw-box');
+      const oralBtn = document.getElementById('oral-btn');
+      const hwIcon = document.getElementById('hw-icon');
+      const hwTitle = document.getElementById('hw-title');
+      const hwScoreInfo = document.getElementById('hw-score-info');
+      
+      if (unitText === "未排定") {
+        hwBox.className = "hw-box"; 
+        hwIcon.innerText = '⏳';
+        hwIcon.style.color = '#7f8c8d';
+        hwIcon.style.background = 'rgba(0,0,0,0.05)';
+        hwTitle.innerText = "今日無任務";
+        hwScoreInfo.classList.add('hidden');
+        
+        oralBtn.className = "btn btn-disabled";
+        oralBtn.innerText = "尚未開放";
+        oralBtn.href = "#";
+        oralBtn.onclick = (e) => e.preventDefault(); 
+        
+      } else if (data.isCompleted) {
+        hwBox.className = "hw-box hw-done";
+        hwIcon.innerText = '✅';
+        hwIcon.style.color = 'var(--marian-green)';
+        hwIcon.style.background = 'rgba(46,204,113,0.12)';
+        hwTitle.innerText = "今日已完成";
+        
+        hwScoreInfo.classList.remove('hidden');
+        document.getElementById('last-score').innerText = data.lastScore;
+        document.getElementById('awarded-points').innerText = data.awardedPoints;
+        
+        oralBtn.className = "btn btn-green";
+        oralBtn.innerText = "再次練習";
+        oralBtn.href = "#";
+        oralBtn.onclick = (e) => { 
+            e.preventDefault(); 
+            checkVoiceLimitAndGo(`arena.html?id=${STUDENT_ID}`, oralBtn, "今日練習已達上限"); 
+        };
+        
+      } else {
+        hwBox.className = "hw-box hw-active";
+        hwIcon.innerText = '🎯';
+        hwIcon.style.color = '#e67e22';
+        hwIcon.style.background = 'linear-gradient(135deg, rgba(255,255,255,1), rgba(255,255,255,0.5))';
+        hwTitle.innerText = "今日口說挑戰";
+        hwScoreInfo.classList.add('hidden');
+        
+        oralBtn.className = "btn btn-yellow";
+        oralBtn.innerText = "開啟挑戰";
+        oralBtn.href = "#";
+        oralBtn.onclick = (e) => { 
+            e.preventDefault(); 
+            checkVoiceLimitAndGo(`arena.html?id=${STUDENT_ID}`, oralBtn, "今日練習已達上限"); 
+        };
+      }
+
+      // 單元任務進度渲染
+      const count = data.missionCount || 0;
+      document.getElementById('mission-count').innerText = `${count} 次`;
+      
+      let estText = ""; 
+      let estColor = ""; 
+      let barColor = "";
+
+      if (count >= 15) { 
+        estText = "+200 點"; estColor = "var(--marian-green)"; barColor = "linear-gradient(90deg, #f1c40f, #2ecc71)"; 
+      } else if (count >= 10) { 
+        estText = "+100 點"; estColor = "var(--marian-green)"; barColor = "linear-gradient(90deg, #f1c40f, #2ecc71)"; 
+      } else if (count >= 5) { 
+        estText = "安全 (不扣點)"; estColor = "var(--text-main)"; barColor = "linear-gradient(90deg, #f1c40f, #2ecc71)"; 
+      } else {
+        const penalty = -250 + (count * 50);
+        estText = `${penalty} 點`;
+        estColor = "var(--marian-red)";
+        barColor = "#e74c3c";
+      }
+      
+      document.getElementById('mission-est').innerText = estText;
+      document.getElementById('mission-est').style.color = estColor;
+      document.querySelectorAll('.end-date-display').forEach(el => el.innerText = data.endDate);
+      
+      setTimeout(() => {
+        const fill = document.getElementById('mission-fill');
+        fill.style.background = barColor;
+        fill.style.width = `${Math.min(100, (count/15)*100)}%`; 
+        if (count >= 5) document.getElementById('node-1').classList.add('active');
+        if (count >= 10) document.getElementById('node-2').classList.add('active');
+        if (count >= 15) document.getElementById('node-3').classList.add('active');
+      }, 800);
+
+      // 榮譽榜渲染
+      document.getElementById('lb-unit-name').innerText = data.currentUnit;
+      const lbContainer = document.getElementById('lb-container');
+      if (!data.leaderboard || data.leaderboard.length === 0) {
+        lbContainer.innerHTML = `<p style="color:var(--text-sub); font-size: 14px; text-align:center; font-weight:bold;">單元挑戰進行中，快來搶佔榜單！</p>`;
+      } else {
+        let lbHtml = data.leaderboard.map((lb, index) => {
+          let isMe = lb.uid === STUDENT_ID;
+          let rankCrown = index === 0 ? "🥇" : (index === 1 ? "🥈" : (index === 2 ? "🥉" : `${index+1}`));
+          let bonusTag = "";
+          if (index === 0) bonusTag = `<span style="font-size:11px; color:#d35400; background:linear-gradient(135deg, #ffeaa7, #f1c40f); padding:3px 8px; border-radius:8px; margin-left:10px; box-shadow: 0 4px 10px rgba(241,196,15,0.3); border:1px solid rgba(255,255,255,0.8);">+100</span>`;
+          else if (index === 1) bonusTag = `<span style="font-size:11px; color:#576574; background:linear-gradient(135deg, #f5f6fa, #dcdde1); padding:3px 8px; border-radius:8px; margin-left:10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border:1px solid rgba(255,255,255,0.8);">+50</span>`;
+          else if (index === 2) bonusTag = `<span style="font-size:11px; color:#b71540; background:linear-gradient(135deg, #ffda79, #e17055); padding:3px 8px; border-radius:8px; margin-left:10px; box-shadow: 0 4px 10px rgba(225,112,85,0.2); border:1px solid rgba(255,255,255,0.8);">+30</span>`;
+
+          let rowStyle = isMe ? 'background:linear-gradient(135deg, rgba(241,196,15,0.2), rgba(243,156,18,0.1)); border:1px solid rgba(241,196,15,0.6); box-shadow: 0 8px 20px rgba(241,196,15,0.15), inset 0 1px 2px rgba(255,255,255,0.9);' : '';
+
+          return `
+            <div class="lb-row" style="${rowStyle}">
+              <span class="lb-rank">${rankCrown}</span>
+              <span class="lb-name">${lb.name}${bonusTag}</span>
+              <span class="lb-score">${lb.score} 分</span>
+            </div>
+          `;
+        }).join('');
+        lbContainer.innerHTML = lbHtml;
+      }
+
+      // 自由練習區渲染
+      if (data.reviewUnits && data.reviewUnits.length > 0) {
+        document.getElementById('review-grid').innerHTML = data.reviewUnits.map(u => 
+          `<a href="#" onclick="event.preventDefault(); checkVoiceLimitAndGo('arena.html?id=${STUDENT_ID}&unit=${encodeURIComponent(u)}&mode=review', this)" class="btn-review">📖 ${u}</a>`
+        ).join('');
+      }
+
+      // 點數明細 (這原本就在最外面，保持不變)
       const logContainer = document.getElementById('log-container');
       if (!data.recentLogs || data.recentLogs.length === 0) {
         logContainer.innerHTML = `<p style="text-align:center; color:var(--text-sub); font-weight:bold;">尚無紀錄</p>`;
