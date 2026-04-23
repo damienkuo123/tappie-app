@@ -1133,57 +1133,6 @@
         }
       });
     })();
-
-    // 🛠️ 補回：開發者模擬器觸發邏輯
-    document.addEventListener('dblclick', function(e) {
-        const devZone = document.getElementById('dev-scanner-zone');
-        devZone.style.display = devZone.style.display === 'none' ? 'block' : 'none';
-        if (devZone.style.display === 'block') {
-            document.getElementById('dev-sim-input').focus();
-        }
-    });
-
-    document.getElementById('dev-sim-input').addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') {
-            const inputStr = this.value.trim();
-            if (!inputStr) return;
-
-            let extractedUid = null;
-            if (inputStr.includes("uid=")) {
-                extractedUid = inputStr.split("uid=")[1].split("&")[0];
-            } else if (inputStr.includes("id=")) {
-                extractedUid = inputStr.split("id=")[1].split("&")[0];
-            }
-
-            const adminAuth = localStorage.getItem('tappie_admin_key');
-
-            if (extractedUid) {
-                if (adminAuth) {
-                    window.location.replace(`admin.html?id=${extractedUid}`);
-                } else {
-                    window.location.href = `dashboard.html?id=${extractedUid}`;
-                }
-            } else {
-                fetch(`${GAS_URL}?action=verify_card&cardId=${encodeURIComponent(inputStr)}`)
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.success) {
-                            if (adminAuth) {
-                                window.location.replace(`admin.html?id=${data.uid}`);
-                            } else {
-                                window.location.href = `dashboard.html?id=${data.uid}`;
-                            }
-                        } else {
-                            alert("❌ GAS 找不到這張卡！");
-                        }
-                    })
-                    .catch(err => {
-                        alert("⚠️ 連線 GAS 失敗！");
-                    });
-            }
-            this.value = "";
-        }
-    });
     
   </script>
 </body>
