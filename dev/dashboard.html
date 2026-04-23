@@ -2,15 +2,12 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, viewport-fit=cover">
   <title>數位學習中心</title>
 
   <meta name="apple-mobile-web-app-capable" content="yes">
-  
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  
   <meta name="apple-mobile-web-app-title" content="數位學習系統">
-  
   <link rel="apple-touch-icon" href="/assets/app-icon.png">
   
   <link rel="preconnect" href="https://script.google.com" crossorigin>
@@ -27,23 +24,18 @@
       --gold: #f1c40f; 
       
       /* 🌟 VisionOS 頂級空間毛玻璃變數 */
-      --glass-bg: rgba(255, 255, 255, 0.55);
+      --glass-bg: rgba(255, 255, 255, 0.65);
       --glass-border: rgba(255, 255, 255, 0.9);
-      --glass-shadow: 0 25px 45px rgba(0, 0, 0, 0.05), inset 0 1px 1px rgba(255, 255, 255, 1), inset 0 -1px 1px rgba(255, 255, 255, 0.3);
+      --glass-shadow: 0 15px 35px rgba(0, 0, 0, 0.05), inset 0 1px 1px rgba(255, 255, 255, 1), inset 0 -1px 1px rgba(255, 255, 255, 0.3);
       --text-main: #1a252f;
       --text-sub: #7f8c8d;
     }
     
-    html, body { height: 100%; margin: 0; padding: 0; width: 100%; overflow-x: hidden; }
-    
-    body { 
-      font-family: 'PingFang TC', -apple-system, sans-serif; 
-      background-color: #f0f4f8; 
-      display: flex; flex-direction: column; align-items: center; padding: 25px 0 60px 0; text-align: center;
-      position: relative;
-    }
+    /* 🚀 SPA 鎖死底層，只允許內容區滑動 */
+    html, body { height: 100%; margin: 0; padding: 0; width: 100%; overflow: hidden; background-color: #f0f4f8; }
+    body { font-family: 'PingFang TC', -apple-system, sans-serif; display: flex; flex-direction: column; position: relative; }
 
-    /* ✨ 動態環境光暈 (這是讓毛玻璃折射出奢華質感的靈魂！) */
+    /* ✨ 動態環境光暈 */
     .ambient-orb { position: fixed; border-radius: 50%; filter: blur(60px); z-index: -1; opacity: 0.6; animation: floatOrb 15s infinite alternate ease-in-out; pointer-events: none; }
     .orb-1 { width: 350px; height: 350px; background: rgba(0, 102, 204, 0.25); top: -10%; left: -20%; }
     .orb-2 { width: 400px; height: 400px; background: rgba(243, 156, 18, 0.2); bottom: 10%; right: -20%; animation-delay: -5s; }
@@ -55,231 +47,171 @@
       position: fixed; inset: 0; background: rgba(240, 244, 248, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
       z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    .spinner {
-      width: 55px; height: 55px; border: 4px solid rgba(0, 102, 204, 0.1);
-      border-top: 4px solid var(--primary-blue); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 25px;
-    }
+    .spinner { width: 55px; height: 55px; border: 4px solid rgba(0, 102, 204, 0.1); border-top: 4px solid var(--primary-blue); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 25px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    /* =======================================================
+       📱 Tappie 4.0 導航架構 (Top Bar, Viewport, Bottom Nav)
+       ======================================================= */
+    
+    /* 頂部導航列 */
+    #top-bar {
+      position: fixed; top: 0; left: 0; width: 100%; height: max(60px, env(safe-area-inset-top) + 60px);
+      padding-top: env(safe-area-inset-top); box-sizing: border-box;
+      background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.6); z-index: 1000;
+      display: flex; justify-content: space-between; align-items: center; padding-left: 20px; padding-right: 20px;
+    }
+    #top-title { font-size: 20px; font-weight: 900; color: var(--text-main); letter-spacing: 2px; margin: 0; flex: 1; text-align: center; }
+    .top-icon-btn { width: 40px; height: 40px; display: flex; justify-content: center; align-items: center; font-size: 22px; cursor: pointer; background: rgba(255,255,255,0.6); border-radius: 50%; border: 1px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: 0.2s; }
+    .top-icon-btn:active { transform: scale(0.9); }
+
+    /* 中間滑動內容區 */
+    #content-viewport {
+      flex: 1; width: 100%; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch;
+      padding-top: max(80px, env(safe-area-inset-top) + 80px); 
+      padding-bottom: max(100px, env(safe-area-inset-bottom) + 100px); 
+      display: flex; flex-direction: column; align-items: center; opacity: 0; transition: opacity 0.8s;
+    }
+    #content-viewport.show { opacity: 1; }
+    #content-viewport::-webkit-scrollbar { display: none; }
+
+    /* 各分頁容器 */
+    .tab-content { display: none; flex-direction: column; align-items: center; width: 100%; animation: fadeInTab 0.3s ease-out forwards; }
+    .tab-content.active { display: flex; }
+    @keyframes fadeInTab { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* 底部導航列 */
+    #bottom-nav {
+      position: fixed; bottom: 0; left: 0; width: 100%; height: max(80px, env(safe-area-inset-bottom) + 70px);
+      padding-bottom: env(safe-area-inset-bottom); box-sizing: border-box;
+      background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+      border-top: 1px solid rgba(255, 255, 255, 0.8); box-shadow: 0 -10px 20px rgba(0,0,0,0.03);
+      display: flex; justify-content: space-around; align-items: center; z-index: 1000; padding-left: 10px; padding-right: 10px;
+    }
+    .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: #95a5a6; cursor: pointer; transition: 0.3s; flex: 1; padding: 10px 0; -webkit-tap-highlight-color: transparent; }
+    .nav-item .nav-icon { font-size: 24px; transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); filter: grayscale(1); opacity: 0.7; }
+    .nav-item span { font-size: 11px; font-weight: 900; letter-spacing: 1px; transition: 0.3s; }
+    
+    /* 選中狀態 */
+    .nav-item.active { color: var(--primary-blue); }
+    .nav-item.active .nav-icon { transform: scale(1.3) translateY(-4px); filter: grayscale(0); opacity: 1; text-shadow: 0 4px 10px rgba(0, 102, 204, 0.3); }
+    .nav-item.active span { transform: translateY(-2px); color: var(--primary-blue); }
+
+    .elite-tab-btn.hidden { display: none !important; }
 
     /* 🌟 共用頂級白玉毛玻璃面板 */
     .glass-panel {
       background: var(--glass-bg); backdrop-filter: blur(35px) saturate(180%); -webkit-backdrop-filter: blur(35px) saturate(180%);
       border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow);
-      border-radius: 36px; width: 92%; max-width: 420px; box-sizing: border-box; padding: 30px 25px; margin-bottom: 22px;
-      position: relative; overflow: hidden;
+      border-radius: 36px; width: 92%; max-width: 420px; box-sizing: border-box; padding: 30px 25px; margin-bottom: 22px; position: relative; overflow: hidden;
     }
 
-    #main-view { width: 100%; display: flex; flex-direction: column; align-items: center; opacity: 0; transition: opacity 0.8s ease-out, transform 0.8s cubic-bezier(0.16, 1, 0.3, 1); transform: translateY(25px); }
-    #main-view.show { opacity: 1; transform: translateY(0); }
-
     /* =======================================================
-       👤 頂部：個人檔案與點數
+       🎨 各板塊內容樣式 (保留您的完美設計，僅微調邊距)
        ======================================================= */
-    .profile-header { padding-top: 25px; }
-    .title-badge { background: linear-gradient(135deg, #fff, #fffaf0); color: #d35400; padding: 8px 22px; border-radius: 25px; font-size: 14px; font-weight: 900; display: inline-block; margin-bottom: 20px; border: 1px solid rgba(241, 196, 15, 0.6); box-shadow: 0 8px 20px rgba(241, 196, 15, 0.2); letter-spacing: 2px; }
+    .title-badge { background: linear-gradient(135deg, #fff, #fffaf0); color: #d35400; padding: 8px 22px; border-radius: 25px; font-size: 14px; font-weight: 900; display: inline-block; margin-bottom: 10px; border: 1px solid rgba(241, 196, 15, 0.6); box-shadow: 0 8px 20px rgba(241, 196, 15, 0.2); letter-spacing: 2px; }
     .student-name { font-size: 28px; font-weight: 900; color: var(--text-main); margin: 12px 0 0 0; letter-spacing: 3px; text-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-    
-    .points-container { display: flex; flex-direction: column; align-items: center; margin: 20px 0 10px 0; }
-    .points { 
-      font-size: 76px; font-weight: 900; line-height: 1; margin: 0;
-      background: linear-gradient(135deg, #ff4757, #ff6b81, #e74c3c);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      filter: drop-shadow(0 10px 15px rgba(231, 76, 60, 0.25));
-    }
+    .points-container { display: flex; flex-direction: column; align-items: center; margin: 15px 0; }
+    .points { font-size: 76px; font-weight: 900; line-height: 1; margin: 0; background: linear-gradient(135deg, #ff4757, #ff6b81, #e74c3c); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 10px 15px rgba(231, 76, 60, 0.25)); }
     .points-label { font-size: 14px; font-weight: 900; color: var(--text-sub); letter-spacing: 3px; text-transform: uppercase; margin-top: 8px; opacity: 0.8; }
-    
-    .history-btn { font-size: 13px; color: var(--primary-blue); font-weight: 900; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 12px 26px; border-radius: 20px; background: rgba(255, 255, 255, 0.6); margin-top: 20px; transition: 0.3s; border: 1px solid rgba(255, 255, 255, 1); box-shadow: 0 4px 15px rgba(0, 102, 204, 0.08); }
-    .history-btn:active { transform: scale(0.95); box-shadow: 0 2px 5px rgba(0, 102, 204, 0.05); }
+    .history-btn { font-size: 13px; color: var(--primary-blue); font-weight: 900; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 12px 26px; border-radius: 20px; background: rgba(255, 255, 255, 0.6); margin-top: 10px; transition: 0.3s; border: 1px solid rgba(255, 255, 255, 1); box-shadow: 0 4px 15px rgba(0, 102, 204, 0.08); }
+    .history-btn:active { transform: scale(0.95); }
 
-    /* =======================================================
-       🎮 旗艦級模塊 (今日挑戰 & 傳說大廳)
-       ======================================================= */
-    .action-stack { display: flex; flex-direction: column; gap: 20px; width: 92%; max-width: 420px; margin-bottom: 22px; }
-    
-    .hw-box {
-      background: linear-gradient(145deg, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.45) 100%);
-      backdrop-filter: blur(35px) saturate(180%); -webkit-backdrop-filter: blur(35px) saturate(180%);
-      border-radius: 36px; padding: 28px; text-align: left;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,1);
-      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-      display: flex; flex-direction: column; position: relative;
-      margin: 0; width: 100%; box-sizing: border-box; border: 1px solid var(--glass-border);
-    }
+    /* 挑戰模塊 */
+    .hw-box { background: linear-gradient(145deg, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.45) 100%); border-radius: 36px; padding: 28px; text-align: left; box-shadow: 0 20px 40px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,1); transition: transform 0.4s; display: flex; flex-direction: column; position: relative; margin: 0; width: 100%; box-sizing: border-box; border: 1px solid var(--glass-border); }
     .hw-box::after { content: ''; position: absolute; inset: 0; border-radius: 36px; padding: 2px; background: linear-gradient(135deg, var(--marian-yellow), transparent 60%); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none; }
     .hw-done::after { background: linear-gradient(135deg, var(--marian-green), transparent 60%); }
-    
     .card-header-row { display: flex; align-items: center; gap: 20px; margin-bottom: 25px; }
     .icon-wrapper { width: 64px; height: 64px; border-radius: 22px; display: flex; justify-content: center; align-items: center; font-size: 34px; background: linear-gradient(135deg, rgba(255,255,255,1), rgba(255,255,255,0.5)); box-shadow: 0 10px 20px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,1); border: 1px solid rgba(255,255,255,0.8); }
     .text-block { flex: 1; }
     .action-title { font-size: 20px; font-weight: 900; color: var(--text-main); margin-bottom: 6px; letter-spacing: 1px; }
     .action-sub { font-size: 14px; color: var(--text-sub); font-weight: bold; margin: 0; }
-    
     .hw-score-badge { background: rgba(255,255,255,0.7); color: var(--marian-green); padding: 10px 18px; border-radius: 16px; font-size: 14px; font-weight: 900; margin-bottom: 20px; border: 1px solid rgba(255,255,255,1); display: inline-block; width: fit-content; box-shadow: 0 5px 15px rgba(46,204,113,0.15); }
     
-    .action-card-lobby {
-      background: linear-gradient(145deg, rgba(255,255,255,0.75) 0%, rgba(255,255,255,0.35) 100%);
-      backdrop-filter: blur(35px) saturate(180%); -webkit-backdrop-filter: blur(35px) saturate(180%);
-      border-radius: 30px; padding: 22px 28px; text-align: left; cursor: pointer;
-      box-shadow: 0 15px 35px rgba(0,102,204,0.06), inset 0 1px 0 rgba(255,255,255,1); 
-      border: 1px solid var(--glass-border); transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-      display: flex; align-items: center; gap: 20px; position: relative;
-    }
-    .action-card-lobby::after { content: ''; position: absolute; inset: 0; border-radius: 30px; padding: 2px; background: linear-gradient(135deg, var(--primary-blue), transparent 60%); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none; }
-    .action-card-lobby:active { transform: scale(0.96); }
-    .action-arrow { color: white; font-size: 16px; font-weight: 900; background: linear-gradient(135deg, var(--primary-blue), #1e3799); width: 44px; height: 44px; border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 8px 20px rgba(0,102,204,0.3); transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1); border: 2px solid rgba(255,255,255,0.5); }
-    .action-card-lobby:hover .action-arrow { transform: translateX(8px); box-shadow: 0 12px 25px rgba(0,102,204,0.4); }
-
-    /* 獨立的對戰大廳外框樣式 */
-    .lobby-container { width: 92%; max-width: 420px; margin-top: 15px; margin-bottom: 25px; box-sizing: border-box; }
-
-    /* 🚀 核心修復：按鈕加上 box-sizing: border-box 避免溢出 */
-    .btn { 
-      padding: 18px; margin: 0; font-size: 18px; font-weight: 900; border-radius: 20px; border: none; color: white; cursor: pointer; display: block; text-decoration: none; width: 100%; transition: 0.3s; text-align: center; letter-spacing: 3px; position: relative; overflow: hidden;
-      box-sizing: border-box; /* 修復按鈕超出容器的問題 */
-    }
+    .btn { padding: 18px; margin: 0; font-size: 18px; font-weight: 900; border-radius: 20px; border: none; color: white; cursor: pointer; display: block; text-decoration: none; width: 100%; transition: 0.3s; text-align: center; letter-spacing: 3px; position: relative; overflow: hidden; box-sizing: border-box; }
     .btn::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 50%; background: linear-gradient(to bottom, rgba(255,255,255,0.3), transparent); pointer-events: none; }
-    .btn:active { transform: scale(0.97); box-shadow: none !important; }
-    
+    .btn:active { transform: scale(0.97); }
     .btn-yellow { background: linear-gradient(135deg, #f39c12, #e67e22); box-shadow: 0 10px 25px rgba(230, 126, 34, 0.4), inset 0 -4px 0 rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.4); }
     .btn-green { background: linear-gradient(135deg, #2ecc71, #27ae60); box-shadow: 0 10px 25px rgba(46, 204, 113, 0.4), inset 0 -4px 0 rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.4); }
-    .btn-yellow { background: linear-gradient(135deg, #f39c12, #e67e22); box-shadow: 0 10px 25px rgba(230, 126, 34, 0.4), inset 0 -4px 0 rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.4); }
-    .btn-green { background: linear-gradient(135deg, #2ecc71, #27ae60); box-shadow: 0 10px 25px rgba(46, 204, 113, 0.4), inset 0 -4px 0 rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.4); }
-    
-    /* 🚀 新增：未排定時的禁用按鈕樣式 */
-    .btn-disabled { 
-      background: rgba(0, 0, 0, 0.08) !important; 
-      color: #95a5a6 !important; 
-      box-shadow: none !important; 
-      border: 1px solid rgba(0, 0, 0, 0.05) !important; 
-      cursor: not-allowed !important; 
-      pointer-events: none; /* 徹底封印點擊能力 */
-    }
+    .btn-disabled { background: rgba(0, 0, 0, 0.08) !important; color: #95a5a6 !important; box-shadow: none !important; border: 1px solid rgba(0, 0, 0, 0.05) !important; cursor: not-allowed !important; pointer-events: none; }
 
-    /* =======================================================
-       📊 任務模塊
-       ======================================================= */
+    /* 任務模塊 */
     .mission-container { padding: 30px; text-align: left; }
     .section-title { font-size: 18px; font-weight: 900; color: var(--text-main); margin: 0 0 20px 0; display: flex; align-items: center; gap: 10px; letter-spacing: 1px; }
-    
     .mission-status-box { background: rgba(255,255,255,0.5); border-radius: 22px; padding: 20px; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255,255,255,1); margin-bottom: 15px; box-shadow: inset 0 2px 10px rgba(0,0,0,0.02); }
     .status-group { display: flex; flex-direction: column; gap: 6px; }
     .status-label { font-size: 13px; color: var(--text-sub); font-weight: 900; letter-spacing: 1px; }
     .status-value { font-size: 22px; font-weight: 900; display: block; margin-top: 2px; text-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-
     .mission-bar-bg { width: 100%; height: 16px; background: rgba(0,0,0,0.04); border-radius: 8px; position: relative; margin: 45px 0 35px 0; box-shadow: inset 0 4px 8px rgba(0,0,0,0.06), 0 1px 0 rgba(255,255,255,0.8); border: 1px solid rgba(0,0,0,0.05); }
-    /* 🚀 修復後的霓虹液體填充：改用絕對像素位移，徹底解決初次進入無流光的問題 */
     .mission-bar-fill { height: 100%; border-radius: 8px; background: linear-gradient(90deg, #f1c40f, #2ecc71, #00cec9); transition: 1.5s cubic-bezier(0.16, 1, 0.3, 1); width: 0%; box-shadow: 0 4px 15px rgba(46, 204, 113, 0.5), inset 0 2px 0 rgba(255,255,255,0.4); position: relative; overflow: hidden; }
-    
-    .mission-bar-fill::after { 
-      content: ''; position: absolute; top: 0; left: 0; width: 100px; height: 100%; 
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent); 
-      animation: shimmer 2.5s infinite linear; 
-    }
-    
-    @keyframes shimmer { 
-      0% { transform: translateX(-120px); } 
-      100% { transform: translateX(450px); } 
-    }
-    
+    .mission-bar-fill::after { content: ''; position: absolute; top: 0; left: 0; width: 100px; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent); animation: shimmer 2.5s infinite linear; }
+    @keyframes shimmer { 0% { transform: translateX(-120px); } 100% { transform: translateX(450px); } }
     .mission-node { position: absolute; top: 50%; transform: translate(-50%, -50%); width: 16px; height: 16px; background: #fff; border: 4px solid #e0e0e0; border-radius: 50%; z-index: 5; transition: 0.4s; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
     .mission-node.active { border-color: var(--marian-green); box-shadow: 0 0 15px rgba(46,204,113,0.6); }
     .node-icon { position: absolute; top: -35px; left: 50%; transform: translateX(-50%); font-size: 22px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.15)); }
-    
     .reward-bar { display: flex; justify-content: space-between; background: rgba(255,255,255,0.7); border-radius: 18px; padding: 16px 20px; margin-top: 15px; border: 1px solid rgba(255,255,255,1); box-shadow: 0 5px 15px rgba(0,0,0,0.03); }
     .reward-unit { font-size: 13px; font-weight: 900; color: var(--text-sub); display: flex; align-items: center; gap: 6px; letter-spacing: 1px; }
     .reward-val { color: var(--marian-green); font-size: 15px; }
 
-    /* =======================================================
-       🏆 榮譽榜模塊
-       ======================================================= */
-    .leaderboard { margin: 0; background: transparent; border: none; padding: 0; width: 100%; box-shadow: none; }
-    .btn-glory { 
-      width: 100%; background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(255,255,255,0.7)); 
-      color: var(--primary-blue); border: 1px solid rgba(255,255,255,1); 
-      padding: 20px; border-radius: 24px; font-size: 16px; font-weight: 900; 
-      cursor: pointer; transition: 0.3s; box-shadow: var(--glass-shadow); 
-      display: flex; justify-content: center; align-items: center; gap: 10px; 
-      letter-spacing: 2px; box-sizing: border-box; 
-      -webkit-appearance: none; appearance: none; background-clip: padding-box; transform: translateZ(0); 
-    }
+    /* 排行榜 */
+    .leaderboard { padding: 20px 25px; }
+    .btn-glory { width: 100%; background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(255,255,255,0.7)); color: var(--primary-blue); border: 1px solid rgba(255,255,255,1); padding: 20px; border-radius: 24px; font-size: 16px; font-weight: 900; cursor: pointer; transition: 0.3s; box-shadow: var(--glass-shadow); display: flex; justify-content: center; align-items: center; gap: 10px; letter-spacing: 2px; box-sizing: border-box; -webkit-appearance: none; appearance: none; }
     .btn-glory:active { transform: scale(0.97); }
-    
-    .lb-panel { max-height: 0; overflow: hidden; transition: max-height 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s; opacity: 0; margin-top: 0; background: transparent; border: none; }
-    .lb-panel.open { max-height: 800px; opacity: 1; padding: 20px 0 0 0; margin-bottom: 0; }
-    
-    .lb-row { 
-      display: flex; justify-content: space-between; align-items: center; 
-      padding: 16px 20px; font-size: 15px; transition: 0.3s; 
-      background: rgba(255, 255, 255, 0.65); /* 稍微調白一點，彌補拿掉毛玻璃的亮度 */
-      border-radius: 20px; margin-bottom: 12px; 
-      border: 1px solid rgba(255,255,255,0.9); 
-      box-shadow: 0 8px 20px rgba(0,0,0,0.04), inset 0 1px 1px rgba(255,255,255,1); 
-      -webkit-appearance: none; appearance: none; background-clip: padding-box; transform: translateZ(0);
-    }
+    .lb-panel { max-height: 0; overflow: hidden; transition: max-height 0.6s, opacity 0.4s; opacity: 0; margin-top: 0; }
+    .lb-panel.open { max-height: 800px; opacity: 1; padding: 20px 0 0 0; }
+    .lb-row { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; font-size: 15px; background: rgba(255, 255, 255, 0.65); border-radius: 20px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.9); box-shadow: 0 8px 20px rgba(0,0,0,0.04), inset 0 1px 1px rgba(255,255,255,1); }
     .lb-rank { font-weight: 900; width: 35px; text-align: center; font-size: 18px; color: var(--text-sub); }
     .lb-name { flex: 1; text-align: left; padding-left: 15px; font-weight: 900; color: var(--text-main); letter-spacing: 1px; }
     .lb-score { font-weight: 900; color: var(--marian-red); font-size: 16px; }
 
-    /* =======================================================
-       📚 自由練習區
-       ======================================================= */
-    .review-section { padding: 30px; margin: 0 0 25px 0; }
+    /* 自由練習 */
     .review-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 10px; }
     .btn-review { background: rgba(255,255,255,0.8); color: var(--text-main); padding: 16px 5px; border-radius: 20px; text-decoration: none; font-size: 15px; font-weight: 900; text-align: center; border: 1px solid rgba(255,255,255,1); box-shadow: 0 5px 15px rgba(0,0,0,0.04); transition: 0.3s; box-sizing: border-box; }
     .btn-review:active { transform: scale(0.95); background: #fff; }
 
-    /* 登出按鈕 */
-    .btn-logout { background: transparent; color: var(--text-sub); border: 2px solid rgba(0, 0, 0, 0.1); padding: 18px 45px; border-radius: 50px; font-size: 16px; font-weight: 900; cursor: pointer; transition: 0.3s; margin-top: 15px; box-shadow: none; letter-spacing: 2px; }
-    .btn-logout:active { background: rgba(231, 76, 60, 0.1); color: var(--marian-red); border-color: rgba(231, 76, 60, 0.3); transform: scale(0.96); }
+    /* 對戰大廳按鈕 (原 action-card-lobby) */
+    .action-card-lobby { background: linear-gradient(145deg, rgba(255,255,255,0.75) 0%, rgba(255,255,255,0.35) 100%); border-radius: 30px; padding: 22px 28px; text-align: left; cursor: pointer; box-shadow: 0 15px 35px rgba(0,102,204,0.06), inset 0 1px 0 rgba(255,255,255,1); border: 1px solid var(--glass-border); transition: transform 0.4s; display: flex; align-items: center; gap: 20px; position: relative; }
+    .action-card-lobby::after { content: ''; position: absolute; inset: 0; border-radius: 30px; padding: 2px; background: linear-gradient(135deg, var(--primary-blue), transparent 60%); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none; }
+    .action-card-lobby:active { transform: scale(0.96); }
+    .action-arrow { color: white; font-size: 16px; font-weight: 900; background: linear-gradient(135deg, var(--primary-blue), #1e3799); width: 44px; height: 44px; border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 8px 20px rgba(0,102,204,0.3); transition: 0.4s; border: 2px solid rgba(255,255,255,0.5); }
 
-    /* 彈窗 (點數明細) */
-    #logModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); }
-    .modal-content { background: rgba(255,255,255,0.85); backdrop-filter: blur(40px) saturate(200%); -webkit-backdrop-filter: blur(40px) saturate(200%); width: 88%; max-width: 380px; border-radius: 36px; padding: 30px; text-align: left; box-shadow: 0 30px 60px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,1); border: 1px solid rgba(255,255,255,0.6); box-sizing: border-box; }
+    /* 學習中心 - Email 區塊 */
+    .newsletter-zone { padding: 0; text-align: center; border: 1px solid rgba(255, 215, 0, 0.3); box-shadow: 0 15px 35px rgba(241, 196, 15, 0.05), inset 0 1px 0 rgba(255,255,255,1); }
+    .newsletter-zone-header { background: linear-gradient(135deg, rgba(241, 196, 15, 0.15), rgba(243, 156, 18, 0.02)); padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.4); }
+    .email-display-zone { align-items: center; justify-content: space-between; background: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,1); padding: 15px 20px; border-radius: 18px; margin-bottom: 5px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
+    .email-edit-zone { display: flex; gap: 10px; max-width: 400px; margin: 0 auto; }
+    .email-input { flex: 1; padding: 15px 18px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.8); background: rgba(255,255,255,0.5); color: var(--text-main); font-size: 15px; font-weight: bold; outline: none; transition: 0.3s; box-shadow: inset 0 2px 5px rgba(0,0,0,0.02); }
+
+    /* =======================================================
+       ⚙️ 跳窗 (Modal) 共用樣式
+       ======================================================= */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); opacity: 0; transition: opacity 0.3s; }
+    .modal-overlay.show { display: flex; opacity: 1; }
+    .modal-content { background: rgba(255,255,255,0.85); backdrop-filter: blur(40px) saturate(200%); -webkit-backdrop-filter: blur(40px) saturate(200%); width: 88%; max-width: 380px; border-radius: 36px; padding: 30px; text-align: left; box-shadow: 0 30px 60px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,1); border: 1px solid rgba(255,255,255,0.6); box-sizing: border-box; transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    .modal-overlay.show .modal-content { transform: scale(1); }
+    
     .separator { border-top: 1px solid rgba(0,0,0,0.08); margin: 18px auto; width: 100%; }
     .log-row { display: flex; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid rgba(0,0,0,0.05); font-size: 15px; font-weight: 900; color: var(--text-main); }
     .log-plus { color: var(--marian-green); }
     .log-minus { color: var(--marian-red); }
+    
     .btn-close-modal { width: 100%; background: rgba(0,0,0,0.05); color: var(--text-main); border: 1px solid rgba(0,0,0,0.05); padding: 16px; border-radius: 20px; font-size: 16px; font-weight: 900; margin-top: 25px; cursor: pointer; transition: 0.2s; letter-spacing: 2px; box-sizing: border-box; }
     .btn-close-modal:active { background: rgba(0,0,0,0.1); transform: scale(0.96); }
     
+    .btn-logout { width: 100%; background: rgba(231, 76, 60, 0.1); color: var(--marian-red); border: 1px solid rgba(231, 76, 60, 0.3); padding: 16px; border-radius: 20px; font-size: 16px; font-weight: 900; cursor: pointer; transition: 0.3s; margin-top: 15px; letter-spacing: 2px; box-sizing: border-box; }
+    .btn-logout:active { background: rgba(231, 76, 60, 0.2); transform: scale(0.96); }
+
     .hidden { display: none !important; }
 
-    /* =======================================================
-       🚀 平板與大螢幕自動適應 (Responsive Design)
-       ======================================================= */
     @media (min-width: 768px) {
-      /* 在平板上，將最大寬度從 420px 解放至 680px，讓畫面更舒展 */
-      .glass-panel, .action-stack, .lobby-container {
-        max-width: 680px;
-      }
-      
-      /* 自由練習區在平板上空間夠大，可以從一排 2 個變成一排 3 個 */
-      .review-grid {
-        grid-template-columns: repeat(3, 1fr);
-      }
-
-      /* 頂部點數的字體在平板上可以稍微放大，更有氣勢 */
-      .points {
-        font-size: 90px;
-      }
-      /* ===================================================
-         🚀 新增：8. 點數明細彈窗 (Modal) 平板放大
-         =================================================== */
-      .modal-content { 
-        max-width: 550px; /* 從 380px 解放，變寬！ */
-        padding: 40px;    /* 內距加大，看起來更舒服 */
-      }
-      .log-row {
-        font-size: 18px;  /* 紀錄文字放大 */
-        padding: 18px 0;  /* 行距拉開 */
-      }
-      .btn-close-modal {
-        font-size: 18px;
-        padding: 20px;
-        margin-top: 30px;
-      }
+      .glass-panel { max-width: 680px; }
+      .review-grid { grid-template-columns: repeat(3, 1fr); }
+      .points { font-size: 90px; }
+      .modal-content { max-width: 550px; padding: 40px; }
+      .log-row { font-size: 18px; padding: 18px 0; }
+      #content-viewport { padding-top: max(100px, env(safe-area-inset-top) + 100px); }
     }
-
   </style>
 </head>
 
@@ -293,22 +225,28 @@
     <h3 style="color: var(--primary-blue); letter-spacing: 3px; font-weight: 900;">學生資料讀取中...</h3>
   </div>
 
-  <div id="main-view">
-    
-    <div class="glass-panel profile-header">
-      <div id="honor-title" class="title-badge hidden"></div>
-      <img src="/assets/logo.webp" style="width:95px; margin: 0 auto; display: block; filter: drop-shadow(0 8px 15px rgba(0,0,0,0.1));">
-      <h1 id="student-name" class="student-name">-</h1>
-      <div class="points-container">
-        <div id="current-points" class="points">0</div>
-        <div class="points-label">Total Points</div>
-      </div>
-      <span class="history-btn" onclick="toggleLogs(true)">📋 查看點數明細</span>
-    </div>
+  <header id="top-bar">
+    <div style="width: 40px;"></div> <h2 id="top-title">首頁</h2>
+    <div class="top-icon-btn" onclick="toggleSettingsModal(true)">⚙️</div>
+  </header>
 
-    <div id="elite-zone" class="hidden" style="width: 100%; display: flex; flex-direction: column; align-items: center;">
-      
-      <div class="action-stack">
+  <main id="content-viewport">
+    
+    <section id="tab-student" class="tab-content active">
+      <div class="glass-panel profile-header" style="margin-top: 10px;">
+        <div id="honor-title" class="title-badge hidden"></div>
+        <img src="/assets/logo.webp" style="width:95px; margin: 0 auto; display: block; filter: drop-shadow(0 8px 15px rgba(0,0,0,0.1));">
+        <h1 id="student-name" class="student-name">-</h1>
+        <div class="points-container">
+          <div id="current-points" class="points">0</div>
+          <div class="points-label">Total Points</div>
+        </div>
+        <span class="history-btn" onclick="toggleLogs(true)">📋 查看點數明細</span>
+      </div>
+    </section>
+
+    <section id="tab-challenge" class="tab-content">
+      <div class="glass-panel" style="padding: 0; background: transparent; border: none; box-shadow: none;">
         <div id="hw-box" class="hw-box hw-active">
           <div class="card-header-row">
             <div id="hw-icon" class="icon-wrapper" style="color: #e67e22;">🎯</div>
@@ -326,7 +264,6 @@
 
       <div class="glass-panel mission-container">
         <h3 class="section-title">🚩 口說挑戰任務</h3>
-        
         <div class="mission-status-box">
           <div class="status-group">
             <span class="status-label">目前進度</span>
@@ -337,14 +274,12 @@
             <span id="mission-est" class="status-value" style="color: var(--marian-red);">-250 點</span>
           </div>
         </div>
-
         <div class="mission-bar-bg">
           <div id="node-1" class="mission-node" style="left: 33.33%;"><span class="node-icon">⚠️</span></div>
           <div id="node-2" class="mission-node" style="left: 66.66%;"><span class="node-icon">🚩</span></div>
           <div id="node-3" class="mission-node" style="left: 100%;"><span class="node-icon">🔥</span></div>
           <div id="mission-fill" class="mission-bar-fill" style="width: 0%;"></div>
         </div>
-
         <div class="reward-bar">
           <div class="reward-unit">⚠️ <span class="reward-val">免扣點</span></div>
           <div class="reward-unit">🚩 <span class="reward-val">+100</span></div>
@@ -353,27 +288,30 @@
         <div style="font-size:12px; color:var(--text-sub); text-align: center; margin-top:20px; font-weight:900; letter-spacing:1px;">⏳ 結算日：<span class="end-date-display">-</span></div>
       </div>
 
-      <div class="glass-panel leaderboard" style="padding: 20px 25px;">
-        <button id="lb-toggle-btn" class="btn-glory" onclick="toggleLB()">🏆 查看單元榮譽榜</button>
-        <div id="lb-panel" class="lb-panel">
-          <h2 style="color:var(--primary-blue); font-size: 18px; margin: 15px 0 20px 0; text-align:center; font-weight:900; letter-spacing:2px;">
-            <span id="lb-unit-name"></span> 排行榜
-          </h2>
-          
-          <div id="lb-container"></div>
-          
-          <div style="margin-top: 15px; padding: 12px 15px; background: rgba(255,255,255,0.6); border-radius: 16px; border: 1px solid rgba(255,255,255,0.6); display: flex; justify-content: center; gap: 20px; font-size: 13px; font-weight: 900; color: var(--text-sub); box-shadow: inset 0 1px 2px rgba(255,255,255,0.8);">
-            <span>🥇 +100<span style="font-size:10px; margin-left:2px;">PTS</span></span>
-            <span>🥈 +50<span style="font-size:10px; margin-left:2px;">PTS</span></span>
-            <span>🥉 +30<span style="font-size:10px; margin-left:2px;">PTS</span></span>
-          </div>
-
-          <div style="font-size:12px; color:var(--text-sub); text-align: center; margin-top:15px; font-weight:900; letter-spacing:1px;">⏳ 結算日：<span class="end-date-display">-</span></div>
+      <div class="glass-panel leaderboard">
+        <h2 style="color:var(--primary-blue); font-size: 18px; margin: 0 0 20px 0; text-align:center; font-weight:900; letter-spacing:2px;">
+          <span id="lb-unit-name"></span> 排行榜
+        </h2>
+        <div id="lb-container"></div>
+        <div style="margin-top: 15px; padding: 12px 15px; background: rgba(255,255,255,0.6); border-radius: 16px; border: 1px solid rgba(255,255,255,0.6); display: flex; justify-content: center; gap: 20px; font-size: 13px; font-weight: 900; color: var(--text-sub); box-shadow: inset 0 1px 2px rgba(255,255,255,0.8);">
+          <span>🥇 +100<span style="font-size:10px; margin-left:2px;">PTS</span></span>
+          <span>🥈 +50<span style="font-size:10px; margin-left:2px;">PTS</span></span>
+          <span>🥉 +30<span style="font-size:10px; margin-left:2px;">PTS</span></span>
         </div>
+        <div style="font-size:12px; color:var(--text-sub); text-align: center; margin-top:15px; font-weight:900; letter-spacing:1px;">⏳ 結算日：<span class="end-date-display">-</span></div>
       </div>
-      
-      <div class="lobby-container">
-        <div class="action-card-lobby" onclick="goToLobby()">
+    </section>
+
+    <section id="tab-practice" class="tab-content">
+      <div class="glass-panel review-section" style="margin-top: 10px;">
+        <h3 class="section-title">📚 自由練習庫</h3>
+        <div id="review-grid" class="review-grid"></div>
+      </div>
+    </section>
+
+    <section id="tab-arena" class="tab-content">
+      <div class="glass-panel" style="margin-top: 10px; padding: 20px;">
+        <div class="action-card-lobby" onclick="goToLobby()" style="margin: 0;">
           <div class="icon-wrapper" style="color: #0066cc;">⚔️</div>
           <div class="text-block">
             <div class="action-title">對戰大廳</div>
@@ -382,51 +320,83 @@
           <div class="action-arrow">➔</div>
         </div>
       </div>
+    </section>
 
-    </div> 
-
-    <div id="review-zone" class="glass-panel review-section hidden">
-      <h3 class="section-title">📚 自由練習庫</h3>
-      <div id="review-grid" class="review-grid"></div>
-    </div>
-    
-    <div style="margin-top: 15px; padding-bottom: 25px;">
-      <button onclick="logoutToPortal()" class="btn-logout">🚪 登出系統</button>
-    </div>
-
-    <div id="newsletter-zone" class="glass-panel hidden" style="margin-top: 30px; padding: 0; text-align: center; overflow: hidden; border: 1px solid rgba(255, 215, 0, 0.3); box-shadow: 0 15px 35px rgba(241, 196, 15, 0.05), inset 0 1px 0 rgba(255,255,255,1);">
-      <div style="background: linear-gradient(135deg, rgba(241, 196, 15, 0.15), rgba(243, 156, 18, 0.02)); padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.4);">
-        <h3 style="color: var(--gold); margin: 0 0 5px 0; letter-spacing: 2px; font-size: 18px; display: flex; align-items: center; justify-content: center; gap: 8px;">
-          <span>📩</span> 訂閱專屬學習週報
-        </h3>
-        <p style="font-size: 13px; color: var(--text-sub); margin: 0; font-weight: bold;">自動寄送寶貝的發音診斷與專欄文章</p>
-      </div>
+    <section id="tab-learning" class="tab-content">
       
-      <div style="padding: 25px 20px;">
-        <div id="email-display-zone" style="display: none; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,1); padding: 15px 20px; border-radius: 18px; margin-bottom: 5px; box-shadow: 0 4px 15px rgba(0,0,0,0.02);">
-          <div style="text-align: left;">
-            <div style="font-size: 12px; color: var(--primary-blue); font-weight: 900; margin-bottom: 2px; letter-spacing: 1px;">目前綁定信箱</div>
-            <div id="parent-email-text" style="font-size: 16px; color: var(--text-main); font-weight: 900; letter-spacing: 1px;"></div>
-          </div>
-          <button onclick="toggleEmailEdit()" style="background: rgba(0, 102, 204, 0.1); color: var(--primary-blue); border: none; padding: 10px 16px; border-radius: 12px; font-weight: 900; font-size: 14px; cursor: pointer; transition: 0.2s;">✏️ 編輯</button>
-        </div>
+      <div class="glass-panel" style="margin-top: 10px; text-align: center;">
+        <div style="font-size: 45px; margin-bottom: 10px; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.1));">📊</div>
+        <h3 style="color: var(--primary-blue); font-size: 22px; font-weight: 900; margin: 0 0 8px 0; letter-spacing: 2px;">發音診斷中心</h3>
+        <p style="color: var(--text-sub); font-size: 14px; font-weight: bold; margin: 0 0 25px 0;">透視寶貝的發音肌肉與流暢度指標</p>
+        <button class="btn btn-green" onclick="alert('診斷中心建置中，敬請期待！')" style="padding: 15px; font-size: 16px;">進入深度診斷</button>
+      </div>
 
-        <div id="email-edit-zone" style="display: flex; gap: 10px; max-width: 400px; margin: 0 auto;">
-          <input type="email" id="parent-email-input" placeholder="請輸入家長 Email" 
-                 style="flex: 1; padding: 15px 18px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.8); background: rgba(255,255,255,0.5); color: var(--text-main); font-size: 15px; font-weight: bold; outline: none; transition: 0.3s; box-shadow: inset 0 2px 5px rgba(0,0,0,0.02);">
-          <button id="email-submit-btn" onclick="subscribeEmail()" 
-                  style="background: linear-gradient(135deg, #00b894, #05c46b); color: white; border: none; padding: 0 22px; border-radius: 16px; font-weight: 900; font-size: 15px; cursor: pointer; box-shadow: 0 6px 15px rgba(0, 184, 148, 0.3); transition: 0.2s; white-space: nowrap;">
-            訂閱
-          </button>
+      <div id="newsletter-zone" class="glass-panel newsletter-zone hidden">
+        <div class="newsletter-zone-header">
+          <h3 style="color: var(--gold); margin: 0 0 5px 0; letter-spacing: 2px; font-size: 18px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <span>📩</span> 訂閱專屬學習週報
+          </h3>
+          <p style="font-size: 13px; color: var(--text-sub); margin: 0; font-weight: bold;">自動寄送寶貝的發音診斷與專欄文章</p>
         </div>
         
-        <div id="email-msg" style="margin-top: 15px; font-size: 14px; font-weight: bold; color: #2ecc71; height: 20px;"></div>
-      </div>
-    </div>
+        <div style="padding: 25px 20px;">
+          <div id="email-display-zone" class="email-display-zone" style="display: none;">
+            <div style="text-align: left;">
+              <div style="font-size: 12px; color: var(--primary-blue); font-weight: 900; margin-bottom: 2px; letter-spacing: 1px;">目前綁定信箱</div>
+              <div id="parent-email-text" style="font-size: 16px; color: var(--text-main); font-weight: 900; letter-spacing: 1px;"></div>
+            </div>
+            <button onclick="toggleEmailEdit()" style="background: rgba(0, 102, 204, 0.1); color: var(--primary-blue); border: none; padding: 10px 16px; border-radius: 12px; font-weight: 900; font-size: 14px; cursor: pointer; transition: 0.2s;">✏️ 編輯</button>
+          </div>
 
+          <div id="email-edit-zone" class="email-edit-zone">
+            <input type="email" id="parent-email-input" placeholder="請輸入家長 Email" class="email-input">
+            <button id="email-submit-btn" onclick="subscribeEmail()" style="background: linear-gradient(135deg, #00b894, #05c46b); color: white; border: none; padding: 0 22px; border-radius: 16px; font-weight: 900; font-size: 15px; cursor: pointer; box-shadow: 0 6px 15px rgba(0, 184, 148, 0.3); transition: 0.2s; white-space: nowrap;">
+              訂閱
+            </button>
+          </div>
+          <div id="email-msg" style="margin-top: 15px; font-size: 14px; font-weight: bold; color: #2ecc71; height: 20px;"></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <nav id="bottom-nav">
+    <div class="nav-item active" onclick="switchTab('student', '首頁', this)">
+      <div class="nav-icon">🧑‍🎓</div>
+      <span>學生</span>
+    </div>
+    <div class="nav-item elite-tab-btn hidden" onclick="switchTab('challenge', '今日挑戰', this)">
+      <div class="nav-icon">🎯</div>
+      <span>挑戰</span>
+    </div>
+    <div class="nav-item elite-tab-btn hidden" onclick="switchTab('practice', '自由練習', this)">
+      <div class="nav-icon">📚</div>
+      <span>練習</span>
+    </div>
+    <div class="nav-item elite-tab-btn hidden" onclick="switchTab('arena', '對戰大廳', this)">
+      <div class="nav-icon">⚔️</div>
+      <span>競技</span>
+    </div>
+    <div class="nav-item elite-tab-btn hidden" onclick="switchTab('learning', '學習中心', this)">
+      <div class="nav-icon">📈</div>
+      <span>學習</span>
+    </div>
+  </nav>
+
+  <div id="settingsModal" class="modal-overlay" onclick="toggleSettingsModal(false)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <h3 style="text-align:center; color:var(--text-main); margin-top:0; font-weight:900; letter-spacing:2px;">⚙️ 系統設定</h3>
+      <div class="separator"></div>
+      
+      <p style="text-align: center; color: var(--text-sub); font-size: 14px; font-weight: bold; margin-bottom: 25px;">更多設定功能開發中...</p>
+
+      <button onclick="logoutToPortal()" class="btn-logout">🚪 登出系統</button>
+      <button class="btn-close-modal" onclick="toggleSettingsModal(false)">關閉</button>
+    </div>
   </div>
 
-  <div id="logModal" onclick="toggleLogs(false)">
+  <div id="logModal" class="modal-overlay" onclick="toggleLogs(false)">
     <div class="modal-content" onclick="event.stopPropagation()">
       <h3 style="text-align:center; color:var(--text-main); margin-top:0; font-weight:900; letter-spacing:2px;">📝 最近點數紀錄</h3>
       <div class="separator"></div>
@@ -441,16 +411,40 @@
     
     const params = new URLSearchParams(window.location.search);
     const STUDENT_ID = params.get('id');
-    let currentParentEmail = ""; // 🚀 儲存目前的 Email
+    let currentParentEmail = ""; 
 
-    // 🚀 智慧導航 (Smart Routing)
+    // 🚀 SPA 分頁切換邏輯
+    function switchTab(tabId, titleText, navElement) {
+      // 1. 更換 Top Title
+      document.getElementById('top-title').innerText = titleText;
+      
+      // 2. 切換 Bottom Nav Active State
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+      navElement.classList.add('active');
+
+      // 3. 切換 Content Viewport 內容
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.getElementById(`tab-${tabId}`).classList.add('active');
+
+      // 4. 滾動回頂部
+      document.getElementById('content-viewport').scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // 🚀 跳窗控制
+    function toggleSettingsModal(show) {
+      const modal = document.getElementById('settingsModal');
+      if (show) { modal.classList.add('show'); } else { modal.classList.remove('show'); }
+    }
+    function toggleLogs(show) { 
+      const modal = document.getElementById('logModal');
+      if (show) { modal.classList.add('show'); } else { modal.classList.remove('show'); }
+    }
+
     const storedAuth = localStorage.getItem('tappie_admin_key');
     if (storedAuth && params.get('view') !== 'true') {
-        // 如果有鑰匙，並且沒有帶 view=true 參數，就把他帶回專屬中控台
         window.location.replace(`admin.html?id=${STUDENT_ID}`);
     }
 
-    // 🚀 初始化：從 GAS 抓取 Dashboard 資料
     window.onload = () => {
       if (!STUDENT_ID) { alert("找不到學生 ID，請重新刷卡！"); logoutToPortal(); return; }
 
@@ -459,18 +453,15 @@
         .then(data => {
           renderDashboard(data);
           
-          // 🎬 電影級開場
           document.getElementById('loading-screen').style.opacity = '0';
           setTimeout(() => {
             document.getElementById('loading-screen').style.display = 'none';
-            document.getElementById('main-view').classList.add('show');
+            document.getElementById('content-viewport').classList.add('show');
           }, 600);
         })
         .catch(err => { alert("連線失敗，請檢查網路狀態！"); console.error(err); });
     };
 
-
-    // 🚀 安全遮蔽 Email (例如: wil***@gmail.com)
     function maskEmail(email) {
       if (!email) return "";
       const parts = email.split('@');
@@ -481,7 +472,6 @@
       return name.substring(0, 3) + "***@" + domain;
     }
 
-    // 🚀 切換到「顯示模式」
     function showEmailDisplay(email) {
       document.getElementById('email-display-zone').style.display = 'flex';
       document.getElementById('email-edit-zone').style.display = 'none';
@@ -489,7 +479,6 @@
       document.getElementById('email-msg').innerText = "";
     }
 
-    // 🚀 切換到「編輯模式」
     function toggleEmailEdit() {
       document.getElementById('email-display-zone').style.display = 'none';
       document.getElementById('email-edit-zone').style.display = 'flex';
@@ -498,22 +487,19 @@
       document.getElementById('parent-email-input').focus();
     }
 
-    // 🚀 核心：發送 Email 訂閱或取消請求
     function subscribeEmail() {
       const emailInput = document.getElementById('parent-email-input');
       let email = emailInput.value.trim();
       const msgEl = document.getElementById('email-msg');
       const btn = document.getElementById('email-submit-btn');
       
-      // 判斷是否為「取消訂閱」動作 (清空並按下確認)
       if (email === "") {
          if (currentParentEmail !== "") {
              if (!confirm("⚠️ 確定要取消訂閱 專屬學習週報 嗎？\n取消後您將不會再收到。")) {
-                 emailInput.value = currentParentEmail; // 恢復原狀
+                 emailInput.value = currentParentEmail; 
                  return;
              }
          } else {
-             // 原本就沒訂閱，還按空字串
              msgEl.style.color = '#e74c3c';
              msgEl.innerText = "⚠️ 請輸入 Email 才能訂閱喔！";
              return;
@@ -560,7 +546,6 @@
       document.getElementById('student-name').innerText = data.studentName;
       document.getElementById('current-points').innerText = data.currentPoints;
 
-      // 🚀 初始化 Email 模塊
       if (data.parentEmail && data.parentEmail.includes('@')) {
           currentParentEmail = data.parentEmail;
           document.getElementById('parent-email-input').value = currentParentEmail;
@@ -577,12 +562,10 @@
         badge.classList.remove('hidden');
       }
 
-      // 👑 美語資優生專屬功能
+      // 👑 美語資優生專屬功能 (解鎖 Tab 按鈕)
       if (data.studentType === "美語資優生") {
-        document.getElementById('elite-zone').classList.remove('hidden');
-        document.getElementById('review-zone').classList.remove('hidden');
-        document.getElementById('newsletter-zone').classList.remove('hidden'); // 🚀 解除隱藏：只有美語資優生看得到週報訂閱
-
+        document.querySelectorAll('.elite-tab-btn').forEach(btn => btn.classList.remove('hidden'));
+        document.getElementById('newsletter-zone').classList.remove('hidden'); 
 
         // 今日挑戰 Box
         const unitText = data.currentUnit || "未排定";
@@ -594,7 +577,6 @@
         const hwScoreInfo = document.getElementById('hw-score-info');
         
         if (unitText === "未排定") {
-          // 🛑 狀態 1：未排定 (灰色休眠模式)
           hwBox.className = "hw-box"; 
           hwIcon.innerText = '⏳';
           hwIcon.style.color = '#7f8c8d';
@@ -608,7 +590,6 @@
           oralBtn.onclick = (e) => e.preventDefault(); 
           
         } else if (data.isCompleted) {
-          // ✅ 狀態 2：已完成 (綠色通關模式)
           hwBox.className = "hw-box hw-done";
           hwIcon.innerText = '✅';
           hwIcon.style.color = 'var(--marian-green)';
@@ -622,14 +603,12 @@
           oralBtn.className = "btn btn-green";
           oralBtn.innerText = "再次練習";
           oralBtn.href = "#";
-          // 🚀 掛上閘門：檢查額度後再進入
           oralBtn.onclick = (e) => { 
               e.preventDefault(); 
               checkVoiceLimitAndGo(`arena.html?id=${STUDENT_ID}`, oralBtn, "今日練習已達上限"); 
           };
           
         } else {
-          // 🎯 狀態 3：未完成 (黃色備戰模式)
           hwBox.className = "hw-box hw-active";
           hwIcon.innerText = '🎯';
           hwIcon.style.color = '#e67e22';
@@ -640,7 +619,6 @@
           oralBtn.className = "btn btn-yellow";
           oralBtn.innerText = "開啟挑戰";
           oralBtn.href = "#";
-          // 🚀 掛上閘門：檢查額度後再進入
           oralBtn.onclick = (e) => { 
               e.preventDefault(); 
               checkVoiceLimitAndGo(`arena.html?id=${STUDENT_ID}`, oralBtn, "今日練習已達上限"); 
@@ -656,23 +634,16 @@
         let barColor = "";
 
         if (count >= 15) { 
-          estText = "+200 點"; 
-          estColor = "var(--marian-green)"; 
-          barColor = "linear-gradient(90deg, #f1c40f, #2ecc71)"; 
+          estText = "+200 點"; estColor = "var(--marian-green)"; barColor = "linear-gradient(90deg, #f1c40f, #2ecc71)"; 
         } else if (count >= 10) { 
-          estText = "+100 點"; 
-          estColor = "var(--marian-green)"; 
-          barColor = "linear-gradient(90deg, #f1c40f, #2ecc71)"; 
+          estText = "+100 點"; estColor = "var(--marian-green)"; barColor = "linear-gradient(90deg, #f1c40f, #2ecc71)"; 
         } else if (count >= 5) { 
-          estText = "安全 (不扣點)"; 
-          estColor = "var(--text-main)"; 
-          barColor = "linear-gradient(90deg, #f1c40f, #2ecc71)"; 
+          estText = "安全 (不扣點)"; estColor = "var(--text-main)"; barColor = "linear-gradient(90deg, #f1c40f, #2ecc71)"; 
         } else {
-          // 🚀 新版動態扣分：每少一次多扣 50 點 (0次: -250, 1次: -200 ... 4次: -50)
           const penalty = -250 + (count * 50);
           estText = `${penalty} 點`;
           estColor = "var(--marian-red)";
-          barColor = "#e74c3c"; // 達標 5 次前，進度條維持警戒的紅色
+          barColor = "#e74c3c";
         }
         
         document.getElementById('mission-est').innerText = estText;
@@ -682,12 +653,9 @@
         setTimeout(() => {
           const fill = document.getElementById('mission-fill');
           fill.style.background = barColor;
-          // 🚀 最大值改為 15，超過 15 次進度條也是 100%
           fill.style.width = `${Math.min(100, (count/15)*100)}%`; 
-          
           if (count >= 5) document.getElementById('node-1').classList.add('active');
           if (count >= 10) document.getElementById('node-2').classList.add('active');
-          // 🚀 第三個節點點亮的條件改為 15
           if (count >= 15) document.getElementById('node-3').classList.add('active');
         }, 800);
 
@@ -700,14 +668,11 @@
           let lbHtml = data.leaderboard.map((lb, index) => {
             let isMe = lb.uid === STUDENT_ID;
             let rankCrown = index === 0 ? "🥇" : (index === 1 ? "🥈" : (index === 2 ? "🥉" : `${index+1}`));
-            
-            // 🚀 重新設計的質感標籤 (金、銀、銅專屬漸層與微反光)
             let bonusTag = "";
             if (index === 0) bonusTag = `<span style="font-size:11px; color:#d35400; background:linear-gradient(135deg, #ffeaa7, #f1c40f); padding:3px 8px; border-radius:8px; margin-left:10px; box-shadow: 0 4px 10px rgba(241,196,15,0.3); border:1px solid rgba(255,255,255,0.8);">+100</span>`;
             else if (index === 1) bonusTag = `<span style="font-size:11px; color:#576574; background:linear-gradient(135deg, #f5f6fa, #dcdde1); padding:3px 8px; border-radius:8px; margin-left:10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border:1px solid rgba(255,255,255,0.8);">+50</span>`;
             else if (index === 2) bonusTag = `<span style="font-size:11px; color:#b71540; background:linear-gradient(135deg, #ffda79, #e17055); padding:3px 8px; border-radius:8px; margin-left:10px; box-shadow: 0 4px 10px rgba(225,112,85,0.2); border:1px solid rgba(255,255,255,0.8);">+30</span>`;
 
-            // 🚀 本人列的高級突顯：保留黃色漸層光暈，並加入白色內陰影
             let rowStyle = isMe ? 'background:linear-gradient(135deg, rgba(241,196,15,0.2), rgba(243,156,18,0.1)); border:1px solid rgba(241,196,15,0.6); box-shadow: 0 8px 20px rgba(241,196,15,0.15), inset 0 1px 2px rgba(255,255,255,0.9);' : '';
 
             return `
@@ -721,7 +686,7 @@
           lbContainer.innerHTML = lbHtml;
         }
 
-        // 自由練習區 (🚀 同樣掛上語音額度閘門！)
+        // 自由練習區
         if (data.reviewUnits && data.reviewUnits.length > 0) {
           document.getElementById('review-grid').innerHTML = data.reviewUnits.map(u => 
             `<a href="#" onclick="event.preventDefault(); checkVoiceLimitAndGo('arena.html?id=${STUDENT_ID}&unit=${encodeURIComponent(u)}&mode=review', this)" class="btn-review">📖 ${u}</a>`
@@ -746,24 +711,6 @@
       }
     }
 
-    function toggleLB() {
-      const panel = document.getElementById('lb-panel');
-      const btn = document.getElementById('lb-toggle-btn');
-      panel.classList.toggle('open');
-      if (panel.classList.contains('open')) {
-        btn.innerHTML = "⬆️ 收起榮譽榜";
-        btn.style.background = "rgba(0,102,204,0.06)";
-        btn.style.color = "var(--text-sub)";
-        btn.style.border = "1px solid rgba(0,0,0,0.05)";
-      } else {
-        btn.innerHTML = "🏆 查看單元榮譽榜";
-        btn.style.background = "linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,255,255,0.6))";
-        btn.style.color = "var(--primary-blue)";
-        btn.style.border = "1px solid rgba(255,255,255,1)";
-      }
-    }
-
-    function toggleLogs(show) { document.getElementById('logModal').style.display = show ? 'flex' : 'none'; }
     function goToLobby() { window.location.href = `lobby.html?id=${STUDENT_ID}`; }
     function logoutToPortal() {
       if (confirm("確定要登出並回到刷卡頁面嗎？")) {
@@ -771,31 +718,24 @@
       }
     }
 
-    // 🚀 新增：語音額度檢測閘門 (Shift-Left Interceptor)
     function checkVoiceLimitAndGo(targetUrl, btnElement, disabledText) {
         const originalText = btnElement.innerText;
-        
         btnElement.innerText = "✨ 傳送中...";
         btnElement.style.pointerEvents = "none";
 
         fetch(`${GAS_URL}?action=get_user_status&id=${STUDENT_ID}`)
             .then(res => res.json())
             .then(status => {
-                // 恢復原本的文字
                 btnElement.innerText = originalText;
                 btnElement.style.pointerEvents = "auto";
-                
-                if (!status.canPlay) { // 這裡的 canPlay 對應後端的 canPlayVoice
+                if (!status.canPlay) { 
                     alert(`⚠️ 今日語音練習已達上限 (${status.count}/${status.limit}次)\n為了保護喉嚨，請明天再來練習吧！`);
-                    
-                    // 如果有指定鎖定文字，就把按鈕徹底變灰封印
                     if (disabledText) {
                         btnElement.className = "btn btn-disabled";
                         btnElement.innerText = disabledText;
                         btnElement.onclick = (e) => e.preventDefault();
                     }
                 } else {
-                    // 額度充足，放行跳轉！
                     window.location.href = targetUrl;
                 }
             })
@@ -806,7 +746,6 @@
             });
     }
 
-    // 🚀 靜置自動登出
     let idleTimer;
     const resetIdleTimer = () => { clearTimeout(idleTimer); idleTimer = setTimeout(() => { window.location.href = "index.html"; }, 180000); };
     document.addEventListener('touchstart', resetIdleTimer); document.addEventListener('mousedown', resetIdleTimer); resetIdleTimer();
@@ -816,14 +755,9 @@
     // =======================================================
     (function() {
       let rawBuffer = ""; let lastPress = Date.now();
-      
-      // 動態建立無痕掃描輸入框，100% 確保不干擾正常操作
       const focusHunter = document.createElement('input');
       focusHunter.type = "text"; 
-      
-      // 🚀 核心防護：明確告訴平板/手機「絕對不要彈出虛擬小鍵盤」！
       focusHunter.setAttribute('inputmode', 'none'); 
-      
       focusHunter.style.position = "fixed";
       focusHunter.style.top = "-500px"; 
       focusHunter.style.opacity = "0";
@@ -831,62 +765,43 @@
 
       setInterval(() => {
         const active = document.activeElement;
-        if (active.tagName !== 'INPUT' && active.tagName !== 'TEXTAREA' && !document.querySelector('.modal')) { 
+        if (active.tagName !== 'INPUT' && active.tagName !== 'TEXTAREA' && !document.querySelector('.modal-overlay.show')) { 
           focusHunter.focus();
         }
       }, 1000);
 
       focusHunter.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault(); // 🚀 防護：防止瀏覽器以為你要跳轉網址
-        }
-
+        if (e.key === 'Enter') e.preventDefault(); 
         const now = Date.now();
         if (now - lastPress > 100 && e.key !== 'Enter') rawBuffer = ""; 
         lastPress = now;
-
         if (e.key.length === 1) rawBuffer += e.key;
 
-        // 🚀 核心修復：拔除 length >= 10 的限制，全權交給 Enter 鍵來結算！
         if (e.key === 'Enter') {
           let inputStr = rawBuffer.trim();
-          rawBuffer = ""; // 瞬間清空
-          focusHunter.value = "";
-          
+          rawBuffer = ""; focusHunter.value = "";
           if (inputStr.length < 4) return;
 
-          // 🚀 萬能萃取器：把網址裡的 uid 挖出來
           let extractedUid = null;
-          if (inputStr.includes("uid=")) {
-              extractedUid = inputStr.split("uid=")[1].split("&")[0];
-          } else if (inputStr.includes("id=")) {
-              extractedUid = inputStr.split("id=")[1].split("&")[0];
-          }
+          if (inputStr.includes("uid=")) extractedUid = inputStr.split("uid=")[1].split("&")[0];
+          else if (inputStr.includes("id=")) extractedUid = inputStr.split("id=")[1].split("&")[0];
 
-          const adminAuth = localStorage.getItem('tappie_admin_key'); // 讀取新鑰匙
+          const adminAuth = localStorage.getItem('tappie_admin_key');
 
           if (extractedUid) {
-              // 🌟 狀況 A：這是新版 tap 網址卡，已經內含 UID，直接光速跳轉！
-              if (adminAuth) {
-                  window.location.replace(`admin.html?id=${extractedUid}`);
-              } else {
-                  window.location.href = `dashboard.html?id=${extractedUid}`;
-              }
+              if (adminAuth) window.location.replace(`admin.html?id=${extractedUid}`);
+              else window.location.href = `dashboard.html?id=${extractedUid}`;
           } else {
-              // 🌟 狀況 B：這是舊版純數字卡，需要連線去問 GAS 大腦
               const loader = document.createElement('div');
               loader.style = "position:fixed;inset:0; width:100vw; height:100dvh;background:radial-gradient(circle at center, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.98) 100%);z-index:999999;display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;backdrop-filter:blur(15px); -webkit-backdrop-filter:blur(15px); font-family:sans-serif; transition:opacity 0.3s;";
               loader.innerHTML = `
                 <h2 style="color:#ffd700; font-size: 26px; font-weight: 900; margin: 0 0 10px 0; letter-spacing: 2px;">🔄 身分驗證中</h2>
                 <p style="color:#94a3b8; font-size: 14px; margin: 0 0 40px 0;">數位系統資料對接，請稍候...</p>
                 <div style="position:relative; width:80px; height:80px; display:flex; align-items:center; justify-content:center;">
-                  <div style="position:absolute; width:100%; height:100%; border-radius:50%; border:4px solid #ffd700; border-top-color: #ffd700; animation:spin 1s linear infinite;"></div>
+                  <div style="position:absolute; width:100%; height:100%; border-radius:50%; border:4px solid #ffd700; border-top-color: transparent; animation:spin 1s linear infinite;"></div>
                   <div style="font-size:30px; animation:blink 1.5s infinite;">🪪</div>
                 </div>
-                <style>
-                  @keyframes spin { to { transform: rotate(360deg); } }
-                  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-                </style>
+                <style> @keyframes spin { to { transform: rotate(360deg); } } @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } } </style>
               `;
               document.body.appendChild(loader);
 
@@ -894,13 +809,9 @@
                 .then(res => res.json())
                 .then(data => {
                   if (data.success) { 
-                      if (adminAuth) {
-                          window.location.replace(`admin.html?id=${data.uid}`);
-                      } else {
-                          window.location.href = `dashboard.html?id=${data.uid}`;
-                      }
-                  } 
-                  else { 
+                      if (adminAuth) window.location.replace(`admin.html?id=${data.uid}`);
+                      else window.location.href = `dashboard.html?id=${data.uid}`;
+                  } else { 
                       alert("❌ 查無此卡！請確認是否拿錯卡片。"); 
                       document.body.removeChild(loader); 
                   }
@@ -913,6 +824,7 @@
         }
       });
     })();
+    
   </script>
 </body>
 </html>
