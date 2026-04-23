@@ -110,8 +110,8 @@
     /* =======================================================
        🎨 各板塊內容樣式 (保留您的完美設計，僅微調邊距)
        ======================================================= */
-    /* 🚀 確保學生卡片內部完全置中 */
-    .profile-header { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+    /* 🚀 確保學生卡片內部完全置中，並提高層級防止被 top-bar 隱形遮擋 */
+    .profile-header { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; position: relative; z-index: 10; }
     .title-badge { background: linear-gradient(135deg, #fff, #fffaf0); color: #d35400; padding: 8px 22px; border-radius: 25px; font-size: 14px; font-weight: 900; display: inline-block; margin-bottom: 10px; border: 1px solid rgba(241, 196, 15, 0.6); box-shadow: 0 8px 20px rgba(241, 196, 15, 0.2); letter-spacing: 2px; }
     .student-name { font-size: 28px; font-weight: 900; color: var(--text-main); margin: 12px 0 0 0; letter-spacing: 3px; text-shadow: 0 2px 4px rgba(0,0,0,0.05); }
     .points-container { display: flex; flex-direction: column; align-items: center; margin: 15px 0; }
