@@ -14,6 +14,8 @@
   <link rel="dns-prefetch" href="https://script.google.com">
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <script src="global-audio.js"></script>
+  <script src="phonics-config.js"></script>
+  <script src="phoneme-tips.js"></script>
 
   <style>
     :root { 
@@ -348,6 +350,30 @@
 
         <div id="diag-content" style="display: none; padding: 20px 25px; flex-direction: column; gap: 30px;">
           
+          <div style="display: flex; gap: 10px; justify-content: space-between;">
+            <div style="flex: 1; background: rgba(255,255,255,0.7); border: 1px solid rgba(255,255,255,0.9); border-radius: 16px; padding: 15px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.03);">
+              <div style="font-size: 11px; font-weight: 900; color: var(--text-sub); letter-spacing: 1px; margin-bottom: 4px;">本單元精熟度</div>
+              <div style="font-size: 24px; font-weight: 900; color: var(--primary-blue);"><span id="diag-mastery-val">0</span>%</div>
+              <div style="width: 100%; height: 6px; background: rgba(0,0,0,0.05); border-radius: 3px; margin-top: 8px; overflow: hidden;">
+                <div id="diag-mastery-bar" style="height: 100%; background: linear-gradient(90deg, #3498db, #2ecc71); width: 0%; border-radius: 3px;"></div>
+              </div>
+            </div>
+            
+            <div style="flex: 1; background: rgba(255,255,255,0.7); border: 1px solid rgba(255,255,255,0.9); border-radius: 16px; padding: 15px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.03);">
+              <div style="font-size: 11px; font-weight: 900; color: var(--text-sub); letter-spacing: 1px; margin-bottom: 4px;">綜合流暢 PR 值</div>
+              <div style="font-size: 24px; font-weight: 900; color: var(--gold); display: flex; align-items: center; justify-content: center; gap: 4px;">
+                🏅 <span id="diag-pr-val">0</span>
+              </div>
+              <div style="font-size: 11px; color: #a4b0be; font-weight: bold; margin-top: 5px;">領先全班多數</div>
+            </div>
+            
+            <div style="flex: 1; background: rgba(255,255,255,0.7); border: 1px solid rgba(255,255,255,0.9); border-radius: 16px; padding: 15px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.03);">
+              <div style="font-size: 11px; font-weight: 900; color: var(--text-sub); letter-spacing: 1px; margin-bottom: 4px;">進步幅度</div>
+              <div id="diag-progress-val" style="font-size: 24px; font-weight: 900; color: var(--marian-green);">+0</div>
+              <div style="font-size: 11px; color: #a4b0be; font-weight: bold; margin-top: 5px;">持續成長中</div>
+            </div>
+          </div>
+
           <div style="display: flex; align-items: center; justify-content: center; gap: 20px;">
             <div style="position: relative; width: 100px; height: 100px; border-radius: 50%; background: conic-gradient(var(--marian-green) calc(var(--fluency, 0) * 1%), rgba(0,0,0,0.05) 0); display: flex; justify-content: center; align-items: center; box-shadow: inset 0 2px 10px rgba(0,0,0,0.1);">
               <div style="width: 80px; height: 80px; background: white; border-radius: 50%; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
@@ -376,7 +402,7 @@
               
               <div style="background: rgba(231, 76, 60, 0.05); border: 1px solid rgba(231, 76, 60, 0.3); border-radius: 16px; padding: 15px; text-align: left;">
                 <div style="font-size: 13px; font-weight: 900; color: #c0392b; margin-bottom: 10px;">
-                  <span>🔧 需鍛鍊的發音 (點擊查看教學)</span>
+                  <span>🔧 相對較弱的發音 (點擊查看教學)</span>
                 </div>
                 <div id="diag-weak-phonemes" style="display: flex; flex-direction: column; gap: 10px;"></div>
               </div>
@@ -860,10 +886,48 @@
         if (tipBox.style.display === 'none') {
             tipBox.style.display = 'block';
             icon.style.transform = 'rotate(180deg)';
-            if (window.GlobalAudio) GlobalAudio.play('click');
+            if (window.GlobalAudio) GlobalAudio.play('popupOpen');
         } else {
             tipBox.style.display = 'none';
             icon.style.transform = 'rotate(0deg)';
+            if (window.GlobalAudio) GlobalAudio.play('popupClose');
+        }
+    };
+
+    // 🔊 點擊喇叭播放音標 (呼叫 phonics-config.js 裡的機制)
+    window.playPhonemeAudio = function(event, azurePhoneme) {
+        event.stopPropagation(); // 防止觸發卡片的展開收合
+        if (window.GlobalAudio) GlobalAudio.play('click');
+        
+        // 1. 嘗試轉換成 Local Key
+        const lowerPh = azurePhoneme.toLowerCase();
+        let localKey = lowerPh;
+        if (typeof AZURE_TO_LOCAL_MAP !== 'undefined' && AZURE_TO_LOCAL_MAP[lowerPh]) {
+            localKey = AZURE_TO_LOCAL_MAP[lowerPh];
+        }
+
+        // 2. 確保 Context 已喚醒並播放
+        if (window.GlobalAudio && window.GlobalAudio.audioCtx) {
+            const ctx = window.GlobalAudio.audioCtx;
+            if (ctx.state === 'suspended') ctx.resume();
+            
+            // 直接 fetch Github 上的 mp3
+            fetch(`/audio/${localKey}.mp3`)
+              .then(res => {
+                  if (!res.ok) throw new Error("無此音標檔");
+                  return res.arrayBuffer();
+              })
+              .then(buffer => ctx.decodeAudioData(buffer))
+              .then(decoded => {
+                  const source = ctx.createBufferSource();
+                  source.buffer = decoded;
+                  source.connect(ctx.destination);
+                  source.start(0);
+              })
+              .catch(err => {
+                  console.log("播放音標失敗:", err);
+                  alert("⚠️ 尚未建立這個音標的示範錄音喔！");
+              });
         }
     };
 
@@ -883,6 +947,25 @@
             return;
           }
 
+          // 🚀 0. 渲染頂部三大指標 (精熟度、PR、進步)
+          const stats = data.stats;
+          document.getElementById('diag-mastery-val').innerText = stats.mastery;
+          document.getElementById('diag-mastery-bar').style.width = `${stats.mastery}%`;
+          
+          document.getElementById('diag-pr-val').innerText = stats.prValue;
+          
+          const progEl = document.getElementById('diag-progress-val');
+          if (stats.progress > 0) {
+             progEl.innerText = `+${stats.progress}`;
+             progEl.style.color = 'var(--marian-green)';
+          } else if (stats.progress < 0) {
+             progEl.innerText = stats.progress;
+             progEl.style.color = 'var(--marian-red)';
+          } else {
+             progEl.innerText = "-";
+             progEl.style.color = 'var(--text-sub)';
+          }
+
           // 🌟 1. 流暢度大圓環與 AI 短評
           const fluency = data.stats.fluency || 0;
           document.getElementById('diag-fluency-score').innerText = fluency;
@@ -895,30 +978,32 @@
           document.getElementById('diag-summary-text').innerText = summary;
 
           // 🌟 2. 音素 X 光機渲染器
-          // 強項：只取前 3 個，顯示標籤即可
           const strongContainer = document.getElementById('diag-strong-phonemes');
           const topStrong = data.strongPhonemes.slice(0, 3);
           if (topStrong.length === 0) {
             strongContainer.innerHTML = `<span style="color:#7f8c8d; font-size:13px; font-weight:bold;">持續收集中...</span>`;
           } else {
             strongContainer.innerHTML = topStrong.map(item => {
-              return `<span style="background: rgba(46, 204, 113, 0.2); color: #27ae60; padding: 6px 12px; border-radius: 10px; font-weight: 900; font-size: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">/${item.p}/ <span style="font-size:11px; opacity:0.8; font-weight:bold; margin-left:4px;">${item.examples.join(', ')}</span></span>`;
+              return `<span style="background: rgba(46, 204, 113, 0.2); color: #27ae60; padding: 6px 12px; border-radius: 10px; font-weight: 900; font-size: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display:inline-flex; align-items:center; gap:4px;">
+                        /${item.p}/ 
+                        <span style="font-size:11px; opacity:0.8; font-weight:bold;">${item.examples.join(', ')}</span>
+                      </span>`;
             }).join('');
           }
 
-          // 弱項：取前 3 個，做成可展開的教學卡片
           const weakContainer = document.getElementById('diag-weak-phonemes');
           const topWeak = data.weakPhonemes.slice(0, 3);
           if (topWeak.length === 0) {
-            weakContainer.innerHTML = `<div style="text-align:center; color:#2ecc71; font-size:13px; font-weight:900; padding:10px;">太棒了！目前沒有明顯弱點 🎉</div>`;
+            weakContainer.innerHTML = `<div style="text-align:center; color:#2ecc71; font-size:13px; font-weight:900; padding:10px;">太棒了！目前沒有相對弱點 🎉</div>`;
           } else {
             weakContainer.innerHTML = topWeak.map(item => {
-              const tip = phonemeTips[item.p.toLowerCase()] || "請提醒孩子放慢語速，聽聽標準發音後再試一次喔！";
+              const tip = typeof getPhonemeTip === 'function' ? getPhonemeTip(item.p) : "請多聽標準發音練習！";
               return `
                 <div style="background: white; border-radius: 12px; border: 1px solid rgba(231,76,60,0.2); overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.03);">
                   <div onclick="togglePhonemeTip(this)" style="display:flex; justify-content:space-between; align-items:center; padding: 12px 15px; cursor:pointer;">
                     <div style="display:flex; align-items:center; gap: 10px;">
                       <span style="font-size: 18px; font-weight: 900; color: #c0392b;">/${item.p}/</span>
+                      <button onclick="playPhonemeAudio(event, '${item.p}')" style="background:rgba(231,76,60,0.1); border:none; border-radius:50%; width:28px; height:28px; font-size:14px; display:flex; justify-content:center; align-items:center; color:#c0392b; cursor:pointer;">🔊</button>
                       <span style="font-size: 12px; color: var(--text-sub); font-weight: bold;">如: ${item.examples.join(', ')}</span>
                     </div>
                     <div class="toggle-icon" style="color: #c0392b; transition: 0.3s; font-size: 12px;">▼</div>
@@ -933,7 +1018,7 @@
             }).join('');
           }
 
-          // 🌟 3. 單字擊破清單 (只取最差的 3 個，並改掉標題負面詞彙)
+          // 🌟 3. 單字擊破清單 
           const weakWordsContainer = document.getElementById('diag-weak-words-list');
           if (data.weakWords.length === 0) {
             weakWordsContainer.innerHTML = `<div style="text-align:center; color:#2ecc71; font-size:14px; font-weight:900; padding:15px; background:rgba(46,204,113,0.1); border-radius:12px;">太厲害了！本單元發音都很棒 🎉</div>`;
