@@ -1545,6 +1545,8 @@
   const ROOM_ID = params.get('roomId');
 
   let stream, mediaRecorder, chunks = [], quizData = [], scores = [], currentIndex = 0, isReReading = false;
+  let systemPassScore = 60; 
+  let systemRewardTiers = [];
   let azureReports = []; // 🚀 專門用來收集微軟的法醫級音素報告
   let audioContext, analyser, dataArray, source, gradingInterval;
   let maxVolume = 0;
@@ -1854,6 +1856,11 @@
       .then(res => res.json()).then(data => {
         if (!data.words || data.words.length === 0) { alert("題目為空"); return; }
         quizData = data.words; 
+        // 🚀 關鍵接線：讀取並套用 GAS 的計分規則
+        if (data.rule) {
+            systemPassScore = data.rule.passScore;
+            systemRewardTiers = data.rule.tiers;
+        }
         scores = new Array(quizData.length).fill(null);
         
         document.getElementById('total-display').innerText = quizData.length;
@@ -2419,8 +2426,8 @@
       submitBtn.style.backgroundColor = "var(--marian-green)";
       submitBtn.innerText = "完成練習";
     } else {
-      // 🚀 新規則：平均 60 分以上即可通關
-      if (avg >= 60) {
+      // 🚀 聽命於 GAS：根據傳來的 systemPassScore 判斷是否及格
+      if (avg >= systemPassScore) {
         submitBtn.removeAttribute('disabled');
         submitBtn.disabled = false;
         submitBtn.style.opacity = "1";
@@ -2428,19 +2435,26 @@
         submitBtn.style.backgroundColor = "#27ae60"; 
         lockMsg.innerText = "";
         
-        // 🚀 全新的降標獎勵規則
+        // 🚀 聽命於 GAS：根據傳來的階梯陣列計算獎勵點數
         let reward = 0;
-        if (avg >= 80) reward = 30;
-        else if (avg >= 70) reward = 20;
-        else reward = 10; // 60~69分現在也有安慰獎 10 點！
+        if (systemRewardTiers && systemRewardTiers.length > 0) {
+            for (let t of systemRewardTiers) {
+                if (avg >= t.min) { reward = t.pts; break; }
+            }
+        }
         
-        rewardHint.innerText = `🎁 可獲得：${reward} 點`;
-        rewardHint.style.color = "#d35400"; // 統一用亮眼的橘色顯示獎勵
+        if (reward > 0) {
+            rewardHint.innerText = `🎁 可獲得：${reward} 點`;
+            rewardHint.style.color = "#d35400"; 
+        } else {
+            rewardHint.innerText = `✅ 挑戰成功！`;
+            rewardHint.style.color = "#7f8c8d";
+        }
 
       } else {
         submitBtn.setAttribute('disabled', 'true');
         submitBtn.style.backgroundColor = "#636e72"; 
-        lockMsg.innerText = "❌ 平均需達 60 分才能通關";
+        lockMsg.innerText = `❌ 平均需達 ${systemPassScore} 分才能通關`;
         rewardHint.innerText = "";
       }
     }
