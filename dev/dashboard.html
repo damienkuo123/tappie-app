@@ -91,7 +91,7 @@
       border-top: 1px solid rgba(255, 255, 255, 0.8); box-shadow: 0 -10px 20px rgba(0,0,0,0.03);
       display: flex; justify-content: space-around; align-items: center; z-index: 1000; padding-left: 10px; padding-right: 10px;
     }
-    .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: #95a5a6; cursor: pointer; transition: 0.3s; flex: 1; padding: 10px 0; -webkit-tap-highlight-color: transparent; }
+    .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: #95a5a6; cursor: pointer; transition: 0.3s; flex: 1; padding: 10px 0; -webkit-tap-highlight-color: transparent; position: relative; } /* 👈 加上 position: relative; */
     .nav-item .nav-icon { font-size: 24px; transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); filter: grayscale(1); opacity: 0.7; }
     .nav-item span { font-size: 11px; font-weight: 900; letter-spacing: 1px; transition: 0.3s; }
     
@@ -203,6 +203,20 @@
     .btn-logout:active { background: rgba(231, 76, 60, 0.2); transform: scale(0.96); }
 
     .hidden { display: none !important; }
+    
+    /* 🔒 未解鎖 Tab 的樣式 (一般生) */
+    .nav-item.locked {
+      opacity: 0.5;
+      cursor: not-allowed;
+      filter: grayscale(100%);
+    }
+    .nav-item.locked::after {
+      content: '🔒';
+      position: absolute;
+      top: 5px;
+      right: 15px;
+      font-size: 10px;
+    }
 
     @media (min-width: 768px) {
       .glass-panel { max-width: 680px; }
@@ -455,19 +469,19 @@
       <div class="nav-icon">🧑‍🎓</div>
       <span>學生</span>
     </div>
-    <div class="nav-item elite-tab-btn hidden" onclick="switchTab('challenge', '今日挑戰', this)">
+    <div class="nav-item elite-tab-btn locked" onclick="switchTab('challenge', '今日挑戰', this)">
       <div class="nav-icon">🎯</div>
       <span>挑戰</span>
     </div>
-    <div class="nav-item elite-tab-btn hidden" onclick="switchTab('practice', '自由練習', this)">
+    <div class="nav-item elite-tab-btn locked" onclick="switchTab('practice', '自由練習', this)">
       <div class="nav-icon">📚</div>
       <span>練習</span>
     </div>
-    <div class="nav-item elite-tab-btn hidden" onclick="switchTab('arena', '對戰大廳', this)">
+    <div class="nav-item elite-tab-btn locked" onclick="switchTab('arena', '對戰大廳', this)">
       <div class="nav-icon">⚔️</div>
       <span>競技</span>
     </div>
-    <div class="nav-item elite-tab-btn hidden" onclick="switchTab('learning', '學習中心', this)">
+    <div class="nav-item elite-tab-btn locked" onclick="switchTab('learning', '學習中心', this)">
       <div class="nav-icon">📈</div>
       <span>學習</span>
     </div>
@@ -504,6 +518,13 @@
 
     // 🚀 SPA 分頁切換邏輯
     function switchTab(tabId, titleText, navElement) {
+      // 🔒 檢查是否被鎖定
+      if (navElement.classList.contains('locked')) {
+        if (window.GlobalAudio) GlobalAudio.play('click'); // 播放一下拒絕的聲音也可以用 click
+        alert("🔒 此功能為【美語資優生】專屬！\n請聯繫老師了解升級方案喔。");
+        return; // 終止執行，不切換分頁
+      }
+
       // 🔊 加入底部分頁切換的清脆音效
       if (window.GlobalAudio) GlobalAudio.play('click');
       
@@ -676,8 +697,10 @@
 
       // 👑 美語資優生專屬功能 (解鎖 Tab 按鈕)
       if (data.studentType === "美語資優生") {
-        document.querySelectorAll('.elite-tab-btn').forEach(btn => btn.classList.remove('hidden'));
+        // 🔓 拔掉鎖頭！
+        document.querySelectorAll('.elite-tab-btn').forEach(btn => btn.classList.remove('locked'));
         document.getElementById('newsletter-zone').classList.remove('hidden'); 
+
 
         // 今日挑戰 Box
         const unitText = data.currentUnit || "未排定";
