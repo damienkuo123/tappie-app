@@ -13,6 +13,7 @@
   <link rel="preconnect" href="https://script.google.com" crossorigin>
   <link rel="dns-prefetch" href="https://script.google.com">
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="global-audio.js"></script>
   <script src="phonics-config.js"></script>
   <script src="phoneme-tips.js"></script>
@@ -387,6 +388,19 @@
               <div style="font-size: 11px; color: #a4b0be; font-weight: bold; margin-top: 5px;">持續成長中</div>
             </div>
           </div>
+
+          <div style="background: rgba(255,255,255,0.7); border: 1px solid rgba(255,255,255,0.9); border-radius: 16px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.03);">
+            <div style="font-size: 15px; font-weight: 900; color: var(--text-main); margin-bottom: 5px; display: flex; align-items: center; gap: 6px;">
+              <span>⚡</span> 綜合能力雷達
+            </div>
+            <div style="position: relative; height: 240px; width: 100%;">
+              <canvas id="radarChart"></canvas>
+            </div>
+          </div>
+
+          <div style="display: flex; align-items: center; justify-content: center; gap: 20px;">
+          
+          
 
           <div style="display: flex; align-items: center; justify-content: center; gap: 20px;">
             <div style="position: relative; width: 100px; height: 100px; border-radius: 50%; background: conic-gradient(var(--marian-green) calc(var(--fluency, 0) * 1%), rgba(0,0,0,0.05) 0); display: flex; justify-content: center; align-items: center; box-shadow: inset 0 2px 10px rgba(0,0,0,0.1);">
@@ -1004,7 +1018,67 @@
              // 連一次練習都沒有，或是真的算不出來
              progEl.innerText = "-";
              progEl.style.color = 'var(--text-sub)';
+          } // (這是進步幅度 else 條件的結尾括號)
+
+          // ==========================================
+          // 🚀 新增：渲染 Chart.js 動態雷達圖
+          // ==========================================
+          // 我們利用現有的數據，推算出雷達圖的五大維度
+          // 發音穩定：弱點音素越少，分數越高 (最高100，最低保底40)
+          const stabilityScore = Math.max(40, 100 - (data.weakPhonemes.length * 8)); 
+          
+          const ctx = document.getElementById('radarChart').getContext('2d');
+          
+          // SPA 架構防呆：如果之前已經畫過圖表，要先銷毀舊的，不然滑鼠摸上去會閃爍
+          if(window.myRadarChart) {
+              window.myRadarChart.destroy();
           }
+
+          // 繪製華麗雷達圖
+          window.myRadarChart = new Chart(ctx, {
+            type: 'radar',
+            data: {
+              labels: ['發音準確', '語句流暢', '拼音完整', '單元精熟', '發音穩定'],
+              datasets: [{
+                label: '能力指標',
+                data: [stats.overall, stats.fluency, stats.completeness, stats.mastery, stabilityScore],
+                backgroundColor: 'rgba(0, 102, 204, 0.15)', // 瑪麗安藍半透明
+                borderColor: '#0066cc',
+                pointBackgroundColor: '#f1c40f', // 金色端點
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: '#f1c40f',
+                borderWidth: 2,
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              scales: {
+                r: {
+                  angleLines: { color: 'rgba(0,0,0,0.1)' },
+                  grid: { color: 'rgba(0,0,0,0.05)' },
+                  pointLabels: {
+                    font: { size: 12, family: "'PingFang TC', sans-serif", weight: 'bold' },
+                    color: '#7f8c8d'
+                  },
+                  // 將刻度隱藏，並固定最大 100 最小 0，讓圖形不會變形
+                  ticks: { display: false, min: 0, max: 100, stepSize: 20 }
+                }
+              },
+              plugins: {
+                legend: { display: false }, // 隱藏多餘的標籤
+                tooltip: { // 帥氣的黑色數據提示框
+                  backgroundColor: 'rgba(0,0,0,0.8)',
+                  titleFont: { size: 13, family: "'PingFang TC', sans-serif" },
+                  bodyFont: { size: 14, weight: 'bold' },
+                  padding: 10,
+                  displayColors: false
+                }
+              }
+            }
+          });
+          // ==========================================
 
           // 🌟 1. 流暢度大圓環與 AI 短評
           const fluency = data.stats.fluency || 0;
