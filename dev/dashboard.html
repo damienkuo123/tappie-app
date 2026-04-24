@@ -13,6 +13,7 @@
   <link rel="preconnect" href="https://script.google.com" crossorigin>
   <link rel="dns-prefetch" href="https://script.google.com">
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="global-audio.js"></script>
   <script src="phonics-config.js"></script>
   <script src="phoneme-tips.js"></script>
@@ -388,6 +389,15 @@
             </div>
           </div>
 
+          <div style="background: rgba(255,255,255,0.7); border: 1px solid rgba(255,255,255,0.9); border-radius: 16px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.03);">
+            <div style="font-size: 15px; font-weight: 900; color: var(--text-main); margin-bottom: 5px; display: flex; align-items: center; gap: 6px;">
+              <span>⚡</span> 綜合能力雷達
+            </div>
+            <div style="position: relative; height: 240px; width: 100%;">
+              <canvas id="radarChart"></canvas>
+            </div>
+          </div>
+
           <div style="display: flex; align-items: center; justify-content: center; gap: 20px;">
             <div style="position: relative; width: 100px; height: 100px; border-radius: 50%; background: conic-gradient(var(--marian-green) calc(var(--fluency, 0) * 1%), rgba(0,0,0,0.05) 0); display: flex; justify-content: center; align-items: center; box-shadow: inset 0 2px 10px rgba(0,0,0,0.1);">
               <div style="width: 80px; height: 80px; background: white; border-radius: 50%; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
@@ -427,8 +437,7 @@
             <div style="font-size: 15px; font-weight: 900; color: var(--text-main); margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
               <span>🎯</span> 精益求精單字 (Top 3)
             </div>
-            <div id="diag-weak-words-list" style="display: flex; flex-direction: column; gap: 10px;">
-              </div>
+            <div id="diag-weak-words-list" style="display: flex; flex-direction: column; gap: 10px;"></div>
           </div>
 
         </div>
@@ -1004,7 +1013,104 @@
              // 連一次練習都沒有，或是真的算不出來
              progEl.innerText = "-";
              progEl.style.color = 'var(--text-sub)';
-          }
+          } // (這是進步幅度 else 條件的結尾括號)
+
+          // ==========================================
+          // 🚀 新增：渲染 Chart.js 動態雷達圖 (瑪麗安五大核心)
+          // ==========================================
+          // 🚀 1. 精準計算「發音穩定度」
+          const totalPCount = stats.totalPhonemesCount || 1; // 避免除以 0
+          // 從 data.weakPhonemes 陣列中還原出總弱音素數量 (因為前端只收到 top3，但每個 top3 裡面有 examples 的長度代表出現次數)
+          // 但最精準的做法是直接拿總計，這裡我們用估算或是你在 GAS 如果有傳完整的數量更好。
+          // 這裡我們暫用原本的算法改進：
+          let weakCountEst = 0;
+          data.weakPhonemes.forEach(wp => weakCountEst += wp.examples.length);
+          const stabilityScore = Math.max(0, Math.round(((totalPCount - weakCountEst) / totalPCount) * 100)); 
+          
+          const ctx = document.getElementById('radarChart').getContext('2d');
+          
+          if(window.myRadarChart) { window.myRadarChart.destroy(); }
+
+          // 🚀 2. 建立白話文辭典
+          const tooltipsDict = {
+            '發音準確': '系統運用聲學技術，精準比對寶貝每個發音與母語人士的相似度。',
+            '語句流暢': '評估寶貝開口時的語速、停頓與自然度，分數越高代表開口越有自信。',
+            '拼音完整': '偵測是否有漏唸單字或跳過發音的情況。滿分代表每個字都有努力唸出來！',
+            '單元精熟': '本單元所有挑戰過的單字中，成功達到 80 分以上高標的單字佔比。',
+            '發音穩定': '分析口腔肌肉的控制力。失誤越少、發音越穩，此項分數就越高。'
+          };
+
+          // 繪製華麗雷達圖
+          window.myRadarChart = new Chart(ctx, {
+            type: 'radar',
+            data: {
+              labels: ['發音準確', '語句流暢', '拼音完整', '單元精熟', '發音穩定'],
+              datasets: [{
+                label: '能力指標',
+                data: [stats.overall, stats.fluency, stats.completeness, stats.mastery, stabilityScore],
+                backgroundColor: 'rgba(0, 102, 204, 0.15)', 
+                borderColor: '#0066cc',
+                pointBackgroundColor: '#f1c40f', 
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: '#f1c40f',
+                borderWidth: 2,
+                // 🚀 觸控升級：視覺上黃點稍微放大，但觸控感應區放大 8 倍！
+                pointRadius: 5,
+                pointHitRadius: 30, 
+                pointHoverRadius: 8
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              scales: {
+                r: {
+                  angleLines: { color: 'rgba(0,0,0,0.1)' },
+                  grid: { color: 'rgba(0,0,0,0.05)' },
+                  pointLabels: {
+                    font: { size: 12, family: "'PingFang TC', sans-serif", weight: 'bold' },
+                    color: '#7f8c8d'
+                  },
+                  // 🚀 關鍵修復：強制釘死原點為 0，最高 100，解決 76 分看起來不到一半的問題！
+                  min: 0,
+                  max: 100,
+                  beginAtZero: true,
+                  ticks: { display: false, stepSize: 20 }
+                }
+              },
+              plugins: {
+                legend: { display: false }, 
+                tooltip: { 
+                  backgroundColor: 'rgba(15, 23, 42, 0.95)', // 更深邃的高級黑
+                  titleFont: { size: 16, family: "'PingFang TC', sans-serif", weight: '900' },
+                  titleColor: '#f1c40f', // 標題變金色
+                  bodyFont: { size: 13, weight: 'bold', lineHeight: 1.5 },
+                  bodyColor: '#e2e8f0',
+                  padding: 15,
+                  cornerRadius: 12,
+                  displayColors: false,
+                  // 🚀 攔截預設 Tooltip，替換成我們的白話文
+                  callbacks: {
+                    title: function(context) {
+                       const label = context[0].label;
+                       const score = context[0].raw;
+                       return `${label}：${score} 分`;
+                    },
+                    label: function(context) {
+                       // 將超過一定字數的字串折行，讓 tooltip 不要太長
+                       const text = tooltipsDict[context.label];
+                       if (text.length > 20) {
+                           return [text.substring(0, 18), text.substring(18)];
+                       }
+                       return text;
+                    }
+                  }
+                }
+              }
+            }
+          });
+          // ==========================================
 
           // 🌟 1. 流暢度大圓環與 AI 短評
           const fluency = data.stats.fluency || 0;
