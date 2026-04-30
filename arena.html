@@ -2854,10 +2854,18 @@
 
                                 let wordCount = pronResult.detailResult.Words ? pronResult.detailResult.Words.length : 1;
                                 let scaleFactor = Math.max(1, Math.sqrt(wordCount)); 
-                                
+                                                                
                                 let penalty = ((missingCount * 15) + (brokenCount * 10) + dynamicPhonemePenalty) / scaleFactor;
-                                if (fluScore < 50) penalty += 15; else if (fluScore < 75) penalty += 6;
                                 
+                                // 📉 流暢度殺手鐧 (🚀 動態寬容版：長句子不重罰結巴)
+                                if (wordCount <= 3) {
+                                    if (fluScore < 50) penalty += 15; 
+                                    else if (fluScore < 75) penalty += 6;  
+                                } else {
+                                    if (fluScore < 50) penalty += 5; 
+                                    else if (fluScore < 75) penalty += 2;
+                                }
+                                                                
                                 let strictScore = Math.max(0, Math.min(100, Math.round(baseScore - penalty)));
                                 if (strictScore % 5 === 0 && strictScore !== 0 && strictScore !== 100) {
                                     strictScore += (Math.random() > 0.5 ? 1 : -1); 
