@@ -956,22 +956,22 @@
             display: flex; flex-direction: column; padding-bottom: 5vh;
             z-index: 20; 
             padding-top: 45vh; 
+            padding-left: 20px; /* 🚀 新增：手機版左右安全距離，避免貼邊 */
+            padding-right: 20px;
         }
         .scroll-step {
-            /* 🚀 修復：手機版把高度與間距縮小，讓文字接得更緊密，消除乾滑的空窗期 */
             min-height: 35vh; margin-bottom: 10vh; 
             display: flex; flex-direction: column; justify-content: flex-start;
             opacity: 0; transform: translateY(40px); transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-            /* 🚀 將 opacity 改為 0，並改為往下降 (translateY)，只要脫離雷達區就會瞬間消失並掉下去！ */
-            opacity: 0; transform: translateY(40px); transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            text-align: center; /* 🚀 新增：手機版文字置中，對齊上方手機畫面更美觀 */
+            align-items: center; 
         }
         .scroll-step:last-child { margin-bottom: 0; }
         .scroll-step.active { opacity: 1; transform: translateY(0); }
         .step-num { font-size: 60px; font-weight: 900; color: #e2e8f0; line-height: 1; margin-bottom: -15px; transition: 0.3s; }
         .scroll-step.active .step-num { color: var(--marian-gold); } 
-        .step-title { font-size: clamp(1.8rem, 4vw, 2.5rem); font-weight: 900; color: #1a252f; margin-bottom: 15px; }
-        .step-desc { font-size: 1.15rem; color: #64748b; line-height: 1.8; font-weight: bold; }
+        .step-title { font-size: clamp(1.6rem, 4vw, 2.5rem); font-weight: 900; color: #1a252f; margin-bottom: 15px; } /* 微調標題大小 */
+        .step-desc { font-size: 1.1rem; color: #64748b; line-height: 1.8; font-weight: bold; max-width: 480px; }
         
         .timeline-grid { display: grid; grid-template-columns: 1fr; gap: 30px; margin-top: 40px; width: 100%; max-width: 1100px; }
         .timeline-card { background: var(--glass-bg); border: 1px solid var(--glass-border); padding: 30px 25px; border-radius: 25px; position: relative; text-align: left; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
@@ -1053,8 +1053,8 @@
             /* 🚀 Apple 黏性滾動大螢幕雙欄配置 */
             .sticky-layout { flex-direction: row-reverse; gap: 80px; align-items: flex-start; }
             .sticky-visual-container { flex: 1; height: 80vh; max-height: 800px; top: 120px; }
-            .scroll-text-container { flex: 1; padding-top: 5vh; padding-bottom: 30vh; }
-            .scroll-step { min-height: 80vh; margin-bottom: 0; justify-content: center; } /* 🚀 恢復大螢幕的滿版高度設定 */
+            .scroll-text-container { flex: 1; padding-top: 5vh; padding-bottom: 30vh; padding-left: 0; padding-right: 0; } /* 拔除手機版留白 */
+            .scroll-step { min-height: 80vh; margin-bottom: 0; justify-content: center; text-align: left; align-items: flex-start; } /* 🚀 大螢幕恢復文字靠左對齊 */
             
             /* 大螢幕恢復大手機 */
             .mock-big-phone { max-width: 320px; border-width: 12px; border-radius: 45px; }
@@ -1491,10 +1491,10 @@
 
     <div class="global-section">
         
-        <section class="section" style="max-width: 100vw; width: 100vw; margin: 0; padding: 80px 0;">
-            <div style="text-align: center; margin-bottom: 60px; padding: 0 25px;">
+        <section class="light-break-section">
+            <div style="text-align: center; margin-bottom: 60px;">
                 <span style="color: var(--primary-blue); font-weight: 900; letter-spacing: 3px; font-size: 14px; text-transform: uppercase;">User Scenario</span>
-                <h2 style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 900; margin: 15px 0 20px; color: #fff;">Tappie 的完美一日</h2>
+                <h2 style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 900; margin: 15px 0 20px; color: #1a252f;">Tappie 的完美一日</h2>
                 <p style="color: #64748b; font-size: 1.15rem; max-width: 600px; margin: 0 auto; line-height: 1.6; font-weight: bold;">從補習班大廳到家裡的客廳，無縫接軌的口說生態系。</p>
             </div>
             
