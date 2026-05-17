@@ -735,6 +735,103 @@
         }
 
         /* ========================================= */
+        /* 🚀 動態 UI 引擎 9：Bento Box 實體應用圖庫 */
+        /* ========================================= */
+        .bento-gallery {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-auto-rows: 280px;
+            gap: 20px;
+            width: 100%;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 20px;
+            box-sizing: border-box;
+        }
+        
+        .bento-item {
+            position: relative;
+            border-radius: 28px;
+            overflow: hidden;
+            background: #1e293b;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            cursor: pointer;
+            display: flex;
+            align-items: flex-end;
+        }
+        
+        .bento-item:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 25px 50px rgba(0, 123, 255, 0.3);
+            border-color: rgba(255,255,255,0.3);
+        }
+        
+        /* 圖庫圖片濾鏡與縮放 */
+        .bento-img {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            object-fit: cover;
+            opacity: 0.7;
+            transition: transform 0.8s ease, opacity 0.4s ease;
+            z-index: 1;
+        }
+        .bento-item:hover .bento-img {
+            opacity: 1;
+            transform: scale(1.08);
+        }
+        
+        /* 漸層遮罩讓文字清楚 */
+        .bento-item::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0; width: 100%; height: 60%;
+            background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0) 100%);
+            z-index: 2;
+            pointer-events: none;
+        }
+        
+        .bento-caption {
+            position: relative;
+            z-index: 3;
+            padding: 25px;
+            text-align: left;
+            width: 100%;
+        }
+        .bento-caption h4 {
+            margin: 0 0 8px 0;
+            font-size: 20px;
+            font-weight: 900;
+            color: var(--marian-gold);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+        }
+        .bento-caption p {
+            margin: 0;
+            font-size: 14px;
+            color: #e2e8f0;
+            line-height: 1.5;
+            font-weight: bold;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+        }
+        
+        /* 版型分配 */
+        .bento-large { grid-column: span 2; grid-row: span 2; }
+        .bento-wide { grid-column: span 2; grid-row: span 1; }
+        .bento-square { grid-column: span 1; grid-row: span 1; }
+
+        @media (max-width: 992px) {
+            .bento-gallery { grid-template-columns: repeat(2, 1fr); grid-auto-rows: 240px; }
+            .bento-large { grid-column: span 2; grid-row: span 2; }
+            .bento-wide { grid-column: span 2; grid-row: span 1; }
+        }
+        
+        @media (max-width: 576px) {
+            .bento-gallery { grid-template-columns: 1fr; grid-auto-rows: 220px; }
+            .bento-large, .bento-wide, .bento-square { grid-column: span 1; grid-row: span 1; }
+        }
+
+        /* ========================================= */
         /* 🚀 擴充區塊：場景、權威、方案、FAQ */
         /* ========================================= */
         /* 🌟 亮色白玉毛玻璃視覺斷點 (Visual Break) */
@@ -935,14 +1032,14 @@
             <img src="/assets/logo.webp" alt="Tappie Logo" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'><circle cx=\'50\' cy=\'50\' r=\'40\' fill=\'%23f1c40f\'/></svg>'">
             Tappie
         </div>
-        <div class="nav-btn" onclick="alert('請聯繫總部申請校區代碼')">分校加盟申請</div>
+        <div class="nav-btn" onclick="document.getElementById('pricing-section').scrollIntoView({ behavior: 'smooth' })">加入Tappie</div>
     </nav>
 
     <section class="section">
         <div class="hero-content">
             <div class="hero-text reveal-up">
                 <h1>嗶卡感應，<br>用 <span>Tappie</span> 秒說外語！</h1>
-                <p>補教業最強的 OMO 語音開口神器。免下載、一嗶即唸，融合微軟醫療級診斷與自動化家長週報。線上加扣點，無痛升級貴校的點數系統。</p>
+                <p>補教業最強的 OMO 語音開口神器。免下載、一嗶即唸，融合微軟醫療級診斷與自動化家長週報。靠卡加扣點，無痛升級貴校的點數系統。</p>
             </div>
 
             <div class="login-card reveal-up" style="transition-delay: 0.2s;" id="mainCard">
@@ -956,7 +1053,7 @@
                     <p style="color: #94a3b8; font-size: 13px; margin: 5px 0 30px 0; font-weight: bold;">數位學習平台</p>
 
                     <button class="btn-login" onclick="toggleManualInput()">
-                        <span style="font-size: 20px;">⌨️</span> <span style="flex:1; text-align: left;">手動輸入校區與學號</span> <span>➔</span>
+                        <span style="font-size: 20px;">⌨️</span> <span style="flex:1; text-align: left;">手動登入</span> <span>➔</span>
                     </button>
                     <button class="btn-login line" onclick="alert('LIFF 靜默登入開發中，敬請期待！')">
                         <span style="font-size: 20px;">💬</span> <span style="flex:1; text-align: left;">使用 Line 快速進入</span> <span>➔</span>
@@ -965,15 +1062,15 @@
 
                 <div id="manual-input-zone">
                     <div style="text-align: left; margin-bottom: 20px; color: #94a3b8; font-size: 14px; cursor: pointer; font-weight: bold;" onclick="toggleManualInput()">❮ 返回感應模式</div>
-                    <h3 style="margin-bottom: 25px; letter-spacing: 2px;">遠端手動登入</h3>
+                    <h3 style="margin-bottom: 25px; letter-spacing: 2px;">手動登入</h3>
                     
-                    <div style="text-align: left; margin-bottom: 5px; font-size: 12px; font-weight: bold; color: var(--marian-gold); padding-left: 10px;">校區代碼 (Class Code)</div>
+                    <div style="text-align: left; margin-bottom: 5px; font-size: 12px; font-weight: bold; color: var(--marian-gold); padding-left: 10px;">校區代碼</div>
                     <input type="text" id="class-input-field" class="uid-input" placeholder="輸入代碼" autocomplete="off" style="margin-bottom: 15px; letter-spacing: 5px;">
                     
-                    <div style="text-align: left; margin-bottom: 5px; font-size: 12px; font-weight: bold; color: var(--marian-gold); padding-left: 10px;">學生代號 (Student UID)</div>
+                    <div style="text-align: left; margin-bottom: 5px; font-size: 12px; font-weight: bold; color: var(--marian-gold); padding-left: 10px;">學生代號</div>
                     <input type="text" id="uid-input-field" class="uid-input" placeholder="輸入學號" autocomplete="off" style="margin-bottom: 25px;">
                     
-                    <button class="btn-login primary" id="manual-submit-btn" style="width: 100%; font-size: 18px;" onclick="handleManualLogin()">驗證並進入系統</button>
+                    <button class="btn-login primary" id="manual-submit-btn" style="width: 100%; font-size: 18px;" onclick="handleManualLogin()">進入系統</button>
                 </div>
             </div>
         </div>
@@ -1447,6 +1544,47 @@
             </div>
         </section>
 
+        <section class="section" style="padding-top: 60px; padding-bottom: 80px; min-height: auto; text-align: center;">
+            <span style="color: var(--marian-green); font-weight: 900; letter-spacing: 3px; font-size: 14px; text-transform: uppercase;" class="reveal-up">OMO Experience</span>
+            <h2 style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 900; margin: 15px 0 50px; color: #fff;" class="reveal-up">重新定義英語教室的樣貌</h2>
+            
+            <div class="bento-gallery reveal-up" style="transition-delay: 0.2s;">
+                
+                <div class="bento-item bento-large">
+                    <img src="https://images.unsplash.com/photo-1590209673960-939e871ddf44?q=80&w=1000&auto=format&fit=crop" class="bento-img" alt="一嗶即戰">
+                    <div class="bento-caption">
+                        <h4>一嗶即戰的科技流暢感</h4>
+                        <p>無需密碼，學生持專屬魔法卡感應設備，瞬間喚醒專屬學習宇宙，下課前 10 分鐘輕鬆完成口說任務。</p>
+                    </div>
+                </div>
+                
+                <div class="bento-item bento-wide">
+                    <img src="https://images.unsplash.com/photo-1601931818224-4b53fa9cb907?q=80&w=800&auto=format&fit=crop" class="bento-img" alt="多樣化載體">
+                    <div class="bento-caption">
+                        <h4>超越卡片：專屬感應吊牌</h4>
+                        <p>除了標準卡片，支援將 NFC 晶片植入客製化吊飾。掛在書包或鉛筆盒上，成為同學間最酷的科技配件。</p>
+                    </div>
+                </div>
+                
+                <div class="bento-item bento-square">
+                    <img src="https://images.unsplash.com/photo-1511895426328-dc8714191300?q=80&w=600&auto=format&fit=crop" class="bento-img" alt="家長報告">
+                    <div class="bento-caption">
+                        <h4 style="font-size: 16px;">家長視角</h4>
+                        <p style="font-size: 12px;">即時收到雷達圖報表，親師溝通零距離。</p>
+                    </div>
+                </div>
+                
+                <div class="bento-item bento-square">
+                    <img src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?q=80&w=600&auto=format&fit=crop" class="bento-img" alt="同儕對戰">
+                    <div class="bento-caption">
+                        <h4 style="font-size: 16px;">熱血連線對戰</h4>
+                        <p style="font-size: 12px;">良性的同儕競爭，激發開口熱情與榮譽心。</p>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
         <section class="section" style="padding-top: 60px; padding-bottom: 100px; min-height: auto; text-align: center; background: rgba(255,255,255,0.01); width: 100vw; max-width: 100vw; border-top: 1px solid rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.05);">
             <h2 style="font-size: clamp(1.8rem, 3vw, 2.5rem); font-weight: 900; color: #fff; letter-spacing: 2px; margin-bottom: 15px;" class="reveal-up">世界級底層架構</h2>
             <p style="color: #64748b; font-size: 1.15rem; font-weight: bold; margin-bottom: 40px;" class="reveal-up">保護您的教育資產，確保每一次開口都穩定無延遲。</p>
@@ -1498,7 +1636,7 @@
             </div>
         </section>
 
-        <section class="section" style="padding-top: 80px; padding-bottom: 120px; min-height: auto; text-align: center;">
+        <section class="section" id="pricing-section" style="padding-top: 80px; padding-bottom: 120px; min-height: auto; text-align: center;">
             <span style="color: var(--marian-gold); font-weight: 900; letter-spacing: 3px; font-size: 14px; text-transform: uppercase;" class="reveal-up">Pricing Configurator</span>
             <h2 style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 900; margin: 15px 0 40px; color: #fff;" class="reveal-up">打造貴校的專屬方案</h2>
             
@@ -1614,7 +1752,7 @@
                 
                 <div class="faq-item" onclick="this.classList.toggle('active')">
                     <div class="faq-q">學生需要自備平板或手機嗎？ <span class="faq-icon">+</span></div>
-                    <div class="faq-a">不需要硬性規定！Tappie 為跨平台網頁架構。校區僅需於大廳準備 1-2 台公用平板作為「口說挑戰站」，學生下課嗶卡即可通關。回家後，也可直接使用家長的手機感應繼續練習，機構硬體零負擔。</div>
+                    <div class="faq-a">不需要硬性規定！Tappie 為跨平台網頁架構。校區可以準備 1-2 台公用平板作為「口說練習區」，學生下課嗶卡即可通關。回家後，也可直接使用家長的手機感應繼續練習，機構硬體零負擔。</div>
                 </div>
 
                 <div class="faq-item" onclick="this.classList.toggle('active')">
