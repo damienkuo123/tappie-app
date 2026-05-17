@@ -1627,12 +1627,11 @@
         </section>
 
         <div class="lightbox-overlay" id="gallery-lightbox">
-            <div class="lightbox-close" onclick="closeLightbox()">✕</div>
             <div class="lightbox-title" id="lightbox-title">圖庫標題</div>
             <div class="lightbox-slider" id="lightbox-slider" onscroll="updateLightboxDots()">
-                </div>
+            </div>
             <div class="lightbox-nav" id="lightbox-dots">
-                </div>
+            </div>
         </div>
 
         <section class="section" style="padding-top: 60px; padding-bottom: 100px; min-height: auto; text-align: center; background: rgba(255,255,255,0.01); width: 100vw; max-width: 100vw; border-top: 1px solid rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.05);">
@@ -2515,8 +2514,17 @@
 
         function closeLightbox() {
             lightbox.classList.remove('show');
-            document.body.style.overflow = 'auto'; // 恢復背景網頁滾動
+            // 🚀 關鍵修復：這裡不能寫 'auto'！必須設為空字串 ''，讓它恢復 CSS 預設值，才不會殺死 Sticky 黏性滾動！
+            document.body.style.overflow = ''; 
         }
+
+        // 🚀 新增：點擊圖片以外的暗處，直接優雅關閉燈箱
+        lightbox.addEventListener('click', function(e) {
+            // 如果點擊的目標是遮罩背景、滑動容器本身、標題或導航點，而不是圖片實體，就關閉
+            if (e.target === lightbox || e.target === slider || e.target === titleElement || e.target === dotsContainer) {
+                closeLightbox();
+            }
+        });
 
         // 3. 監聽滑動，動態更新下方的點點狀態
         function updateLightboxDots() {
