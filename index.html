@@ -735,6 +735,148 @@
         }
 
         /* ========================================= */
+        /* 🚀 動態 UI 引擎 9：Bento Box 實體應用圖庫 */
+        /* ========================================= */
+        .bento-gallery {
+            display: grid;
+            /* 🚀 修改：改為高級 3 欄對稱排版 */
+            grid-template-columns: repeat(3, 1fr);
+            grid-auto-rows: 340px; /* 稍微拉高格子的比例，展示卡片商品更霸氣 */
+            gap: 25px;
+            width: 100%;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 20px;
+            box-sizing: border-box;
+        }
+        
+        .bento-item {
+            position: relative;
+            border-radius: 28px;
+            overflow: hidden;
+            background: #1e293b;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            cursor: pointer;
+            display: flex;
+            align-items: flex-end;
+        }
+        
+        .bento-item:hover, .bento-item.active {
+            transform: translateY(-8px);
+            box-shadow: 0 25px 50px rgba(0, 123, 255, 0.3);
+            border-color: rgba(255,255,255,0.3);
+        }
+        
+        .bento-img {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            object-fit: cover;
+            opacity: 0.7;
+            color: transparent; 
+            transition: transform 0.8s ease, opacity 0.4s ease;
+            z-index: 1;
+        }
+        .bento-item:hover .bento-img, .bento-item.active .bento-img {
+            opacity: 1;
+            transform: scale(1.05);
+        }
+        
+        .bento-item::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0; width: 100%; height: 70%;
+            background: linear-gradient(to top, rgba(11, 15, 26, 0.95) 0%, rgba(11, 15, 26, 0) 100%);
+            z-index: 2;
+            pointer-events: none;
+        }
+        
+        .gallery-badge {
+            position: absolute;
+            top: 20px; right: 20px;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.15);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: 0.3s;
+            letter-spacing: 1px;
+        }
+        .bento-item:hover .gallery-badge, .bento-item.active .gallery-badge {
+            background: var(--primary-blue);
+            border-color: var(--primary-blue);
+        }
+
+        .bento-caption { position: relative; z-index: 3; padding: 30px 25px; text-align: left; width: 100%; box-sizing: border-box; }
+        .bento-caption h4 { margin: 0 0 10px 0; font-size: 20px; font-weight: 900; color: var(--marian-gold); text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+        .bento-caption p { margin: 0; font-size: 13.5px; color: #cbd5e1; line-height: 1.6; font-weight: bold; text-shadow: 0 1px 3px rgba(0,0,0,0.8); }
+        
+        /* 🚀 響應式：手機與平板完美分配 */
+        @media (max-width: 992px) {
+            .bento-gallery { grid-template-columns: repeat(2, 1fr); gap: 20px; }
+            .bento-item.tablet-full { grid-column: span 2; } /* 讓第三個客製化卡片在平板寬度時橫跨滿版，極度好看 */
+        }
+        
+        @media (max-width: 576px) {
+            .bento-gallery { grid-template-columns: 1fr; grid-auto-rows: 260px; }
+            .bento-item.tablet-full { grid-column: span 1; }
+            .bento-caption h4 { font-size: 18px !important; }
+            .bento-caption p { font-size: 13px !important; }
+        }
+
+        /* ========================================= */
+        /* 📸 滿版橫向滑動燈箱 (Lightbox Modal) */
+        /* ========================================= */
+        .lightbox-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(11, 15, 26, 0.95); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            z-index: 99999; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+        }
+        .lightbox-overlay.show { opacity: 1; pointer-events: auto; }
+        .lightbox-close { position: absolute; top: 20px; right: 25px; font-size: 36px; color: white; cursor: pointer; z-index: 100; padding: 10px; line-height: 1; }
+        
+        .lightbox-slider {
+            display: flex; gap: 20px; overflow-x: auto; scroll-snap-type: x mandatory;
+            width: 100%; max-width: 800px; padding: 20px; box-sizing: border-box;
+            scrollbar-width: none; /* Firefox 隱藏卷軸 */
+            scroll-behavior: smooth;
+        }
+        .lightbox-slider::-webkit-scrollbar { display: none; /* Chrome/Safari 隱藏卷軸 */ }
+        .lightbox-slider img {
+            flex: 0 0 100%; width: 100%; height: 60vh; object-fit: contain;
+            scroll-snap-align: center; border-radius: 12px;
+        }
+        .lightbox-nav { display: flex; gap: 8px; margin-top: 20px; }
+        .lightbox-dot { width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,0.3); transition: 0.3s; }
+        .lightbox-dot.active { background: var(--marian-gold); transform: scale(1.2); }
+        .lightbox-title { color: white; font-weight: bold; font-size: 18px; margin-top: 15px; letter-spacing: 1px; }
+
+        /* 🚀 修復：手機版字體與浮動統一 */
+        @media (max-width: 992px) {
+            .bento-gallery { grid-template-columns: repeat(2, 1fr); grid-auto-rows: 240px; }
+            .bento-large { grid-column: span 2; grid-row: span 2; }
+            .bento-wide { grid-column: span 2; grid-row: span 1; }
+        }
+        
+        @media (max-width: 576px) {
+            .bento-gallery { grid-template-columns: 1fr; grid-auto-rows: 220px; }
+            .bento-large, .bento-wide, .bento-square { grid-column: span 1; grid-row: span 1; }
+            /* 強制統一手機版的所有便當盒字體大小 */
+            .bento-caption h4 { font-size: 18px !important; }
+            .bento-caption p { font-size: 13px !important; }
+            .bento-item:hover, .bento-item.active { transform: translateY(-4px); } /* 手機版浮動幅度小一點 */
+        }
+
+        /* ========================================= */
         /* 🚀 擴充區塊：場景、權威、方案、FAQ */
         /* ========================================= */
         /* 🌟 亮色白玉毛玻璃視覺斷點 (Visual Break) */
@@ -814,22 +956,22 @@
             display: flex; flex-direction: column; padding-bottom: 5vh;
             z-index: 20; 
             padding-top: 45vh; 
+            padding-left: 20px; /* 🚀 新增：手機版左右安全距離，避免貼邊 */
+            padding-right: 20px;
         }
         .scroll-step {
-            /* 🚀 修復：手機版把高度與間距縮小，讓文字接得更緊密，消除乾滑的空窗期 */
             min-height: 35vh; margin-bottom: 10vh; 
             display: flex; flex-direction: column; justify-content: flex-start;
             opacity: 0; transform: translateY(40px); transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-            /* 🚀 將 opacity 改為 0，並改為往下降 (translateY)，只要脫離雷達區就會瞬間消失並掉下去！ */
-            opacity: 0; transform: translateY(40px); transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            text-align: center; /* 🚀 新增：手機版文字置中，對齊上方手機畫面更美觀 */
+            align-items: center; 
         }
         .scroll-step:last-child { margin-bottom: 0; }
         .scroll-step.active { opacity: 1; transform: translateY(0); }
         .step-num { font-size: 60px; font-weight: 900; color: #e2e8f0; line-height: 1; margin-bottom: -15px; transition: 0.3s; }
         .scroll-step.active .step-num { color: var(--marian-gold); } 
-        .step-title { font-size: clamp(1.8rem, 4vw, 2.5rem); font-weight: 900; color: #1a252f; margin-bottom: 15px; }
-        .step-desc { font-size: 1.15rem; color: #64748b; line-height: 1.8; font-weight: bold; }
+        .step-title { font-size: clamp(1.6rem, 4vw, 2.5rem); font-weight: 900; color: #1a252f; margin-bottom: 15px; } /* 微調標題大小 */
+        .step-desc { font-size: 1.1rem; color: #64748b; line-height: 1.8; font-weight: bold; max-width: 480px; }
         
         .timeline-grid { display: grid; grid-template-columns: 1fr; gap: 30px; margin-top: 40px; width: 100%; max-width: 1100px; }
         .timeline-card { background: var(--glass-bg); border: 1px solid var(--glass-border); padding: 30px 25px; border-radius: 25px; position: relative; text-align: left; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
@@ -911,8 +1053,8 @@
             /* 🚀 Apple 黏性滾動大螢幕雙欄配置 */
             .sticky-layout { flex-direction: row-reverse; gap: 80px; align-items: flex-start; }
             .sticky-visual-container { flex: 1; height: 80vh; max-height: 800px; top: 120px; }
-            .scroll-text-container { flex: 1; padding-top: 5vh; padding-bottom: 30vh; }
-            .scroll-step { min-height: 80vh; margin-bottom: 0; justify-content: center; } /* 🚀 恢復大螢幕的滿版高度設定 */
+            .scroll-text-container { flex: 1; padding-top: 5vh; padding-bottom: 30vh; padding-left: 0; padding-right: 0; } /* 拔除手機版留白 */
+            .scroll-step { min-height: 80vh; margin-bottom: 0; justify-content: center; text-align: left; align-items: flex-start; } /* 🚀 大螢幕恢復文字靠左對齊 */
             
             /* 大螢幕恢復大手機 */
             .mock-big-phone { max-width: 320px; border-width: 12px; border-radius: 45px; }
@@ -1353,99 +1495,109 @@
             <div style="text-align: center; margin-bottom: 60px;">
                 <span style="color: var(--primary-blue); font-weight: 900; letter-spacing: 3px; font-size: 14px; text-transform: uppercase;">User Scenario</span>
                 <h2 style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 900; margin: 15px 0 20px; color: #1a252f;">Tappie 的完美一日</h2>
-                <p style="color: #64748b; font-size: 1.15rem; max-width: 600px; margin: 0 auto; line-height: 1.6; font-weight: bold;">從補習班大廳到家裡的客廳，無縫接軌的口說生態系。</p>
+                <p style="color: #64748b; font-size: 1.15rem; max-width: 600px; margin: 0 auto; line-height: 1.6; font-weight: bold;">從學校到家裡的客廳，無縫接軌的口說生態系。</p>
             </div>
             
             <div class="sticky-layout">
                 <div class="sticky-visual-container">
-                    
                     <div class="mock-big-phone">
                         
-                        <div class="phone-screen active" id="screen-1" style="background: radial-gradient(circle at center, #1a365d, #050914); overflow: visible;">
-                            <div class="anim-nfc-stage" style="overflow: visible;"> 
-                                
-                                <img src="/assets/logo.webp" class="anim-mini-logo scrub" style="width: 100px; margin-bottom: 10px;" alt="Tappie Logo" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'><circle cx=\'50\' cy=\'50\' r=\'40\' fill=\'%23f1c40f\'/></svg>'">
-                                <div class="anim-mini-text scrub" style="font-size: 14px;">System Online...</div>
-
-                                <div class="nfc-real-waves scrub"></div>
-                                <div class="nfc-real-waves w2 scrub"></div>
-                            </div>
+                        <div class="phone-screen active" id="screen-1" style="background: var(--bg-dark);">
+                            <img src="/assets/official/tappieweb-stickty-1.PNG" style="width: 100%; height: 100%; object-fit: cover;" alt="">
                         </div>
 
                         <div class="phone-screen" id="screen-2" style="background: var(--bg-dark);">
-                            <div class="anim-diag-stage" style="transform: scale(0.85);">
-                                <div class="anim-diag-mic-wrapper scrub">
-                                    <div class="mock-mic anim-diag-mic scrub">🎤</div>
-                                    <div class="mock-wave anim-diag-waves">
-                                        <div class="mock-bar scrub"></div><div class="mock-bar scrub"></div><div class="mock-bar scrub"></div><div class="mock-bar scrub"></div><div class="mock-bar scrub"></div>
-                                    </div>
-                                </div>
-                                <div class="anim-diag-finger scrub">👆</div>
-                                <div class="anim-diag-sentence scrub">
-                                    I like to play 
-                                    <span class="diag-word scrub">
-                                        <span class="diag-green">bas</span><span class="diag-green">ket</span><span class="diag-red">ball</span>
-                                        <div class="diag-tooltip scrub">/bɔːl/ ➔ 母音偏移</div>
-                                    </span>
-                                </div>
-                            </div>
+                            <img src="/assets/official/tappieweb-stickty-2.PNG" style="width: 100%; height: 100%; object-fit: cover;" alt="">
                         </div>
 
                         <div class="phone-screen" id="screen-3" style="background: var(--bg-dark);">
-                            <div style="margin-top: 40px; margin-bottom: 10px; text-align: center; z-index: 50; width: 100%;">
-                                <div style="display: inline-block; padding: 6px 16px; background: rgba(255,255,255,0.1); border-radius: 20px; border: 1px solid rgba(255,255,255,0.15); color: #cbd5e1; font-size: 12px; font-weight: 900; letter-spacing: 2px; backdrop-filter: blur(10px);">本週口說診斷報告</div>
-                            </div>
+                            <img src="/assets/official/tappieweb-stickty-3.PNG" style="width: 100%; height: 100%; object-fit: cover;" alt="">
+                        </div>
 
-                            <div class="anim-radar-stage" style="transform: scale(0.85);">
-                                <div class="anim-radar-header">
-                                    <span class="radar-label l-1 scrub">Student: Leo (進階)</span>
-                                    <span class="radar-label l-2 scrub">Student: Mia (偏科)</span>
-                                    <span class="radar-label l-3 scrub">Student: Tom (衝刺)</span>
-                                </div>
-                                <div class="radar-container">
-                                    <div class="radar-bg"></div>
-                                    <div class="anim-radar-morph scrub"></div>
-                                    <div style="position: absolute; font-weight: bold; font-size: 13px; top: -10%; left: 50%; transform: translateX(-50%);">準確度</div>
-                                    <div style="position: absolute; font-weight: bold; font-size: 13px; right: -25%; top: 35%;">流暢度</div>
-                                    <div style="position: absolute; font-weight: bold; font-size: 13px; bottom: -10%; right: 5%;">穩定度</div>
-                                    <div style="position: absolute; font-weight: bold; font-size: 13px; bottom: -10%; left: 5%;">完整度</div>
-                                    <div style="position: absolute; font-weight: bold; font-size: 13px; left: -25%; top: 35%;">精熟度</div>
-                                </div>
-                                <div class="radar-score">
-                                    <span class="s-1 scrub">PR 85</span>
-                                    <span class="s-2 scrub">PR 42</span>
-                                    <span class="s-3 scrub">PR 68</span>
-                                </div>
-                            </div>
+                        <div class="phone-screen" id="screen-4" style="background: var(--bg-dark);">
+                            <img src="/assets/official/tappieweb-stickty-4.PNG" style="width: 100%; height: 100%; object-fit: cover;" alt="">
+                        </div>
+
+                        <div class="phone-screen" id="screen-5" style="background: var(--bg-dark);">
+                            <img src="/assets/official/tappieweb-stickty-5.PNG" style="width: 100%; height: 100%; object-fit: cover;" alt="">
                         </div>
 
                     </div>
-                    
-                    <div class="mock-nfc-card anim-card-big-phone scrub" id="big-nfc-card">
-                        <div class="mock-nfc-chip"></div>
-                    </div>
-
                 </div>
                 
                 <div class="scroll-text-container">
                     <div class="scroll-step active" data-step="1">
                         <div class="step-num">01</div>
-                        <h3 class="step-title">一嗶即唸，快速上線</h3>
-                        <p class="step-desc">下課前 10 分鐘，學生在校區大廳拿出專屬實體卡片感應平板。無需輸入帳號密碼，系統瞬間喚醒專屬學習大廳，立刻準備好進入全英語將是。</p>
+                        <h3 class="step-title">校園的隱形宣傳</h3>
+                        <p class="step-desc">智慧感應卡可與國小名牌套完美結合。孩子在校園日常配戴，不僅精緻美觀，更能讓貴校的英語品牌在學童同儕間得到最自然的招生宣傳效果。</p>
                     </div>
                     <div class="scroll-step" data-step="2">
                         <div class="step-num">02</div>
-                        <h3 class="step-title">沉浸式 AI 陪練</h3>
-                        <p class="step-desc">啟動對戰挑戰。在 Azure 醫療級引擎的精準抓錯與 Gemini AI 教練的引導下，進行高頻率的發音開口。即便遇到長句子結巴，系統也會給予溫柔寬容，重建孩子的開口自信。</p>
+                        <h3 class="step-title">大廳平板，到校即練</h3>
+                        <p class="step-desc">可以於補習班架設公用平板，學生到校後免輸入密碼，嗶卡即可開始口說過關。輕鬆將下課或休息時間化為高效率的英語練習點。</p>
                     </div>
                     <div class="scroll-step" data-step="3">
                         <div class="step-num">03</div>
-                        <h3 class="step-title">成效視覺化與回饋</h3>
-                        <p class="step-desc">練習結束後，學生抽取 3D 盲盒獲得實質成就感。同時，家長的手機已自動收到精美的雷達圖診斷與專屬教育週報，徹底解放老師的課後溝通時間。</p>
+                        <h3 class="step-title">堂上優異，靠卡加分</h3>
+                        <p class="step-desc">在教室內，學生回答問題表現亮眼或課堂競賽獲勝時，老師只需拿起手機輕碰學生的專屬名牌，即可直接執行線上加扣點，行政效率百分百。</p>
+                    </div>
+                    <div class="scroll-step" data-step="4">
+                        <div class="step-num">04</div>
+                        <h3 class="step-title">家長在家，成效一目了然</h3>
+                        <p class="step-desc">家長在家即可查看小孩的個人動態分析。包含五維雷達圖、強弱勢單字追蹤，以及 AI 教練給予的居家陪伴指引，用數據展示貴校的教學實力。</p>
+                    </div>
+                    <div class="scroll-step" data-step="5">
+                        <div class="step-num">05</div>
+                        <h3 class="step-title">回到家，手機一嗶繼續挑戰</h3>
+                        <p class="step-desc">回到家中的孩子，隨時可以拿起家長的手機或家中的平板，靠卡感應即可無縫重返Tappie系統，主動完成每日的口說練習量，續班率直線飆升。</p>
                     </div>
                 </div>
             </div>
         </section>
+
+        <section class="section" style="max-width: 100vw; width: 100vw; margin: 0; padding: 60px 0 100px;">
+            <span style="color: var(--marian-green); font-weight: 900; letter-spacing: 3px; font-size: 14px; text-transform: uppercase;" class="reveal-up">Hardware Lineup</span>
+            <h2 style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 900; margin: 15px 0 50px; color: #fff;" class="reveal-up">Tappie 實體商品與客製化</h2>
+            
+            <div class="bento-gallery reveal-up" style="transition-delay: 0.2s;">
+                
+                <div class="bento-item" onclick="openLightbox('Tappie 官方標準學生卡', ['/assets/official/tappiecard-1.PNG', '/assets/official/tappiecard-2.PNG', '/assets/official/tappiecard-3.PNG', '/assets/official/tappiecard-4.PNG'])">
+                    <div class="gallery-badge">📷 產品相簿</div>
+                    <img src="/assets/official/tappiecard-1.PNG" class="bento-img" alt="">
+                    <div class="bento-caption">
+                        <h4>Tappie 官方標準卡</h4>
+                        <p>標準信用卡尺寸，採用防刮耐磨的晶片複合材質。印有經典吉祥物，最適合放入學生胸前名牌套中天天配戴。</p>
+                    </div>
+                </div>
+                
+                <div class="bento-item" onclick="openLightbox('Tappie 官方專屬感應吊牌系列', ['/assets/official/tappietag-1.PNG', '/assets/official/tappietag-2.PNG'])">
+                    <div class="gallery-badge">📷 產品相簿</div>
+                    <img src="/assets/official/tappietag-1.PNG" class="bento-img" alt="">
+                    <div class="bento-caption">
+                        <h4>Tappie 官方感應吊牌</h4>
+                        <p>打破卡片限制！專為不喜歡帶名牌的學童設計，可輕巧掛在書包、鉛筆盒或水壺袋上。防撞防水，是極具科技感的人氣配件。</p>
+                    </div>
+                </div>
+                
+                <div class="bento-item tablet-full" onclick="openLightbox('品牌校區專屬客製化', ['/assets/official/tappiecard-customized.PNG'])">
+                    <div class="gallery-badge">📷 樣本參考</div>
+                    <img src="/assets/official/tappiecard-customized.PNG" class="bento-img" alt="">
+                    <div class="bento-caption">
+                        <h4>校區專屬白標客製卡</h4>
+                        <p>為大型連鎖加盟校與品牌主提供的高級服務。支援全面印上貴校專屬的 Logo、主視覺配色與品牌圖騰，完美融為您招生時的數位活招牌。</p>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <div class="lightbox-overlay" id="gallery-lightbox">
+            <div class="lightbox-title" id="lightbox-title">圖庫標題</div>
+            <div class="lightbox-slider" id="lightbox-slider" onscroll="updateLightboxDots()">
+            </div>
+            <div class="lightbox-nav" id="lightbox-dots">
+            </div>
+        </div>
 
         <section class="section" style="padding-top: 60px; padding-bottom: 100px; min-height: auto; text-align: center; background: rgba(255,255,255,0.01); width: 100vw; max-width: 100vw; border-top: 1px solid rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.05);">
             <h2 style="font-size: clamp(1.8rem, 3vw, 2.5rem); font-weight: 900; color: #fff; letter-spacing: 2px; margin-bottom: 15px;" class="reveal-up">世界級底層架構</h2>
@@ -1731,14 +1883,10 @@
                     
                     p = Math.max(0, Math.min(1, p)); 
                     
+                    // 🚀 完美的純實景照片進度控制，不再受卡片動畫干擾，清爽乾淨
                     const screen = document.getElementById(`screen-${index + 1}`);
                     if (screen) {
                         screen.style.setProperty('--p', p);
-                        
-                        if (index === 0) {
-                            const bigCard = document.getElementById('big-nfc-card');
-                            if (bigCard) bigCard.style.setProperty('--p', p);
-                        }
                     }
                 });
             });
@@ -2258,6 +2406,106 @@
                 btn.style.pointerEvents = 'auto';
             });
         }
+        
+        // =======================================================
+        // 📸 OMO 圖庫引擎：手機滑動點亮 & Lightbox 橫向滑動
+        // =======================================================
+        
+        // 1. 手機版滑動自動點亮 (Intersection Observer)
+        document.addEventListener("DOMContentLoaded", function() {
+            const bentoItems = document.querySelectorAll('.bento-item');
+            
+            // 只有在螢幕寬度小於 992px (平板/手機) 才啟動自動點亮
+            if (window.innerWidth <= 992) {
+                const bentoObserver = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        // 當圖片進入畫面中央區域時，自動加上 active 點亮
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('active');
+                        } else {
+                            entry.target.classList.remove('active');
+                        }
+                    });
+                }, { 
+                    root: null, 
+                    rootMargin: '-30% 0px -30% 0px', // 判定區限縮在畫面中間 40%
+                    threshold: 0 
+                });
+
+                bentoItems.forEach(item => bentoObserver.observe(item));
+            }
+        });
+
+        // 2. Lightbox 燈箱控制
+        const lightbox = document.getElementById('gallery-lightbox');
+        const slider = document.getElementById('lightbox-slider');
+        const dotsContainer = document.getElementById('lightbox-dots');
+        const titleElement = document.getElementById('lightbox-title');
+        let currentImgCount = 0;
+
+        function openLightbox(title, imgUrlsArray) {
+            titleElement.innerText = title;
+            slider.innerHTML = '';
+            dotsContainer.innerHTML = '';
+            currentImgCount = imgUrlsArray.length;
+
+            imgUrlsArray.forEach((url, index) => {
+                // 產生圖片
+                const img = document.createElement('img');
+                img.src = url;
+                slider.appendChild(img);
+
+                // 產生下方的導航點點
+                if (currentImgCount > 1) {
+                    const dot = document.createElement('div');
+                    dot.classList.add('lightbox-dot');
+                    if (index === 0) dot.classList.add('active');
+                    // 點擊點點可以快速滑動到該圖片
+                    dot.onclick = () => {
+                        const imgWidth = slider.clientWidth;
+                        slider.scrollTo({ left: imgWidth * index, behavior: 'smooth' });
+                    };
+                    dotsContainer.appendChild(dot);
+                }
+            });
+
+            lightbox.classList.add('show');
+            document.body.style.overflow = 'hidden'; // 防止背景網頁繼續滾動
+        }
+
+        function closeLightbox() {
+            lightbox.classList.remove('show');
+            // 🚀 關鍵修復：這裡不能寫 'auto'！必須設為空字串 ''，讓它恢復 CSS 預設值，才不會殺死 Sticky 黏性滾動！
+            document.body.style.overflow = ''; 
+        }
+
+        // 🚀 新增：點擊圖片以外的暗處，直接優雅關閉燈箱
+        lightbox.addEventListener('click', function(e) {
+            // 如果點擊的目標是遮罩背景、滑動容器本身、標題或導航點，而不是圖片實體，就關閉
+            if (e.target === lightbox || e.target === slider || e.target === titleElement || e.target === dotsContainer) {
+                closeLightbox();
+            }
+        });
+
+        // 3. 監聽滑動，動態更新下方的點點狀態
+        function updateLightboxDots() {
+            if (currentImgCount <= 1) return;
+            
+            const scrollLeft = slider.scrollLeft;
+            const imgWidth = slider.clientWidth;
+            // 計算目前滑到了第幾張圖 (四捨五入)
+            const currentIndex = Math.round(scrollLeft / imgWidth);
+            
+            const dots = dotsContainer.querySelectorAll('.lightbox-dot');
+            dots.forEach((dot, index) => {
+                if (index === currentIndex) {
+                    dot.classList.add('active');
+                } else {
+                    dot.classList.remove('active');
+                }
+            });
+        }
+        
         // 統一的錯誤狀態 UI 恢復系統
         function showError(text = "❌ 查無此卡，請重試") {
             msg.innerText = text;
