@@ -739,9 +739,10 @@
         /* ========================================= */
         .bento-gallery {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            grid-auto-rows: 280px;
-            gap: 20px;
+            /* 🚀 修改：改為高級 3 欄對稱排版 */
+            grid-template-columns: repeat(3, 1fr);
+            grid-auto-rows: 340px; /* 稍微拉高格子的比例，展示卡片商品更霸氣 */
+            gap: 25px;
             width: 100%;
             max-width: 1100px;
             margin: 0 auto;
@@ -762,14 +763,12 @@
             align-items: flex-end;
         }
         
-        /* 🚀 修改：加入 .active 狀態供手機版滾動點亮使用 */
         .bento-item:hover, .bento-item.active {
             transform: translateY(-8px);
             box-shadow: 0 25px 50px rgba(0, 123, 255, 0.3);
             border-color: rgba(255,255,255,0.3);
         }
         
-        /* 🚀 修復：設定 color: transparent 隱藏破圖時醜陋的 alt 預設文字 */
         .bento-img {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -781,48 +780,57 @@
         }
         .bento-item:hover .bento-img, .bento-item.active .bento-img {
             opacity: 1;
-            transform: scale(1.08);
+            transform: scale(1.05);
         }
         
         .bento-item::after {
             content: '';
             position: absolute;
-            bottom: 0; left: 0; width: 100%; height: 65%;
-            background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0) 100%);
+            bottom: 0; left: 0; width: 100%; height: 70%;
+            background: linear-gradient(to top, rgba(11, 15, 26, 0.95) 0%, rgba(11, 15, 26, 0) 100%);
             z-index: 2;
             pointer-events: none;
         }
         
-        /* 📷 多圖提示標籤 */
         .gallery-badge {
             position: absolute;
-            top: 15px; right: 15px;
+            top: 20px; right: 20px;
             background: rgba(0,0,0,0.6);
             backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.15);
             color: white;
-            padding: 6px 12px;
+            padding: 6px 14px;
             border-radius: 20px;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: bold;
             z-index: 10;
             display: flex;
             align-items: center;
             gap: 6px;
             transition: 0.3s;
+            letter-spacing: 1px;
         }
         .bento-item:hover .gallery-badge, .bento-item.active .gallery-badge {
             background: var(--primary-blue);
             border-color: var(--primary-blue);
         }
 
-        .bento-caption { position: relative; z-index: 3; padding: 25px; text-align: left; width: 100%; }
-        .bento-caption h4 { margin: 0 0 8px 0; font-size: 20px; font-weight: 900; color: var(--marian-gold); text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
-        .bento-caption p { margin: 0; font-size: 14px; color: #e2e8f0; line-height: 1.5; font-weight: bold; text-shadow: 0 1px 3px rgba(0,0,0,0.8); }
+        .bento-caption { position: relative; z-index: 3; padding: 30px 25px; text-align: left; width: 100%; box-sizing: border-box; }
+        .bento-caption h4 { margin: 0 0 10px 0; font-size: 20px; font-weight: 900; color: var(--marian-gold); text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+        .bento-caption p { margin: 0; font-size: 13.5px; color: #cbd5e1; line-height: 1.6; font-weight: bold; text-shadow: 0 1px 3px rgba(0,0,0,0.8); }
         
-        .bento-large { grid-column: span 2; grid-row: span 2; }
-        .bento-wide { grid-column: span 2; grid-row: span 1; }
-        .bento-square { grid-column: span 1; grid-row: span 1; }
+        /* 🚀 響應式：手機與平板完美分配 */
+        @media (max-width: 992px) {
+            .bento-gallery { grid-template-columns: repeat(2, 1fr); gap: 20px; }
+            .bento-item.tablet-full { grid-column: span 2; } /* 讓第三個客製化卡片在平板寬度時橫跨滿版，極度好看 */
+        }
+        
+        @media (max-width: 576px) {
+            .bento-gallery { grid-template-columns: 1fr; grid-auto-rows: 260px; }
+            .bento-item.tablet-full { grid-column: span 1; }
+            .bento-caption h4 { font-size: 18px !important; }
+            .bento-caption p { font-size: 13px !important; }
+        }
 
         /* ========================================= */
         /* 📸 滿版橫向滑動燈箱 (Lightbox Modal) */
@@ -1483,116 +1491,100 @@
 
     <div class="global-section">
         
-        <section class="light-break-section">
-            <div style="text-align: center; margin-bottom: 60px;">
+        <section class="section" style="max-width: 100vw; width: 100vw; margin: 0; padding: 80px 0;">
+            <div style="text-align: center; margin-bottom: 60px; padding: 0 25px;">
                 <span style="color: var(--primary-blue); font-weight: 900; letter-spacing: 3px; font-size: 14px; text-transform: uppercase;">User Scenario</span>
-                <h2 style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 900; margin: 15px 0 20px; color: #1a252f;">Tappie 的完美一日</h2>
+                <h2 style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 900; margin: 15px 0 20px; color: #fff;">Tappie 的完美一日</h2>
                 <p style="color: #64748b; font-size: 1.15rem; max-width: 600px; margin: 0 auto; line-height: 1.6; font-weight: bold;">從補習班大廳到家裡的客廳，無縫接軌的口說生態系。</p>
             </div>
             
             <div class="sticky-layout">
                 <div class="sticky-visual-container">
-                    
                     <div class="mock-big-phone">
                         
-                        <div class="phone-screen active" id="screen-1" style="background: var(--bg-dark); overflow: visible;">
-                            <img src="https://images.unsplash.com/photo-1577896851231-70ef18881754?q=80&w=600&auto=format&fit=crop" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.7;" alt="名牌宣傳">
-                            
-                            <div class="mock-nfc-card anim-card-big-phone scrub" id="big-nfc-card" style="top: -20px; transform: scale(0.85);">
-                                <div class="mock-nfc-chip"></div>
-                            </div>
+                        <div class="phone-screen active" id="screen-1" style="background: var(--bg-dark);">
+                            <img src="https://images.unsplash.com/photo-1577896851231-70ef18881754?q=80&w=600&auto=format&fit=crop" style="width: 100%; height: 100%; object-fit: cover;" alt="">
                         </div>
 
                         <div class="phone-screen" id="screen-2" style="background: var(--bg-dark);">
-                            <img src="https://images.unsplash.com/photo-1606326608606-aa0b62935f2b?q=80&w=600&auto=format&fit=crop" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.8;" alt="補習班測驗">
+                            <img src="https://images.unsplash.com/photo-1606326608606-aa0b62935f2b?q=80&w=600&auto=format&fit=crop" style="width: 100%; height: 100%; object-fit: cover;" alt="">
                         </div>
 
                         <div class="phone-screen" id="screen-3" style="background: var(--bg-dark);">
-                            <img src="https://images.unsplash.com/photo-1580894732444-8ecded7900cd?q=80&w=600&auto=format&fit=crop" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.8;" alt="課堂加分">
+                            <img src="https://images.unsplash.com/photo-1580894732444-8ecded7900cd?q=80&w=600&auto=format&fit=crop" style="width: 100%; height: 100%; object-fit: cover;" alt="">
                         </div>
 
                         <div class="phone-screen" id="screen-4" style="background: var(--bg-dark);">
-                            <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=600&auto=format&fit=crop" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.8;" alt="家長報表">
+                            <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=600&auto=format&fit=crop" style="width: 100%; height: 100%; object-fit: cover;" alt="">
                         </div>
 
                         <div class="phone-screen" id="screen-5" style="background: var(--bg-dark);">
-                            <img src="https://images.unsplash.com/photo-1529390079861-591de354faf5?q=80&w=600&auto=format&fit=crop" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.8;" alt="居家口說">
+                            <img src="https://images.unsplash.com/photo-1529390079861-591de354faf5?q=80&w=600&auto=format&fit=crop" style="width: 100%; height: 100%; object-fit: cover;" alt="">
                         </div>
 
                     </div>
-                    
                 </div>
                 
                 <div class="scroll-text-container">
                     <div class="scroll-step active" data-step="1">
                         <div class="step-num">01</div>
-                        <h3 class="step-title">會走路的招生名片</h3>
-                        <p class="step-desc">卡片結合國小名牌設計。學生在學校配戴時，不僅是身分的象徵，更讓自家的教育品牌在校園中達到最強的口碑行銷效果。</p>
+                        <h3 class="step-title">校園名牌的隱形宣傳</h3>
+                        <p class="step-desc">智慧感應卡可與國小名牌套完美結合。孩子在校園日常配戴，不僅精緻美觀，更能讓貴校的英語品牌在學童同儕間得到最自然的招生宣傳效果。</p>
                     </div>
                     <div class="scroll-step" data-step="2">
                         <div class="step-num">02</div>
-                        <h3 class="step-title">下課十分鐘，開口說英文</h3>
-                        <p class="step-desc">只需在校區大廳架設公用平板，學生抵達後嗶卡即可開始口說練習。完美利用下課或休息時間完成任務，不佔用實體教學時數。</p>
+                        <h3 class="step-title">大廳平板，到校即練</h3>
+                        <p class="step-desc">只需在補習班大廳或玄關架設公用平板，學生到校後免輸入密碼，嗶卡即可開始口說過關。輕鬆將下課或休息時間化為高效率的英語練習點。</p>
                     </div>
                     <div class="scroll-step" data-step="3">
                         <div class="step-num">03</div>
-                        <h3 class="step-title">課堂表現，一嗶給獎</h3>
-                        <p class="step-desc">在實體教室內，學生回答問題表現優異時，老師只需用手機輕觸學生名牌，即可瞬間完成加點，完美串聯線上與線下的獎勵機制。</p>
+                        <h3 class="step-title">堂上優異，實體靠卡加分</h3>
+                        <p class="step-desc">在教室內，學生回答問題表現亮眼或課堂競賽獲勝時，老師只需拿起手機輕碰學生的專屬名牌，即可直接執行線上加扣點，行政效率百分百。</p>
                     </div>
                     <div class="scroll-step" data-step="4">
                         <div class="step-num">04</div>
-                        <h3 class="step-title">數據可視化，親師零距離</h3>
-                        <p class="step-desc">家長在家隨時透過手機收到學生的練習分析。精美的五維雷達圖、優劣單字盤點，以及專屬的教養與陪練建議，讓專業被看見。</p>
+                        <h3 class="step-title">家長在家，成效一目了然</h3>
+                        <p class="step-desc">家長在家點開 Email 即可查看每週動態分析。包含五維雷達圖、強弱勢單字追蹤，以及 AI 教練給予的居家陪伴指引，用數據展示貴校的教學實力。</p>
                     </div>
                     <div class="scroll-step" data-step="5">
                         <div class="step-num">05</div>
-                        <h3 class="step-title">學習不中斷，家裡也是語言村</h3>
-                        <p class="step-desc">回到家後，學生隨時可以拿起平板或家長的手機，嗶卡後無縫繼續未完成的口說任務，將英語開口練習真正融入日常生活中。</p>
+                        <h3 class="step-title">回到家中，手機一嗶繼續挑戰</h3>
+                        <p class="step-desc">回到家中的孩子，隨時可以拿起家長的手機或家中的平板，靠卡感應即可無縫重返對戰大廳，主動刷滿每日的口說練習量，續班率直線飆升。</p>
                     </div>
                 </div>
-                
             </div>
         </section>
 
-        <section class="section" style="padding-top: 60px; padding-bottom: 80px; min-height: auto; text-align: center;">
-            <span style="color: var(--marian-green); font-weight: 900; letter-spacing: 3px; font-size: 14px; text-transform: uppercase;" class="reveal-up">OMO Experience</span>
-            <h2 style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 900; margin: 15px 0 50px; color: #fff;" class="reveal-up">重新定義英語教室的樣貌</h2>
+        <section class="section" style="max-width: 100vw; width: 100vw; margin: 0; padding: 60px 0 100px;">
+            <span style="color: var(--marian-green); font-weight: 900; letter-spacing: 3px; font-size: 14px; text-transform: uppercase;" class="reveal-up">Hardware Lineup</span>
+            <h2 style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 900; margin: 15px 0 50px; color: #fff;" class="reveal-up">Tappie 實體感應裝置系列</h2>
             
             <div class="bento-gallery reveal-up" style="transition-delay: 0.2s;">
                 
-                <div class="bento-item bento-large" onclick="openLightbox('一嗶即戰的科技流暢感', ['https://images.unsplash.com/photo-1590209673960-939e871ddf44?q=80&w=1000&auto=format&fit=crop', 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?q=80&w=1000&auto=format&fit=crop'])">
-                    <div class="gallery-badge">📷 +2 圖</div>
+                <div class="bento-item" onclick="openLightbox('Tappie 官方標準學生卡', ['https://images.unsplash.com/photo-1590209673960-939e871ddf44?q=80&w=1000&auto=format&fit=crop', 'https://images.unsplash.com/photo-1544305175-5231c6130b91?q=80&w=1000&auto=format&fit=crop'])">
+                    <div class="gallery-badge">📷 產品相簿</div>
                     <img src="https://images.unsplash.com/photo-1590209673960-939e871ddf44?q=80&w=1000&auto=format&fit=crop" class="bento-img" alt="">
                     <div class="bento-caption">
-                        <h4>一嗶即戰的科技流暢感</h4>
-                        <p>無需密碼，學生持專屬魔法卡感應設備，瞬間喚醒專屬學習宇宙，下課前 10 分鐘輕鬆完成口說任務。</p>
+                        <h4>Tappie 官方標準卡</h4>
+                        <p>標準信用卡尺寸，採用防刮耐磨的高階晶片複合材質。印有經典吉祥物，最適合放入學生胸前名牌套中天天配戴。</p>
                     </div>
                 </div>
                 
-                <div class="bento-item bento-wide" onclick="openLightbox('超越卡片：專屬感應吊牌', ['https://images.unsplash.com/photo-1601931818224-4b53fa9cb907?q=80&w=1000&auto=format&fit=crop', 'https://images.unsplash.com/photo-1544305175-5231c6130b91?q=80&w=1000&auto=format&fit=crop', 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=1000&auto=format&fit=crop'])">
-                    <div class="gallery-badge">📷 +3 圖</div>
+                <div class="bento-item" onclick="openLightbox('Tappie 官方專屬感應吊牌系列', ['https://images.unsplash.com/photo-1601931818224-4b53fa9cb907?q=80&w=1000&auto=format&fit=crop', 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=1000&auto=format&fit=crop'])">
+                    <div class="gallery-badge">📷 產品相簿</div>
                     <img src="https://images.unsplash.com/photo-1601931818224-4b53fa9cb907?q=80&w=800&auto=format&fit=crop" class="bento-img" alt="">
                     <div class="bento-caption">
-                        <h4>超越卡片：專屬感應吊牌</h4>
-                        <p>除了標準卡片，支援將 NFC 晶片植入客製化吊飾。掛在書包或鉛筆盒上，成為同學間最酷的科技配件。</p>
+                        <h4>Tappie 官方感應吊牌</h4>
+                        <p>打破卡片限制！專為不喜歡帶名牌的學童設計，可輕巧掛在書包、鉛筆盒或水壺袋上。防撞防水，是極具科技感的人氣配件。</p>
                     </div>
                 </div>
                 
-                <div class="bento-item bento-square" onclick="openLightbox('家長視角：精準數據追蹤', ['https://images.unsplash.com/photo-1511895426328-dc8714191300?q=80&w=1000&auto=format&fit=crop'])">
-                    <div class="gallery-badge">🔍 放大</div>
-                    <img src="https://images.unsplash.com/photo-1511895426328-dc8714191300?q=80&w=600&auto=format&fit=crop" class="bento-img" alt="">
-                    <div class="bento-caption">
-                        <h4 style="font-size: 16px;">家長視角</h4>
-                        <p style="font-size: 12px;">即時收到雷達圖報表，親師溝通零距離。</p>
-                    </div>
-                </div>
-                
-                <div class="bento-item bento-square" onclick="openLightbox('品牌客製化專屬卡面', ['https://images.unsplash.com/photo-1611162616475-46b635cb6868?q=80&w=1000&auto=format&fit=crop', 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?q=80&w=1000&auto=format&fit=crop'])">
-                    <div class="gallery-badge">📷 +2 圖</div>
+                <div class="bento-item tablet-full" onclick="openLightbox('品牌校區專屬客製化卡面服務', ['https://images.unsplash.com/photo-1611162616475-46b635cb6868?q=80&w=1000&auto=format&fit=crop', 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?q=80&w=1000&auto=format&fit=crop'])">
+                    <div class="gallery-badge">📷 服務案例</div>
                     <img src="https://images.unsplash.com/photo-1611162616475-46b635cb6868?q=80&w=600&auto=format&fit=crop" class="bento-img" alt="">
                     <div class="bento-caption">
-                        <h4 style="font-size: 16px;">品牌專屬客製</h4>
-                        <p style="font-size: 12px;">印上貴校 Logo，打造頂級品牌認同感。</p>
+                        <h4>校區專屬白標客製卡</h4>
+                        <p>為大型連鎖加盟校與品牌主提供的高級服務。支援全面印上貴校專屬的 Logo、主視覺配色與品牌圖騰，完美融為您招生時的數位活招牌。</p>
                     </div>
                 </div>
 
@@ -1891,14 +1883,10 @@
                     
                     p = Math.max(0, Math.min(1, p)); 
                     
+                    // 🚀 完美的純實景照片進度控制，不再受卡片動畫干擾，清爽乾淨
                     const screen = document.getElementById(`screen-${index + 1}`);
                     if (screen) {
                         screen.style.setProperty('--p', p);
-                        
-                        if (index === 0) {
-                            const bigCard = document.getElementById('big-nfc-card');
-                            if (bigCard) bigCard.style.setProperty('--p', p);
-                        }
                     }
                 });
             });
