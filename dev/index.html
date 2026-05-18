@@ -974,10 +974,14 @@
             padding-right: 20px;
         }
         .scroll-step {
+            /* 🚀 修復：手機版把高度與間距縮小，讓文字接得更緊密，消除乾滑的空窗期 */
             min-height: 35vh; margin-bottom: 10vh; 
             display: flex; flex-direction: column; justify-content: flex-start;
-            text-align: center; 
+            text-align: center; /* 手機版文字置中，對齊上方手機畫面更美觀 */
             align-items: center; 
+            opacity: 0; transform: translateY(40px); transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+            /* 🚀 將 opacity 改為 0，並改為往下降 (translateY)，只要脫離雷達區就會瞬間消失並掉下去！ */
             opacity: 0; transform: translateY(40px); transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .scroll-step:last-child { margin-bottom: 0; }
