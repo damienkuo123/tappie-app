@@ -1846,65 +1846,48 @@
             const activeElements = document.querySelectorAll('#tab-student .reveal-up, #tab-student .reveal-left, #tab-student .reveal-right, .hero-text, .login-card, .global-section .reveal-up, .global-section .reveal-left, .global-section .reveal-right');
             activeElements.forEach(el => scrollObserver.observe(el));
             // ==========================================
-            // 🚀 專屬 Apple 黏性滾動引擎 (Sticky Scroll)
+            // 🚀 專屬 Apple 黏性滾動引擎 (Sticky Scroll) - 絕對純淨版
             // ==========================================
             const scrollSteps = document.querySelectorAll('.scroll-step');
             const phoneScreens = document.querySelectorAll('.phone-screen');
             
-            // 🚀 判斷當前是否為大螢幕 (電腦版)
-            const isDesktop = window.innerWidth >= 992;
-
-            // 🚀 智慧雷達區間設定：
-            // 電腦版：擴大生存區！從畫面底部 15% 活到頂部 15%，讓文字停留在畫面上的時間最大化。
-            // 手機版：維持 '-55% 0px -15% 0px'，文字碰到手機底緣就消失。
-            const stepObserverOptions = {
-                root: null,
-                rootMargin: isDesktop ? '-15% 0px -15% 0px' : '-55% 0px -15% 0px', 
-                threshold: 0
-            };
-
-            const stepObserver = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('active');
-                        
-                        const stepNum = entry.target.getAttribute('data-step');
-                        phoneScreens.forEach(screen => screen.classList.remove('active'));
-                        const targetScreen = document.getElementById(`screen-${stepNum}`);
-                        if (targetScreen) targetScreen.classList.add('active');
-                    } else {
-                        entry.target.classList.remove('active');
-                    }
-                });
-            }, stepObserverOptions);
-
-            scrollSteps.forEach(step => stepObserver.observe(step));
-            
-            // 🚀 智慧動畫時間軸：動態調整播放速率
+            // 移除不穩定的 Intersection Observer，改用精準的 Scroll 距離計算
             window.addEventListener('scroll', () => {
                 const windowHeight = window.innerHeight;
-                const currentIsDesktop = window.innerWidth >= 992;
+                // 🎯 觸發線：設定在螢幕中央偏上 (約 40% 處)，這裡視覺焦點最好
+                const triggerLine = windowHeight * 0.4; 
                 
+                let activeIndex = 0;
+                let minDistance = Infinity;
+
+                // 1. 掃描所有的文字步驟，看誰的「中心點」離「觸發線」最近
                 scrollSteps.forEach((step, index) => {
                     const rect = step.getBoundingClientRect();
+                    const stepCenter = rect.top + (rect.height / 2);
+                    const distance = Math.abs(stepCenter - triggerLine);
+
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        activeIndex = index; // 記住最近的這個元素索引
+                    }
+                });
+
+                // 2. 統一派發 Active 狀態，贏家全拿，絕對不會發生兩個同時亮起的 Bug
+                scrollSteps.forEach((step, index) => {
+                    const targetScreen = document.getElementById(`screen-${index + 1}`);
                     
-                    // 🚀 終極同步：讓「動畫的作動區間」與「文字的生存區間」完全吻合！
-                    // 電腦版：文字在 85% 處出現時動畫 0%，一路滑到 15% 處消失時動畫剛好 100%。
-                    const startY = windowHeight * (currentIsDesktop ? 0.85 : 0.85);
-                    const endY = windowHeight * (currentIsDesktop ? 0.15 : 0.35);
-                    
-                    let p = (startY - rect.top) / (startY - endY);
-                    
-                    p = Math.max(0, Math.min(1, p)); 
-                    
-                    // 🚀 完美的純實景照片進度控制，不再受卡片動畫干擾，清爽乾淨
-                    const screen = document.getElementById(`screen-${index + 1}`);
-                    if (screen) {
-                        screen.style.setProperty('--p', p);
+                    if (index === activeIndex) {
+                        step.classList.add('active');
+                        if (targetScreen) targetScreen.classList.add('active');
+                    } else {
+                        step.classList.remove('active');
+                        if (targetScreen) targetScreen.classList.remove('active');
                     }
                 });
             });
-        });
+            
+            // 初始化：網頁載入時主動算一次，確保第一張圖正確顯示
+            window.dispatchEvent(new Event('scroll'));
         
         // ==========================================
             // 🚀 科技權威卡片滾動感應 (手機版免滑鼠自動通電)
