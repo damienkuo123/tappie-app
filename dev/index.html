@@ -970,17 +970,15 @@
             display: flex; flex-direction: column; padding-bottom: 5vh;
             z-index: 20; 
             padding-top: 45vh; 
-            padding-left: 20px; 
+            padding-left: 20px; /* 🚀 新增：手機版左右安全距離，避免貼邊 */
             padding-right: 20px;
         }
         .scroll-step {
             /* 🚀 修復：手機版把高度與間距縮小，讓文字接得更緊密，消除乾滑的空窗期 */
             min-height: 35vh; margin-bottom: 10vh; 
             display: flex; flex-direction: column; justify-content: flex-start;
-            text-align: center; /* 手機版文字置中，對齊上方手機畫面更美觀 */
+            text-align: center; /* 🚀 新增：手機版文字置中，對齊上方手機畫面更美觀 */
             align-items: center; 
-            opacity: 0; transform: translateY(40px); transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-        }
             /* 🚀 將 opacity 改為 0，並改為往下降 (translateY)，只要脫離雷達區就會瞬間消失並掉下去！ */
             opacity: 0; transform: translateY(40px); transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         }
@@ -988,7 +986,7 @@
         .scroll-step.active { opacity: 1; transform: translateY(0); }
         .step-num { font-size: 60px; font-weight: 900; color: #e2e8f0; line-height: 1; margin-bottom: -15px; transition: 0.3s; }
         .scroll-step.active .step-num { color: var(--marian-gold); } 
-        .step-title { font-size: clamp(1.6rem, 4vw, 2.5rem); font-weight: 900; color: #1a252f; margin-bottom: 15px; } 
+        .step-title { font-size: clamp(1.6rem, 4vw, 2.5rem); font-weight: 900; color: #1a252f; margin-bottom: 15px; } /* 微調標題大小 */
         .step-desc { font-size: 1.1rem; color: #64748b; line-height: 1.8; font-weight: bold; max-width: 480px; }
         
         .timeline-grid { display: grid; grid-template-columns: 1fr; gap: 30px; margin-top: 40px; width: 100%; max-width: 1100px; }
@@ -1855,8 +1853,10 @@
             const scrollSteps = document.querySelectorAll('.scroll-step');
             const phoneScreens = document.querySelectorAll('.phone-screen');
             
-            // 1. Intersection Observer 現在「只負責」文字的淡入淡出動畫
+            // 🚀 判斷當前是否為大螢幕 (電腦版)
             const isDesktop = window.innerWidth >= 992;
+
+            // 1. Intersection Observer 現在「只負責」文字的淡入淡出動畫
             const stepObserverOptions = {
                 root: null,
                 rootMargin: isDesktop ? '-15% 0px -15% 0px' : '-55% 0px -15% 0px', 
@@ -1878,11 +1878,11 @@
             // 2. 🚀 核心升級：圖片切換改由真實 Scroll 座標絕對控制，徹底根除邊界抖動！
             window.addEventListener('scroll', () => {
                 // 定義觸發線：大螢幕抓螢幕高度 50% 的中心點，手機版因為圖片在上面，我們抓偏下的 60% 處
-                const triggerPoint = window.innerHeight * (window.innerWidth >= 992 ? 0.5 : 0.6);
+                const triggerPoint = window.innerHeight * (isDesktop ? 0.5 : 0.6);
                 
                 let currentActiveIndex = 0; // 預設顯示第一張圖
 
-                // 迴圈比對每一個文字區塊的座標
+                // 迴圈比對每一個文字區塊的絕對座標
                 scrollSteps.forEach((step, index) => {
                     const rect = step.getBoundingClientRect();
                     // 當這個文字區塊的頂端，滑過（小於等於）我們設定的觸發線時，就視為進度到了這一步
@@ -1900,6 +1900,7 @@
                     }
                 });
             });
+        });
         
         // ==========================================
             // 🚀 科技權威卡片滾動感應 (手機版免滑鼠自動通電)
