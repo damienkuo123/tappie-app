@@ -974,11 +974,13 @@
             padding-right: 20px;
         }
         .scroll-step {
+            /* 🚀 修復：手機版把高度與間距縮小，讓文字接得更緊密，消除乾滑的空窗期 */
             min-height: 35vh; margin-bottom: 10vh; 
             display: flex; flex-direction: column; justify-content: flex-start;
-            opacity: 0; transform: translateY(40px); transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
             text-align: center; /* 🚀 新增：手機版文字置中，對齊上方手機畫面更美觀 */
             align-items: center; 
+            /* 🚀 將 opacity 改為 0，並改為往下降 (translateY)，只要脫離雷達區就會瞬間消失並掉下去！ */
+            opacity: 0; transform: translateY(40px); transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .scroll-step:last-child { margin-bottom: 0; }
         .scroll-step.active { opacity: 1; transform: translateY(0); }
@@ -1854,9 +1856,7 @@
             // 🚀 判斷當前是否為大螢幕 (電腦版)
             const isDesktop = window.innerWidth >= 992;
 
-            // 🚀 智慧雷達區間設定：
-            // 電腦版：擴大生存區！從畫面底部 15% 活到頂部 15%，讓文字停留在畫面上的時間最大化。
-            // 手機版：維持 '-55% 0px -15% 0px'，文字碰到手機底緣就消失。
+            // 1. Intersection Observer 現在「只負責」文字的淡入淡出動畫
             const stepObserverOptions = {
                 root: null,
                 rootMargin: isDesktop ? '-15% 0px -15% 0px' : '-55% 0px -15% 0px', 
@@ -1867,11 +1867,6 @@
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
                         entry.target.classList.add('active');
-                        
-                        const stepNum = entry.target.getAttribute('data-step');
-                        phoneScreens.forEach(screen => screen.classList.remove('active'));
-                        const targetScreen = document.getElementById(`screen-${stepNum}`);
-                        if (targetScreen) targetScreen.classList.add('active');
                     } else {
                         entry.target.classList.remove('active');
                     }
@@ -1880,27 +1875,28 @@
 
             scrollSteps.forEach(step => stepObserver.observe(step));
             
-            // 🚀 智慧動畫時間軸：動態調整播放速率
+            // 2. 🚀 核心升級：圖片切換改由真實 Scroll 座標絕對控制，徹底根除邊界抖動！
             window.addEventListener('scroll', () => {
-                const windowHeight = window.innerHeight;
-                const currentIsDesktop = window.innerWidth >= 992;
+                // 定義觸發線：大螢幕抓螢幕高度 50% 的中心點，手機版因為圖片在上面，我們抓偏下的 60% 處
+                const triggerPoint = window.innerHeight * (isDesktop ? 0.5 : 0.6);
                 
+                let currentActiveIndex = 0; // 預設顯示第一張圖
+
+                // 迴圈比對每一個文字區塊的絕對座標
                 scrollSteps.forEach((step, index) => {
                     const rect = step.getBoundingClientRect();
-                    
-                    // 🚀 終極同步：讓「動畫的作動區間」與「文字的生存區間」完全吻合！
-                    // 電腦版：文字在 85% 處出現時動畫 0%，一路滑到 15% 處消失時動畫剛好 100%。
-                    const startY = windowHeight * (currentIsDesktop ? 0.85 : 0.85);
-                    const endY = windowHeight * (currentIsDesktop ? 0.15 : 0.35);
-                    
-                    let p = (startY - rect.top) / (startY - endY);
-                    
-                    p = Math.max(0, Math.min(1, p)); 
-                    
-                    // 🚀 完美的純實景照片進度控制，不再受卡片動畫干擾，清爽乾淨
-                    const screen = document.getElementById(`screen-${index + 1}`);
-                    if (screen) {
-                        screen.style.setProperty('--p', p);
+                    // 當這個文字區塊的頂端，滑過（小於等於）我們設定的觸發線時，就視為進度到了這一步
+                    if (rect.top <= triggerPoint) {
+                        currentActiveIndex = index;
+                    }
+                });
+
+                // 根據算出來的最終 Index，精準切換圖片，絕對不會再有 A 標題配 B 圖片的問題
+                phoneScreens.forEach((screen, index) => {
+                    if (index === currentActiveIndex) {
+                        screen.classList.add('active');
+                    } else {
+                        screen.classList.remove('active');
                     }
                 });
             });
