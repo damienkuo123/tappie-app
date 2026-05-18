@@ -974,11 +974,12 @@
             padding-right: 20px;
         }
         .scroll-step {
+            /* 🚀 修復：手機版把高度與間距縮小，讓文字接得更緊密，消除乾滑的空窗期 */
             min-height: 35vh; margin-bottom: 10vh; 
             display: flex; flex-direction: column; justify-content: flex-start;
-            opacity: 0; transform: translateY(40px); transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-            text-align: center; /* 🚀 新增：手機版文字置中，對齊上方手機畫面更美觀 */
+            text-align: center; /* 手機版文字置中，對齊上方手機畫面更美觀 */
             align-items: center; 
+            opacity: 0; transform: translateY(40px); transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .scroll-step:last-child { margin-bottom: 0; }
         .scroll-step.active { opacity: 1; transform: translateY(0); }
@@ -1846,48 +1847,56 @@
             const activeElements = document.querySelectorAll('#tab-student .reveal-up, #tab-student .reveal-left, #tab-student .reveal-right, .hero-text, .login-card, .global-section .reveal-up, .global-section .reveal-left, .global-section .reveal-right');
             activeElements.forEach(el => scrollObserver.observe(el));
             // ==========================================
-            // 🚀 專屬 Apple 黏性滾動引擎 (Sticky Scroll) - 絕對純淨版
+            // 🚀 專屬 Apple 黏性滾動引擎 (Sticky Scroll)
             // ==========================================
             const scrollSteps = document.querySelectorAll('.scroll-step');
             const phoneScreens = document.querySelectorAll('.phone-screen');
             
-            // 移除不穩定的 Intersection Observer，改用精準的 Scroll 距離計算
-            window.addEventListener('scroll', () => {
-                const windowHeight = window.innerHeight;
-                // 🎯 觸發線：設定在螢幕中央偏上 (約 40% 處)，這裡視覺焦點最好
-                const triggerLine = windowHeight * 0.4; 
-                
-                let activeIndex = 0;
-                let minDistance = Infinity;
+            // 1. Intersection Observer 現在「只負責」文字的淡入淡出動畫
+            const isDesktop = window.innerWidth >= 992;
+            const stepObserverOptions = {
+                root: null,
+                rootMargin: isDesktop ? '-15% 0px -15% 0px' : '-55% 0px -15% 0px', 
+                threshold: 0
+            };
 
-                // 1. 掃描所有的文字步驟，看誰的「中心點」離「觸發線」最近
+            const stepObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('active');
+                    } else {
+                        entry.target.classList.remove('active');
+                    }
+                });
+            }, stepObserverOptions);
+
+            scrollSteps.forEach(step => stepObserver.observe(step));
+            
+            // 2. 🚀 核心升級：圖片切換改由真實 Scroll 座標絕對控制，徹底根除邊界抖動！
+            window.addEventListener('scroll', () => {
+                // 定義觸發線：大螢幕抓螢幕高度 50% 的中心點，手機版因為圖片在上面，我們抓偏下的 60% 處
+                const triggerPoint = window.innerHeight * (window.innerWidth >= 992 ? 0.5 : 0.6);
+                
+                let currentActiveIndex = 0; // 預設顯示第一張圖
+
+                // 迴圈比對每一個文字區塊的座標
                 scrollSteps.forEach((step, index) => {
                     const rect = step.getBoundingClientRect();
-                    const stepCenter = rect.top + (rect.height / 2);
-                    const distance = Math.abs(stepCenter - triggerLine);
-
-                    if (distance < minDistance) {
-                        minDistance = distance;
-                        activeIndex = index; // 記住最近的這個元素索引
+                    // 當這個文字區塊的頂端，滑過（小於等於）我們設定的觸發線時，就視為進度到了這一步
+                    if (rect.top <= triggerPoint) {
+                        currentActiveIndex = index;
                     }
                 });
 
-                // 2. 統一派發 Active 狀態，贏家全拿，絕對不會發生兩個同時亮起的 Bug
-                scrollSteps.forEach((step, index) => {
-                    const targetScreen = document.getElementById(`screen-${index + 1}`);
-                    
-                    if (index === activeIndex) {
-                        step.classList.add('active');
-                        if (targetScreen) targetScreen.classList.add('active');
+                // 根據算出來的最終 Index，精準切換圖片，絕對不會再有 A 標題配 B 圖片的問題
+                phoneScreens.forEach((screen, index) => {
+                    if (index === currentActiveIndex) {
+                        screen.classList.add('active');
                     } else {
-                        step.classList.remove('active');
-                        if (targetScreen) targetScreen.classList.remove('active');
+                        screen.classList.remove('active');
                     }
                 });
             });
-            
-            // 初始化：網頁載入時主動算一次，確保第一張圖正確顯示
-            window.dispatchEvent(new Event('scroll'));
         
         // ==========================================
             // 🚀 科技權威卡片滾動感應 (手機版免滑鼠自動通電)
