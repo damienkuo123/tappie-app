@@ -915,6 +915,13 @@
         const res = await fetch(`${GAS_URL}?action=get_lobby_data&id=${STUDENT_ID}`);
         const data = await res.json();
         
+        // 🚀 關鍵修復：檢查是否有錯誤
+        if (data.success === false || data.error) {
+            alert("⚠️ 查無此帳號或權限不足！");
+            window.location.href = "index.html"; // 強制踢回首頁
+            return;
+        }
+                
         characterAssets = data.assets;
         document.getElementById('header-name').innerText = data.profile.name || STUDENT_ID;
         document.getElementById('header-points').innerText = `${data.profile.points} PTS`;
