@@ -2258,14 +2258,18 @@
     const charCount = current.en.length; // 🚀 計算包含空格與符號的總字數
 
     // 🧠 智慧縮放核心：使用 CSS clamp 確保在手機與平板上都能完美顯示
-    if (charCount > 35) {
-        wordDisplay.style.fontSize = "clamp(18px, 4vw, 26px)";  // 超長句子
-    } else if (charCount > 20) {
-        wordDisplay.style.fontSize = "clamp(24px, 5vw, 36px)";  // 中長句子
+    if (charCount > 20) {
+        // 中長句子：字體微微放大，並給予極大的行高 (2.0) 來容納小燈泡
+        wordDisplay.style.fontSize = "clamp(28px, 6vw, 42px)";  
+        wordDisplay.style.lineHeight = "1.6"; 
     } else if (charCount > 10) {
-        wordDisplay.style.fontSize = "clamp(32px, 6vw, 48px)";  // 短句子
+        // 短句子：字體再放大，行高也適度撐開 (1.8)
+        wordDisplay.style.fontSize = "clamp(36px, 7vw, 54px)";  
+        wordDisplay.style.lineHeight = "1.6"; 
     } else {
-        wordDisplay.style.fontSize = "clamp(42px, 8vw, 64px)";  // 單字
+        // 單字：視覺中心，霸氣大字，單行不需要擔心擋字問題
+        wordDisplay.style.fontSize = "clamp(48px, 9vw, 72px)";  
+        wordDisplay.style.lineHeight = "1.6"; 
     }
 
 
