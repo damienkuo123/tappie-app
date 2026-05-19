@@ -2837,7 +2837,22 @@
         if (!isBattleRecording) {
             isBattleRecording = true;
             
-            // 強制切斷所有正在播放的讀音
+            // 🚀 關鍵修復：檢查麥克風心跳
+            try {
+                if (!globalMicStream || globalMicStream.getAudioTracks()[0].readyState === 'ended') {
+                    console.log("麥克風已斷開，重新申請...");
+                    globalMicStream = await navigator.mediaDevices.getUserMedia({ 
+                        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1, sampleRate: 16000 } 
+                    });
+                }
+                // 🚀 關鍵修復：喚醒 AudioContext
+                if (!sysAudioCtx) sysAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (sysAudioCtx.state === 'suspended') await sysAudioCtx.resume();
+            } catch(err) {
+                alert("無法使用麥克風，請確認權限！");
+                isBattleRecording = false; return;
+            }
+  
             window.speechSynthesis.cancel();
             if (audioCtx && audioCtx.state === 'running') {
                 audioCtx.suspend().then(() => audioCtx.resume());
